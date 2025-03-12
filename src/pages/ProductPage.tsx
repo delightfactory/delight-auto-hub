@@ -6,6 +6,7 @@ import { ArrowLeft, ShoppingCart, Star, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import SectionHeading from '@/components/SectionHeading';
 import { toast } from '@/components/ui/use-toast';
+import { useCart } from '@/context/CartContext';
 
 // This would come from an API in a real application
 const getProductData = (id: string) => {
@@ -72,6 +73,7 @@ const getProductData = (id: string) => {
 const ProductPage: React.FC = () => {
   const { productId } = useParams<{ productId: string }>();
   const product = productId ? getProductData(productId) : null;
+  const { addItem } = useCart();
   
   if (!product) {
     return (
@@ -88,11 +90,21 @@ const ProductPage: React.FC = () => {
   }
 
   const handleAddToCart = () => {
+    addItem({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.image
+    });
+    
     toast({
       title: "تمت الإضافة إلى السلة",
       description: `تمت إضافة ${product.name} إلى سلة التسوق بنجاح.`,
     });
   };
+
+  // Get related products data
+  const relatedProducts = product.relatedProducts?.map(id => getProductData(id)).filter(p => p) || [];
 
   return (
     <div className="pb-20">
@@ -189,13 +201,27 @@ const ProductPage: React.FC = () => {
           />
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10">
-            {/* This would typically come from an API, but for demo we'll just show placeholders */}
-            {[1, 2, 3].map((item) => (
-              <div key={item} className="bg-white rounded-xl shadow-sm p-4">
-                <div className="aspect-square w-full bg-gray-100 rounded-lg mb-4"></div>
-                <h3 className="text-lg font-semibold">منتج آخر من ديلايت</h3>
-                <p className="text-gray-600 text-sm mt-2">وصف مختصر للمنتج وفوائده الرئيسية للعناية بالسيارة</p>
-              </div>
+            {relatedProducts.map((relatedProduct) => (
+              <motion.div 
+                key={relatedProduct?.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="bg-white rounded-xl shadow-sm p-4"
+              >
+                <Link to={`/products/${relatedProduct?.id}`}>
+                  <div className="aspect-square w-full bg-gray-100 rounded-lg mb-4 overflow-hidden">
+                    <img 
+                      src={relatedProduct?.image} 
+                      alt={relatedProduct?.name} 
+                      className="w-full h-full object-cover transition-transform hover:scale-105 duration-300"
+                    />
+                  </div>
+                  <h3 className="text-lg font-semibold">{relatedProduct?.name}</h3>
+                  <p className="text-gray-600 text-sm mt-2 line-clamp-2">{relatedProduct?.description}</p>
+                  <p className="text-delight-600 font-bold mt-2">{relatedProduct?.price}</p>
+                </Link>
+              </motion.div>
             ))}
           </div>
         </div>

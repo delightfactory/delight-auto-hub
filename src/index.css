@@ -82,9 +82,24 @@
   .container-custom {
     @apply container mx-auto px-4 sm:px-6 lg:px-8;
   }
+
+  .nav-link {
+    @apply text-gray-600 hover:text-delight-600 transition-colors text-sm py-1 px-3 rounded-md hover:bg-gray-50;
+  }
+  
+  .nav-link-active {
+    @apply text-delight-600 font-medium;
+  }
 }
 
 /* RTL Support */
 html {
   direction: rtl;
+}
+
+/* Main content padding for fixed sidebar */
+@media (min-width: 1024px) {
+  main {
+    margin-right: 18rem; /* width of the sidebar */
+  }
 }
