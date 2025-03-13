@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useAnimation, useInView } from 'framer-motion';
@@ -15,34 +14,7 @@ import {
 } from 'lucide-react';
 import SectionHeading from '@/components/SectionHeading';
 import ProductCard from '@/components/ProductCard';
-
-// Sample product data
-const featuredProducts = [
-  {
-    id: "car-shampoo",
-    name: "شامبو السيارات الفاخر",
-    description: "شامبو مركز عالي الجودة للعناية بسيارتك والحفاظ على لمعانها الطبيعي مع حماية طويلة الأمد.",
-    image: "https://images.unsplash.com/photo-1610647752706-3bb12232b3ab?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80"
-  },
-  {
-    id: "interior-cleaner",
-    name: "منظف المقصورة الداخلية",
-    description: "منظف متخصص للعناية بالأسطح الداخلية للسيارة مع حماية من الأشعة فوق البنفسجية.",
-    image: "https://images.unsplash.com/photo-1597766332420-6d25196201bf?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80"
-  },
-  {
-    id: "tire-shine",
-    name: "ملمع إطارات بتقنية النانو",
-    description: "ملمع إطارات بتقنية النانو يمنح إطارات سيارتك مظهرًا احترافيًا ولامعًا مع حماية من العوامل الجوية.",
-    image: "https://images.unsplash.com/photo-1580273916550-e323be2ae537?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1528&q=80"
-  },
-  {
-    id: "ceramic-coating",
-    name: "طلاء سيراميك للحماية",
-    description: "طلاء سيراميك متطور يوفر حماية فائقة لطلاء السيارة مع تعزيز اللمعان والمقاومة للماء والأوساخ.",
-    image: "https://images.unsplash.com/photo-1607860108855-64acf2078ed9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1471&q=80"
-  }
-];
+import { ProductService } from '@/services/productService';
 
 // Animation variants
 const fadeInUp = {
@@ -61,6 +33,9 @@ const staggerContainer = {
 };
 
 const HomePage: React.FC = () => {
+  // Get featured products from the service
+  const featuredProducts = ProductService.getFeaturedProducts();
+  
   // Animation hooks
   const controlsFeatures = useAnimation();
   const controlsProducts = useAnimation();
@@ -323,6 +298,8 @@ const HomePage: React.FC = () => {
                   name={product.name}
                   description={product.description}
                   image={product.image}
+                  price={product.price}
+                  rating={product.rating}
                 />
               </motion.div>
             ))}

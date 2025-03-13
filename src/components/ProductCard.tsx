@@ -5,6 +5,8 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart, Eye, Star } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useCart } from '@/context/CartContext';
+import { toast } from '@/components/ui/use-toast';
 
 interface ProductCardProps {
   id: string;
@@ -25,6 +27,25 @@ const ProductCard: React.FC<ProductCardProps> = ({
   rating = 4.5,
   price = '',
 }) => {
+  const { addItem } = useCart();
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    addItem({
+      id,
+      name,
+      price: price || '0 ريال',
+      image,
+    });
+    
+    toast({
+      title: "تمت الإضافة إلى السلة",
+      description: `تمت إضافة ${name} إلى سلة التسوق بنجاح.`,
+    });
+  };
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 30 }}
@@ -82,15 +103,22 @@ const ProductCard: React.FC<ProductCardProps> = ({
           <div className="text-delight-700 font-bold mb-4">{price}</div>
         )}
         
-        <div className="flex justify-end">
+        <div className="flex justify-between">
           <Link to={`/products/${id}`}>
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button className="bg-delight-600 hover:bg-delight-700 text-white group">
-                <ShoppingCart className="w-4 h-4 ml-2 group-hover:animate-pulse" />
-                <span>عرض المنتج</span>
+              <Button variant="outline" className="border-delight-200 text-delight-700">
+                <Eye className="w-4 h-4 ml-2" />
+                <span>التفاصيل</span>
               </Button>
             </motion.div>
           </Link>
+          
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <Button className="bg-delight-600 hover:bg-delight-700 text-white group" onClick={handleAddToCart}>
+              <ShoppingCart className="w-4 h-4 ml-2 group-hover:animate-pulse" />
+              <span>إضافة للسلة</span>
+            </Button>
+          </motion.div>
         </div>
       </div>
     </motion.div>

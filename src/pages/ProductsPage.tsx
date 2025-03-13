@@ -1,51 +1,34 @@
 
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useEffect } from 'react';
+import { motion, useAnimation } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import ProductCard from '@/components/ProductCard';
 import SectionHeading from '@/components/SectionHeading';
-
-// This would come from an API in a real application
-const productData = [
-  {
-    id: 'interior-cleaner',
-    name: 'منظف المقصورة الداخلية',
-    description: 'منظف عالي الجودة للمقصورة الداخلية للسيارة، يزيل البقع والأوساخ بفعالية ويترك رائحة منعشة.',
-    image: '/placeholder.svg'
-  },
-  {
-    id: 'exterior-cleaner',
-    name: 'منظف الهيكل الخارجي',
-    description: 'منظف متطور للهيكل الخارجي للسيارة، يزيل الأوساخ والشحوم ويمنح لمعاناً فائقاً.',
-    image: '/placeholder.svg'
-  },
-  {
-    id: 'tire-shine',
-    name: 'ملمع الإطارات',
-    description: 'ملمع إطارات عالي الجودة يمنح الإطارات مظهراً جديداً ولامعاً ويحميها من التشقق والتلف.',
-    image: '/placeholder.svg'
-  },
-  {
-    id: 'dashboard-protectant',
-    name: 'حامي لوحة القيادة',
-    description: 'منتج متخصص لحماية لوحة القيادة من الأشعة فوق البنفسجية وإضفاء لمعان طبيعي.',
-    image: '/placeholder.svg'
-  },
-  {
-    id: 'wheel-cleaner',
-    name: 'منظف الجنوط',
-    description: 'منظف قوي للجنوط يزيل الأوساخ العنيدة وغبار الفرامل دون التسبب في أي ضرر.',
-    image: '/placeholder.svg'
-  },
-  {
-    id: 'wax-polish',
-    name: 'شمع التلميع',
-    description: 'شمع تلميع عالي الجودة يمنح سيارتك لمعاناً كالمرآة ويوفر حماية تدوم لأشهر.',
-    image: '/placeholder.svg'
-  }
-];
+import { ProductService } from '@/services/productService';
 
 const ProductsPage: React.FC = () => {
+  const products = ProductService.getAllProducts();
+  const controls = useAnimation();
+
+  useEffect(() => {
+    controls.start('visible');
+  }, [controls]);
+
+  const staggerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
+  };
+
   return (
     <div className="pb-20">
       {/* Hero Section */}
@@ -69,13 +52,16 @@ const ProductsPage: React.FC = () => {
       {/* Products Section */}
       <section className="py-16">
         <div className="container-custom">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {productData.map((product, index) => (
+          <motion.div 
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+            variants={staggerVariants}
+            initial="hidden"
+            animate={controls}
+          >
+            {products.map((product) => (
               <motion.div
                 key={product.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
+                variants={itemVariants}
               >
                 <Link to={`/products/${product.id}`}>
                   <ProductCard
@@ -83,11 +69,13 @@ const ProductsPage: React.FC = () => {
                     name={product.name}
                     description={product.description}
                     image={product.image}
+                    price={product.price}
+                    rating={product.rating}
                   />
                 </Link>
               </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 

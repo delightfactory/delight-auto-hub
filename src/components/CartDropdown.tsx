@@ -1,25 +1,30 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, X, Plus, Minus, ShoppingBag, Check, ShoppingBasket } from 'lucide-react';
+import { ShoppingCart, X, Plus, Minus, ShoppingBag, Check, ShoppingBasket, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CartItem, useCart } from '@/context/CartContext';
 import { toast } from '@/components/ui/use-toast';
+import Checkout from './Checkout';
 
 const CartDropdown = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [showCheckout, setShowCheckout] = useState(false);
   const { items, total, itemCount, removeItem, updateQuantity, clearCart } = useCart();
 
   const toggleCart = () => {
     setIsOpen(!isOpen);
+    if (!isOpen) {
+      setShowCheckout(false);
+    }
   };
 
-  const handleCheckout = () => {
-    toast({
-      title: "تم إكمال الطلب بنجاح",
-      description: "سيتم التواصل معك قريباً للتأكيد.",
-    });
-    clearCart();
+  const handleStartCheckout = () => {
+    setShowCheckout(true);
+  };
+
+  const handleCloseCheckout = () => {
+    setShowCheckout(false);
     setIsOpen(false);
   };
 
@@ -68,80 +73,104 @@ const CartDropdown = () => {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 300 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="fixed top-0 right-0 h-full w-full max-w-sm bg-white shadow-2xl z-50 overflow-hidden flex flex-col"
+              className="fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-2xl z-50 overflow-hidden flex flex-col"
             >
-              {/* Header */}
-              <div className="p-4 border-b flex items-center justify-between bg-gradient-to-r from-delight-50 to-delight-100">
-                <h2 className="text-lg font-semibold flex items-center gap-2 text-delight-800">
-                  <ShoppingBag className="h-5 w-5 text-delight-600" />
-                  سلة المشتريات
-                </h2>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={toggleCart}
-                  className="hover:bg-white/50 rounded-full"
-                >
-                  <X className="h-5 w-5" />
-                </Button>
-              </div>
-
-              {/* Cart Items */}
-              <div className="flex-grow overflow-auto p-4 bg-gray-50/50">
-                <AnimatePresence>
-                  {items.length === 0 ? (
-                    <motion.div 
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="h-full flex flex-col items-center justify-center text-gray-500 py-16"
+              {showCheckout ? (
+                <div className="flex flex-col h-full">
+                  <div className="p-4 border-b flex items-center justify-between bg-gradient-to-r from-delight-50 to-delight-100">
+                    <h2 className="text-lg font-semibold flex items-center gap-2 text-delight-800">
+                      <ArrowRight className="h-5 w-5 text-delight-600 cursor-pointer" onClick={() => setShowCheckout(false)} />
+                      إتمام الطلب
+                    </h2>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={toggleCart}
+                      className="hover:bg-white/50 rounded-full"
                     >
-                      <motion.div
-                        initial={{ scale: 0.8 }}
-                        animate={{ scale: [0.8, 1, 0.8] }}
-                        transition={{ duration: 3, repeat: Infinity }}
-                      >
-                        <ShoppingBasket className="h-16 w-16 mb-4 text-gray-300" />
-                      </motion.div>
-                      <p className="font-medium">السلة فارغة</p>
-                      <p className="text-sm text-gray-400 mt-2">أضف منتجات من صفحة المنتجات</p>
-                    </motion.div>
-                  ) : (
-                    <motion.ul layout className="space-y-4">
-                      {items.map((item) => (
-                        <CartItemCard 
-                          key={item.id} 
-                          item={item} 
-                          removeItem={removeItem}
-                          updateQuantity={updateQuantity}
-                        />
-                      ))}
-                    </motion.ul>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              {/* Footer */}
-              <div className="p-4 border-t bg-gradient-to-b from-white to-delight-50">
-                <div className="flex justify-between items-center mb-4">
-                  <span className="font-semibold text-gray-700">المجموع:</span>
-                  <span className="text-lg font-bold text-delight-700">{total}</span>
+                      <X className="h-5 w-5" />
+                    </Button>
+                  </div>
+                  <div className="flex-grow overflow-auto">
+                    <Checkout onClose={handleCloseCheckout} />
+                  </div>
                 </div>
-                <Button 
-                  onClick={handleCheckout}
-                  className="w-full bg-delight-600 hover:bg-delight-700 group"
-                  disabled={items.length === 0}
-                >
-                  <motion.span 
-                    initial={{ x: 0 }}
-                    whileHover={{ x: -4 }}
-                    className="flex items-center gap-2"
-                  >
-                    إتمام الطلب
-                    <Check className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </motion.span>
-                </Button>
-              </div>
+              ) : (
+                <>
+                  {/* Header */}
+                  <div className="p-4 border-b flex items-center justify-between bg-gradient-to-r from-delight-50 to-delight-100">
+                    <h2 className="text-lg font-semibold flex items-center gap-2 text-delight-800">
+                      <ShoppingBag className="h-5 w-5 text-delight-600" />
+                      سلة المشتريات
+                    </h2>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={toggleCart}
+                      className="hover:bg-white/50 rounded-full"
+                    >
+                      <X className="h-5 w-5" />
+                    </Button>
+                  </div>
+
+                  {/* Cart Items */}
+                  <div className="flex-grow overflow-auto p-4 bg-gray-50/50">
+                    <AnimatePresence>
+                      {items.length === 0 ? (
+                        <motion.div 
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="h-full flex flex-col items-center justify-center text-gray-500 py-16"
+                        >
+                          <motion.div
+                            initial={{ scale: 0.8 }}
+                            animate={{ scale: [0.8, 1, 0.8] }}
+                            transition={{ duration: 3, repeat: Infinity }}
+                          >
+                            <ShoppingBasket className="h-16 w-16 mb-4 text-gray-300" />
+                          </motion.div>
+                          <p className="font-medium">السلة فارغة</p>
+                          <p className="text-sm text-gray-400 mt-2">أضف منتجات من صفحة المنتجات</p>
+                        </motion.div>
+                      ) : (
+                        <motion.ul layout className="space-y-4">
+                          {items.map((item) => (
+                            <CartItemCard 
+                              key={item.id} 
+                              item={item} 
+                              removeItem={removeItem}
+                              updateQuantity={updateQuantity}
+                            />
+                          ))}
+                        </motion.ul>
+                      )}
+                    </AnimatePresence>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="p-4 border-t bg-gradient-to-b from-white to-delight-50">
+                    <div className="flex justify-between items-center mb-4">
+                      <span className="font-semibold text-gray-700">المجموع:</span>
+                      <span className="text-lg font-bold text-delight-700">{total}</span>
+                    </div>
+                    <Button 
+                      onClick={handleStartCheckout}
+                      className="w-full bg-delight-600 hover:bg-delight-700 group"
+                      disabled={items.length === 0}
+                    >
+                      <motion.span 
+                        initial={{ x: 0 }}
+                        whileHover={{ x: -4 }}
+                        className="flex items-center gap-2"
+                      >
+                        إتمام الطلب
+                        <Check className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </motion.span>
+                    </Button>
+                  </div>
+                </>
+              )}
             </motion.div>
           </>
         )}
