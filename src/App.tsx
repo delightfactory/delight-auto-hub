@@ -36,10 +36,15 @@ const AnimatedRoutes = () => {
     <AnimatePresence mode="wait">
       <motion.div
         key={location.pathname}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.3 }}
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -20 }}
+        transition={{ 
+          type: "spring", 
+          stiffness: 260, 
+          damping: 20, 
+          duration: 0.3 
+        }}
         className="flex-1 min-h-screen w-full"
       >
         <Suspense fallback={<PageLoader />}>
@@ -64,7 +69,19 @@ const App = () => (
     <CartProvider>
       <TooltipProvider>
         <Toaster />
-        <Sonner position="top-right" closeButton />
+        <Sonner 
+          position="top-right" 
+          closeButton 
+          richColors
+          expand
+          toastOptions={{
+            style: {
+              background: 'white',
+              border: '1px solid #E2E8F0',
+              direction: 'rtl',
+            }
+          }}
+        />
         <BrowserRouter>
           <div className="flex flex-col lg:flex-row min-h-screen bg-gradient-to-br from-white to-delight-50/30">
             <Sidebar />

@@ -3,7 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, Eye, Star } from 'lucide-react';
+import { ShoppingCart, Eye, Star, Heart } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useCart } from '@/context/CartContext';
 import { toast } from '@/components/ui/use-toast';
@@ -28,6 +28,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   price = '',
 }) => {
   const { addItem } = useCart();
+  const [isLiked, setIsLiked] = React.useState(false);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -46,6 +47,12 @@ const ProductCard: React.FC<ProductCardProps> = ({
     });
   };
 
+  const toggleLike = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsLiked(!isLiked);
+  };
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 30 }}
@@ -58,6 +65,17 @@ const ProductCard: React.FC<ProductCardProps> = ({
       )}
     >
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-gray-50">
+        <motion.button
+          onClick={toggleLike}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          className="absolute top-3 right-3 z-10 bg-white/70 backdrop-blur-sm p-2 rounded-full shadow-sm"
+        >
+          <Heart 
+            className={`w-4 h-4 ${isLiked ? 'fill-red-500 text-red-500' : 'text-gray-500'}`} 
+          />
+        </motion.button>
+        
         <motion.img
           whileHover={{ scale: 1.1 }}
           transition={{ duration: 0.6 }}
@@ -80,7 +98,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         </Link>
       </div>
       <div className="p-6">
-        <div className="flex items-center mb-2">
+        <div className="flex items-center justify-between mb-2">
           <div className="flex gap-0.5">
             {[...Array(5)].map((_, i) => (
               <Star 
@@ -89,10 +107,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
               />
             ))}
           </div>
-          <span className="text-xs text-gray-500 mr-1">{rating}</span>
+          <span className="text-xs font-medium bg-delight-50 text-delight-700 px-2 py-1 rounded-full">{rating}</span>
         </div>
         
-        <h3 className="text-xl font-bold mb-2 text-gray-800">
+        <h3 className="text-xl font-bold mb-2 text-gray-800 line-clamp-1">
           {name}
         </h3>
         <p className="text-gray-600 mb-4 text-sm line-clamp-2">
@@ -100,7 +118,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         </p>
         
         {price && (
-          <div className="text-delight-700 font-bold mb-4">{price}</div>
+          <div className="text-delight-700 font-bold mb-4 text-lg">{price}</div>
         )}
         
         <div className="flex justify-between">
@@ -114,7 +132,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
           </Link>
           
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <Button className="bg-delight-600 hover:bg-delight-700 text-white group" onClick={handleAddToCart}>
+            <Button className="bg-gradient-to-r from-delight-600 to-delight-700 hover:from-delight-700 hover:to-delight-800 text-white group" onClick={handleAddToCart}>
               <ShoppingCart className="w-4 h-4 ml-2 group-hover:animate-pulse" />
               <span>إضافة للسلة</span>
             </Button>
