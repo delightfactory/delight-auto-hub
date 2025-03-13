@@ -3,8 +3,10 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
-import { ChevronRight, Home, Info, Phone, ShoppingBag, Factory, Menu, X } from 'lucide-react';
+import { ChevronRight, Home, Info, Phone, ShoppingBag, Factory, Menu, X, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useCart } from '@/context/CartContext';
+import CartDropdown from '@/components/CartDropdown';
 
 const navItems = [
   { path: '/', label: 'الرئيسية', icon: Home },
@@ -17,6 +19,7 @@ const navItems = [
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const { itemCount } = useCart();
 
   const toggleSidebar = () => setIsOpen(!isOpen);
 
@@ -85,6 +88,21 @@ const Sidebar = () => {
               );
             })}
           </nav>
+
+          {/* Cart section */}
+          <div className="mt-8 pt-6 border-t border-gray-200">
+            <div className="flex items-center justify-between">
+              <h3 className="font-medium text-gray-900">سلة المشتريات</h3>
+              <div className="relative">
+                <CartDropdown />
+              </div>
+            </div>
+            {itemCount > 0 && (
+              <div className="mt-2 text-sm text-gray-500">
+                لديك {itemCount} منتج في السلة
+              </div>
+            )}
+          </div>
         </div>
       </motion.div>
     </>
