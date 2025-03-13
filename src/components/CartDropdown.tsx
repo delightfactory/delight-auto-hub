@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, X, Plus, Minus, ShoppingBag } from 'lucide-react';
+import { ShoppingCart, X, Plus, Minus, ShoppingBag, Check, ShoppingBasket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CartItem, useCart } from '@/context/CartContext';
 import { toast } from '@/components/ui/use-toast';
@@ -30,14 +30,23 @@ const CartDropdown = () => {
         variant="ghost" 
         size="icon" 
         onClick={toggleCart}
-        className="relative"
+        className="relative hover:bg-delight-100 transition-colors"
       >
-        <ShoppingCart className="h-6 w-6" />
-        {itemCount > 0 && (
-          <span className="absolute -top-2 -right-2 bg-delight-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-            {itemCount}
-          </span>
-        )}
+        <motion.div
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+        >
+          <ShoppingCart className="h-6 w-6 text-delight-700" />
+          {itemCount > 0 && (
+            <motion.span 
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className="absolute -top-2 -right-2 bg-delight-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center"
+            >
+              {itemCount}
+            </motion.span>
+          )}
+        </motion.div>
       </Button>
 
       {/* Cart Dropdown */}
@@ -49,7 +58,7 @@ const CartDropdown = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
               onClick={toggleCart}
             />
 
@@ -59,52 +68,78 @@ const CartDropdown = () => {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 300 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="fixed top-0 right-0 h-full w-full max-w-sm bg-white shadow-xl z-50 overflow-hidden flex flex-col"
+              className="fixed top-0 right-0 h-full w-full max-w-sm bg-white shadow-2xl z-50 overflow-hidden flex flex-col"
             >
               {/* Header */}
-              <div className="p-4 border-b flex items-center justify-between bg-delight-50">
-                <h2 className="text-lg font-semibold flex items-center gap-2">
+              <div className="p-4 border-b flex items-center justify-between bg-gradient-to-r from-delight-50 to-delight-100">
+                <h2 className="text-lg font-semibold flex items-center gap-2 text-delight-800">
                   <ShoppingBag className="h-5 w-5 text-delight-600" />
                   سلة المشتريات
                 </h2>
-                <Button variant="ghost" size="icon" onClick={toggleCart}>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={toggleCart}
+                  className="hover:bg-white/50 rounded-full"
+                >
                   <X className="h-5 w-5" />
                 </Button>
               </div>
 
               {/* Cart Items */}
-              <div className="flex-grow overflow-auto p-4">
-                {items.length === 0 ? (
-                  <div className="h-full flex flex-col items-center justify-center text-gray-500">
-                    <ShoppingCart className="h-12 w-12 mb-4 text-gray-300" />
-                    <p>السلة فارغة</p>
-                  </div>
-                ) : (
-                  <ul className="space-y-4">
-                    {items.map((item) => (
-                      <CartItemCard 
-                        key={item.id} 
-                        item={item} 
-                        removeItem={removeItem}
-                        updateQuantity={updateQuantity}
-                      />
-                    ))}
-                  </ul>
-                )}
+              <div className="flex-grow overflow-auto p-4 bg-gray-50/50">
+                <AnimatePresence>
+                  {items.length === 0 ? (
+                    <motion.div 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="h-full flex flex-col items-center justify-center text-gray-500 py-16"
+                    >
+                      <motion.div
+                        initial={{ scale: 0.8 }}
+                        animate={{ scale: [0.8, 1, 0.8] }}
+                        transition={{ duration: 3, repeat: Infinity }}
+                      >
+                        <ShoppingBasket className="h-16 w-16 mb-4 text-gray-300" />
+                      </motion.div>
+                      <p className="font-medium">السلة فارغة</p>
+                      <p className="text-sm text-gray-400 mt-2">أضف منتجات من صفحة المنتجات</p>
+                    </motion.div>
+                  ) : (
+                    <motion.ul layout className="space-y-4">
+                      {items.map((item) => (
+                        <CartItemCard 
+                          key={item.id} 
+                          item={item} 
+                          removeItem={removeItem}
+                          updateQuantity={updateQuantity}
+                        />
+                      ))}
+                    </motion.ul>
+                  )}
+                </AnimatePresence>
               </div>
 
               {/* Footer */}
-              <div className="p-4 border-t bg-gray-50">
+              <div className="p-4 border-t bg-gradient-to-b from-white to-delight-50">
                 <div className="flex justify-between items-center mb-4">
-                  <span className="font-semibold">المجموع:</span>
+                  <span className="font-semibold text-gray-700">المجموع:</span>
                   <span className="text-lg font-bold text-delight-700">{total}</span>
                 </div>
                 <Button 
                   onClick={handleCheckout}
-                  className="w-full"
+                  className="w-full bg-delight-600 hover:bg-delight-700 group"
                   disabled={items.length === 0}
                 >
-                  إتمام الطلب
+                  <motion.span 
+                    initial={{ x: 0 }}
+                    whileHover={{ x: -4 }}
+                    className="flex items-center gap-2"
+                  >
+                    إتمام الطلب
+                    <Check className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </motion.span>
                 </Button>
               </div>
             </motion.div>
@@ -140,11 +175,14 @@ const CartItemCard: React.FC<CartItemCardProps> = ({ item, removeItem, updateQua
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="flex gap-3 p-3 bg-white rounded-lg border"
+      whileHover={{ y: -2, boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
+      className="flex gap-3 p-3 bg-white rounded-lg border border-gray-100 transition-all"
     >
       {/* Product Image */}
-      <div className="w-16 h-16 bg-gray-100 rounded overflow-hidden">
-        <img 
+      <div className="w-16 h-16 bg-gray-100 rounded overflow-hidden border border-gray-100">
+        <motion.img 
+          whileHover={{ scale: 1.1 }}
+          transition={{ duration: 0.3 }}
           src={item.image} 
           alt={item.name} 
           className="w-full h-full object-cover"
@@ -158,32 +196,49 @@ const CartItemCard: React.FC<CartItemCardProps> = ({ item, removeItem, updateQua
         
         {/* Quantity Controls */}
         <div className="flex items-center mt-2">
-          <Button 
-            variant="outline" 
-            size="icon" 
-            className="h-7 w-7 rounded-full" 
-            onClick={handleDecrement}
+          <motion.div whileTap={{ scale: 0.9 }}>
+            <Button 
+              variant="outline" 
+              size="icon" 
+              className="h-7 w-7 rounded-full border-delight-200 text-delight-700" 
+              onClick={handleDecrement}
+            >
+              <Minus className="h-3 w-3" />
+            </Button>
+          </motion.div>
+          <motion.span
+            key={item.quantity}
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="mx-2 w-8 text-center font-medium"
           >
-            <Minus className="h-3 w-3" />
-          </Button>
-          <span className="mx-2 w-8 text-center">{item.quantity}</span>
-          <Button 
-            variant="outline" 
-            size="icon" 
-            className="h-7 w-7 rounded-full" 
-            onClick={handleIncrement}
-          >
-            <Plus className="h-3 w-3" />
-          </Button>
+            {item.quantity}
+          </motion.span>
+          <motion.div whileTap={{ scale: 0.9 }}>
+            <Button 
+              variant="outline" 
+              size="icon" 
+              className="h-7 w-7 rounded-full border-delight-200 text-delight-700" 
+              onClick={handleIncrement}
+            >
+              <Plus className="h-3 w-3" />
+            </Button>
+          </motion.div>
           
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-7 w-7 text-red-500 mr-auto" 
-            onClick={() => removeItem(item.id)}
+          <motion.div 
+            whileHover={{ rotate: 90 }}
+            whileTap={{ scale: 0.9 }}
+            className="mr-auto"
           >
-            <X className="h-4 w-4" />
-          </Button>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-7 w-7 text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors" 
+              onClick={() => removeItem(item.id)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </motion.div>
         </div>
       </div>
     </motion.li>

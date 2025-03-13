@@ -68,15 +68,19 @@
   html {
     scroll-behavior: smooth;
   }
+  
+  body {
+    @apply text-foreground antialiased;
+  }
 }
 
 @layer components {
   .btn-primary {
-    @apply bg-delight-600 hover:bg-delight-700 text-white transition-colors;
+    @apply bg-delight-600 hover:bg-delight-700 text-white transition-all hover:shadow-lg hover:shadow-delight-500/20;
   }
   
   .glass-card {
-    @apply bg-white/70 backdrop-blur-sm border border-white/20 shadow-glass;
+    @apply bg-white/70 backdrop-blur-sm border border-white/20 shadow-lg;
   }
   
   .container-custom {
@@ -84,11 +88,35 @@
   }
 
   .nav-link {
-    @apply text-gray-600 hover:text-delight-600 transition-colors text-sm py-1 px-3 rounded-md hover:bg-gray-50;
+    @apply text-gray-600 hover:text-delight-600 transition-all text-sm py-1 px-3 rounded-md hover:bg-gray-50;
   }
   
   .nav-link-active {
     @apply text-delight-600 font-medium;
+  }
+  
+  .section-title {
+    @apply text-3xl md:text-4xl font-bold mb-4 text-gray-800;
+  }
+  
+  .section-subtitle {
+    @apply text-xl text-gray-600 mb-8;
+  }
+  
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+  }
+  
+  .input-style {
+    @apply w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-delight-500 focus:border-transparent;
+  }
+  
+  .btn-hover-scale {
+    @apply transition-transform hover:scale-105 active:scale-95;
+  }
+  
+  .text-gradient {
+    @apply bg-gradient-to-r from-delight-700 to-delight-500 text-transparent bg-clip-text;
   }
 }
 
@@ -102,4 +130,68 @@ html {
   main {
     margin-right: 18rem; /* width of the sidebar */
   }
+}
+
+/* Animation Utility Classes */
+.hover-float {
+  transition: transform 0.3s ease;
+}
+
+.hover-float:hover {
+  transform: translateY(-5px);
+}
+
+.hover-scale {
+  transition: transform 0.3s ease;
+}
+
+.hover-scale:hover {
+  transform: scale(1.05);
+}
+
+/* Entrance animations */
+.fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Scroll reveal animation */
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.reveal.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cdd5e1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8b6cb;
 }

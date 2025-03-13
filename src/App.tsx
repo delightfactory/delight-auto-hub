@@ -13,6 +13,7 @@ import FactoryPage from "./pages/FactoryPage";
 import NotFound from "./pages/NotFound";
 import Sidebar from "./components/Sidebar";
 import { CartProvider } from "./context/CartContext";
+import { motion } from "framer-motion";
 
 const queryClient = new QueryClient();
 
@@ -23,9 +24,14 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <div className="flex">
+          <div className="flex flex-col lg:flex-row min-h-screen bg-gradient-to-br from-white to-delight-50/30">
             <Sidebar />
-            <main className="flex-1 min-h-screen">
+            <motion.main 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
+              className="flex-1 min-h-screen pt-16 lg:pt-0 lg:pr-72"
+            >
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/contact" element={<ContactPage />} />
@@ -36,7 +42,7 @@ const App = () => (
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
-            </main>
+            </motion.main>
           </div>
         </BrowserRouter>
       </TooltipProvider>
