@@ -39,6 +39,42 @@ const AnimatedRoutes = () => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
   
+  // Add star animation
+  useEffect(() => {
+    // Create and append stars
+    const createStars = () => {
+      const container = document.createElement('div');
+      container.className = 'stars-container';
+      container.style.position = 'fixed';
+      container.style.top = '0';
+      container.style.left = '0';
+      container.style.width = '100%';
+      container.style.height = '100%';
+      container.style.overflow = 'hidden';
+      container.style.zIndex = '-1';
+      
+      // Create golden triangle
+      const triangle = document.createElement('div');
+      triangle.className = 'golden-triangle';
+      triangle.style.position = 'absolute';
+      triangle.style.top = '50%';
+      triangle.style.left = '50%';
+      triangle.style.transform = 'translate(-50%, -50%)';
+      container.appendChild(triangle);
+
+      document.body.appendChild(container);
+    };
+
+    createStars();
+
+    return () => {
+      const container = document.querySelector('.stars-container');
+      if (container) {
+        container.remove();
+      }
+    };
+  }, []);
+  
   return (
     <AnimatePresence mode="wait">
       <motion.div
@@ -83,20 +119,22 @@ const App = () => (
           expand
           toastOptions={{
             style: {
-              background: 'white',
-              border: '1px solid #E2E8F0',
+              background: 'rgba(255, 255, 255, 0.1)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              color: 'white',
               direction: 'rtl',
             }
           }}
         />
         <BrowserRouter>
-          <div className="flex flex-col lg:flex-row min-h-screen bg-gradient-to-br from-white to-delight-50/30">
+          <div className="flex flex-col lg:flex-row min-h-screen">
             <Sidebar />
             <motion.main 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5 }}
-              className="flex-1 min-h-screen pt-16 lg:pt-0 lg:pr-72"
+              className="flex-1 min-h-screen pt-16 lg:pt-0 lg:pr-72 glass-panel"
             >
               <AnimatedRoutes />
             </motion.main>
