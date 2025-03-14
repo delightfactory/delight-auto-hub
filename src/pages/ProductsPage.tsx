@@ -27,8 +27,10 @@ const ProductsPage: React.FC = () => {
     
     try {
       // Simulate network delay for a better loading experience
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise(resolve => setTimeout(resolve, 1000));
       const allProducts = ProductService.getAllProducts();
+      
+      console.log("Fetched products:", allProducts);
       
       if (allProducts.length === 0) {
         throw new Error("لم يتم العثور على منتجات");
@@ -56,6 +58,7 @@ const ProductsPage: React.FC = () => {
   };
 
   useEffect(() => {
+    console.log("ProductsPage mounted, loading products...");
     loadProducts();
   }, []);
 
@@ -63,6 +66,12 @@ const ProductsPage: React.FC = () => {
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
     product.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Debugging log
+  useEffect(() => {
+    console.log("Products state:", products);
+    console.log("Filtered products:", filteredProducts);
+  }, [products, filteredProducts]);
 
   const staggerVariants = {
     hidden: { opacity: 0 },
@@ -233,16 +242,14 @@ const ProductsPage: React.FC = () => {
                     variants={itemVariants}
                     whileHover={{ y: -5, transition: { duration: 0.2 } }}
                   >
-                    <Link to={`/products/${product.id}`}>
-                      <ProductCard
-                        id={product.id}
-                        name={product.name}
-                        description={product.description}
-                        image={product.image || 'https://placehold.co/600x400/e2e8f0/1e293b?text=Delight+Car+Products'}
-                        price={product.price}
-                        rating={product.rating}
-                      />
-                    </Link>
+                    <ProductCard
+                      id={product.id}
+                      name={product.name}
+                      description={product.description}
+                      image={product.image || 'https://placehold.co/600x400/e2e8f0/1e293b?text=Delight+Car+Products'}
+                      price={product.price}
+                      rating={product.rating}
+                    />
                   </motion.div>
                 ))}
               </motion.div>

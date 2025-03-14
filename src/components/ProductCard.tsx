@@ -84,18 +84,17 @@ const ProductCard: React.FC<ProductCardProps> = ({
           className="h-full w-full object-cover transition-all"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-        <Link to={`/products/${id}`}>
-          <motion.div 
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="absolute bottom-4 right-4 left-4 flex justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
-          >
-            <Button variant="secondary" className="bg-white/90 backdrop-blur-sm hover:bg-white">
-              <Eye className="w-4 h-4 ml-2" />
-              عرض المنتج
-            </Button>
-          </motion.div>
-        </Link>
+        
+        <motion.div 
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="absolute bottom-4 right-4 left-4 flex justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
+        >
+          <Button variant="secondary" className="bg-white/90 backdrop-blur-sm hover:bg-white" onClick={(e) => e.preventDefault()}>
+            <Eye className="w-4 h-4 ml-2" />
+            عرض المنتج
+          </Button>
+        </motion.div>
       </div>
       <div className="p-6">
         <div className="flex items-center justify-between mb-2">

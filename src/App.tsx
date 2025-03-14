@@ -17,6 +17,7 @@ import Sidebar from "./components/Sidebar";
 import { CartProvider } from "./context/CartContext";
 import WhatsAppButton from "./components/WhatsAppButton";
 import PageLoader from "./components/PageLoader";
+import FloatingCartButton from "./components/FloatingCartButton";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -95,6 +96,7 @@ const App = () => (
               <AnimatedRoutes />
             </motion.main>
             <WhatsAppButton phoneNumber="00201211668511" />
+            <FloatingCartButton />
           </div>
         </BrowserRouter>
       </TooltipProvider>

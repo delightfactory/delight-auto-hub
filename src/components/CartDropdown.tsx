@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, X, Plus, Minus, ShoppingBag, Check, ShoppingBasket, ArrowRight } from 'lucide-react';
+import { ShoppingCart, X, Plus, Minus, Check, ShoppingBag, ShoppingBasket, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CartItem, useCart } from '@/context/CartContext';
 import { toast } from '@/components/ui/use-toast';
@@ -36,6 +36,7 @@ const CartDropdown = () => {
         size="icon" 
         onClick={toggleCart}
         className="relative hover:bg-delight-100 transition-colors"
+        data-cart-toggle
       >
         <motion.div
           whileHover={{ scale: 1.1 }}
