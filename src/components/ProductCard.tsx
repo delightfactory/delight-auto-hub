@@ -3,8 +3,8 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, Eye, Star, Heart } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { ShoppingCart, Eye, Star, Heart, Check } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '@/context/CartContext';
 import { toast } from '@/components/ui/use-toast';
 
@@ -27,8 +27,15 @@ const ProductCard: React.FC<ProductCardProps> = ({
   rating = 4.5,
   price = '',
 }) => {
-  const { addItem } = useCart();
+  const { addItem, items } = useCart();
   const [isLiked, setIsLiked] = React.useState(false);
+  const [isAddedToCart, setIsAddedToCart] = React.useState(false);
+  
+  // Check if item is already in cart
+  React.useEffect(() => {
+    const isInCart = items.some(item => item.id === id);
+    setIsAddedToCart(isInCart);
+  }, [items, id]);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -41,6 +48,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
       image,
     });
     
+    setIsAddedToCart(true);
+    
     toast({
       title: "تمت الإضافة إلى السلة",
       description: `تمت إضافة ${name} إلى سلة التسوق بنجاح.`,
@@ -51,6 +60,13 @@ const ProductCard: React.FC<ProductCardProps> = ({
     e.preventDefault();
     e.stopPropagation();
     setIsLiked(!isLiked);
+    
+    if (!isLiked) {
+      toast({
+        title: "تمت الإضافة للمفضلة",
+        description: `تم إضافة ${name} إلى المفضلة.`,
+      });
+    }
   };
 
   return (
@@ -58,18 +74,18 @@ const ProductCard: React.FC<ProductCardProps> = ({
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      whileHover={{ y: -8 }}
+      whileHover={{ y: -8, boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)" }}
       className={cn(
-        'group overflow-hidden rounded-xl bg-white border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300',
+        'group overflow-hidden rounded-xl bg-white/90 backdrop-blur-sm border border-white/20 shadow-lg hover:shadow-xl transition-all duration-300',
         className
       )}
     >
-      <div className="relative aspect-[4/3] w-full overflow-hidden bg-gray-50">
+      <div className="relative aspect-[4/3] w-full overflow-hidden bg-gray-50 border-b border-gray-100">
         <motion.button
           onClick={toggleLike}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
-          className="absolute top-3 right-3 z-10 bg-white/70 backdrop-blur-sm p-2 rounded-full shadow-sm"
+          className="absolute top-3 right-3 z-10 bg-white/80 backdrop-blur-sm p-2 rounded-full shadow-sm"
         >
           <Heart 
             className={`w-4 h-4 ${isLiked ? 'fill-red-500 text-red-500' : 'text-gray-500'}`} 
@@ -77,25 +93,54 @@ const ProductCard: React.FC<ProductCardProps> = ({
         </motion.button>
         
         <motion.img
-          whileHover={{ scale: 1.1 }}
+          whileHover={{ scale: 1.15, rotate: -2 }}
           transition={{ duration: 0.6 }}
           src={image}
           alt={name}
           className="h-full w-full object-cover transition-all"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
         
         <motion.div 
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="absolute bottom-4 right-4 left-4 flex justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
+          className="absolute bottom-4 right-4 left-4 flex justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 gap-2"
         >
-          <Button variant="secondary" className="bg-white/90 backdrop-blur-sm hover:bg-white" onClick={(e) => e.preventDefault()}>
-            <Eye className="w-4 h-4 ml-2" />
-            عرض المنتج
-          </Button>
+          <Link to={`/products/${id}`} className="flex-1">
+            <motion.div 
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="w-full"
+            >
+              <Button variant="secondary" className="w-full bg-white/90 backdrop-blur-sm hover:bg-white shadow-md">
+                <Eye className="w-4 h-4 ml-2" />
+                عرض المنتج
+              </Button>
+            </motion.div>
+          </Link>
+          
+          <motion.div 
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleAddToCart}
+            className="flex-1"
+          >
+            <Button className="w-full gold-gradient hover:brightness-110 text-white shadow-md group">
+              {isAddedToCart ? (
+                <>
+                  <Check className="w-4 h-4 ml-2" />
+                  في السلة
+                </>
+              ) : (
+                <>
+                  <ShoppingCart className="w-4 h-4 ml-2 group-hover:animate-pulse" />
+                  إضافة للسلة
+                </>
+              )}
+            </Button>
+          </motion.div>
         </motion.div>
       </div>
+      
       <div className="p-6">
         <div className="flex items-center justify-between mb-2">
           <div className="flex gap-0.5">
@@ -105,13 +150,27 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 className={`w-3 h-3 ${i < Math.floor(rating) ? 'fill-amber-400 text-amber-400' : 'fill-gray-200 text-gray-200'}`} 
               />
             ))}
+            <span className="text-xs font-medium text-gray-500 mr-1">({rating})</span>
           </div>
-          <span className="text-xs font-medium bg-delight-50 text-delight-700 px-2 py-1 rounded-full">{rating}</span>
+          
+          <AnimatePresence>
+            {isAddedToCart && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.5 }}
+                className="text-xs font-medium bg-green-100 text-green-700 px-2 py-1 rounded-full flex items-center"
+              >
+                <Check className="h-3 w-3 mr-1" /> في السلة
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
         
-        <h3 className="text-xl font-bold mb-2 text-gray-800 line-clamp-1">
+        <h3 className="text-xl font-bold mb-2 text-gray-800 line-clamp-1 group-hover:text-delight-700 transition-colors">
           {name}
         </h3>
+        
         <p className="text-gray-600 mb-4 text-sm line-clamp-2">
           {description}
         </p>
@@ -123,21 +182,50 @@ const ProductCard: React.FC<ProductCardProps> = ({
         <div className="flex justify-between">
           <Link to={`/products/${id}`}>
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button variant="outline" className="border-delight-200 text-delight-700">
+              <Button variant="outline" className="border-delight-200 text-delight-700 hover:bg-delight-50 hover:text-delight-800">
                 <Eye className="w-4 h-4 ml-2" />
                 <span>التفاصيل</span>
               </Button>
             </motion.div>
           </Link>
           
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <Button className="bg-gradient-to-r from-delight-600 to-delight-700 hover:from-delight-700 hover:to-delight-800 text-white group" onClick={handleAddToCart}>
-              <ShoppingCart className="w-4 h-4 ml-2 group-hover:animate-pulse" />
-              <span>إضافة للسلة</span>
+          <motion.div 
+            whileHover={{ scale: 1.05 }} 
+            whileTap={{ scale: 0.95 }}
+            animate={isAddedToCart ? { y: [0, -5, 0] } : {}}
+            transition={{ duration: 0.5 }}
+          >
+            <Button 
+              className={cn(
+                "transition-all duration-300",
+                isAddedToCart
+                  ? "bg-green-600 hover:bg-green-700 text-white"
+                  : "bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-600 hover:to-amber-500 text-white"
+              )}
+              onClick={handleAddToCart}
+            >
+              {isAddedToCart ? (
+                <>
+                  <Check className="w-4 h-4 ml-2" />
+                  <span>تمت الإضافة</span>
+                </>
+              ) : (
+                <>
+                  <ShoppingCart className="w-4 h-4 ml-2 group-hover:animate-pulse" />
+                  <span>إضافة للسلة</span>
+                </>
+              )}
             </Button>
           </motion.div>
         </div>
       </div>
+      
+      {/* Glowing effect on hover */}
+      <motion.div
+        className="absolute -z-10 inset-0 bg-gradient-to-r from-amber-200/20 to-delight-300/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-xl"
+        initial={{ opacity: 0 }}
+        whileHover={{ opacity: 1 }}
+      />
     </motion.div>
   );
 };

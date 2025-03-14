@@ -7,7 +7,11 @@ import { CartItem, useCart } from '@/context/CartContext';
 import { toast } from '@/components/ui/use-toast';
 import Checkout from './Checkout';
 
-const CartDropdown = () => {
+interface CartDropdownProps {
+  inFloatingMode?: boolean;
+}
+
+const CartDropdown: React.FC<CartDropdownProps> = ({ inFloatingMode = false }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const { items, total, itemCount, removeItem, updateQuantity, clearCart } = useCart();
@@ -28,6 +32,94 @@ const CartDropdown = () => {
     setIsOpen(false);
   };
 
+  // Inline cart items view - used in both normal and floating modes
+  const renderCartItems = () => (
+    <AnimatePresence>
+      {items.length === 0 ? (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="h-full flex flex-col items-center justify-center text-gray-500 py-16"
+        >
+          <motion.div
+            initial={{ scale: 0.8 }}
+            animate={{ scale: [0.8, 1, 0.8] }}
+            transition={{ duration: 3, repeat: Infinity }}
+          >
+            <ShoppingBasket className="h-16 w-16 mb-4 text-gray-300" />
+          </motion.div>
+          <p className="font-medium">السلة فارغة</p>
+          <p className="text-sm text-gray-400 mt-2">أضف منتجات من صفحة المنتجات</p>
+        </motion.div>
+      ) : (
+        <motion.ul layout className="space-y-4">
+          {items.map((item) => (
+            <CartItemCard 
+              key={item.id} 
+              item={item} 
+              removeItem={removeItem}
+              updateQuantity={updateQuantity}
+            />
+          ))}
+        </motion.ul>
+      )}
+    </AnimatePresence>
+  );
+
+  // Inline cart footer - used in both modes
+  const renderCartFooter = () => (
+    <div className="p-4 border-t bg-gradient-to-b from-white to-delight-50">
+      <div className="flex justify-between items-center mb-4">
+        <span className="font-semibold text-gray-700">المجموع:</span>
+        <span className="text-lg font-bold text-delight-700">{total}</span>
+      </div>
+      <Button 
+        onClick={handleStartCheckout}
+        className="w-full bg-delight-600 hover:bg-delight-700 group"
+        disabled={items.length === 0}
+      >
+        <motion.span 
+          initial={{ x: 0 }}
+          whileHover={{ x: -4 }}
+          className="flex items-center gap-2"
+        >
+          إتمام الطلب
+          <Check className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+        </motion.span>
+      </Button>
+    </div>
+  );
+
+  // If in floating mode, just render the cart content
+  if (inFloatingMode) {
+    return (
+      <div className="flex flex-col h-full">
+        {showCheckout ? (
+          <div className="flex flex-col h-full">
+            <div className="p-4 border-b flex items-center justify-between bg-gradient-to-r from-delight-50 to-delight-100">
+              <h2 className="text-lg font-semibold flex items-center gap-2 text-delight-800">
+                <ArrowRight className="h-5 w-5 text-delight-600 cursor-pointer" onClick={() => setShowCheckout(false)} />
+                إتمام الطلب
+              </h2>
+            </div>
+            <div className="flex-grow overflow-auto">
+              <Checkout onClose={handleCloseCheckout} />
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="flex-grow overflow-auto p-4 bg-gray-50/50">
+              {renderCartItems()}
+            </div>
+            {renderCartFooter()}
+          </>
+        )}
+      </div>
+    );
+  }
+
+  // Regular sidebar dropdown mode
   return (
     <div className="relative">
       {/* Cart Button */}
@@ -116,60 +208,11 @@ const CartDropdown = () => {
 
                   {/* Cart Items */}
                   <div className="flex-grow overflow-auto p-4 bg-gray-50/50">
-                    <AnimatePresence>
-                      {items.length === 0 ? (
-                        <motion.div 
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          className="h-full flex flex-col items-center justify-center text-gray-500 py-16"
-                        >
-                          <motion.div
-                            initial={{ scale: 0.8 }}
-                            animate={{ scale: [0.8, 1, 0.8] }}
-                            transition={{ duration: 3, repeat: Infinity }}
-                          >
-                            <ShoppingBasket className="h-16 w-16 mb-4 text-gray-300" />
-                          </motion.div>
-                          <p className="font-medium">السلة فارغة</p>
-                          <p className="text-sm text-gray-400 mt-2">أضف منتجات من صفحة المنتجات</p>
-                        </motion.div>
-                      ) : (
-                        <motion.ul layout className="space-y-4">
-                          {items.map((item) => (
-                            <CartItemCard 
-                              key={item.id} 
-                              item={item} 
-                              removeItem={removeItem}
-                              updateQuantity={updateQuantity}
-                            />
-                          ))}
-                        </motion.ul>
-                      )}
-                    </AnimatePresence>
+                    {renderCartItems()}
                   </div>
 
                   {/* Footer */}
-                  <div className="p-4 border-t bg-gradient-to-b from-white to-delight-50">
-                    <div className="flex justify-between items-center mb-4">
-                      <span className="font-semibold text-gray-700">المجموع:</span>
-                      <span className="text-lg font-bold text-delight-700">{total}</span>
-                    </div>
-                    <Button 
-                      onClick={handleStartCheckout}
-                      className="w-full bg-delight-600 hover:bg-delight-700 group"
-                      disabled={items.length === 0}
-                    >
-                      <motion.span 
-                        initial={{ x: 0 }}
-                        whileHover={{ x: -4 }}
-                        className="flex items-center gap-2"
-                      >
-                        إتمام الطلب
-                        <Check className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </motion.span>
-                    </Button>
-                  </div>
+                  {renderCartFooter()}
                 </>
               )}
             </motion.div>
