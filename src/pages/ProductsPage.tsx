@@ -32,7 +32,7 @@ const ProductsPage: React.FC = () => {
       
       console.log("Fetched products:", allProducts);
       
-      if (allProducts.length === 0) {
+      if (!allProducts || allProducts.length === 0) {
         throw new Error("لم يتم العثور على منتجات");
       }
       
@@ -60,6 +60,13 @@ const ProductsPage: React.FC = () => {
   useEffect(() => {
     console.log("ProductsPage mounted, loading products...");
     loadProducts();
+    
+    // Force rerender after a short delay to ensure products display
+    const timer = setTimeout(() => {
+      controls.start('visible');
+    }, 1500);
+    
+    return () => clearTimeout(timer);
   }, []);
 
   const filteredProducts = products.filter(product => 
@@ -293,9 +300,11 @@ const ProductsPage: React.FC = () => {
               whileTap={{ scale: 0.95 }}
               className="mt-8"
             >
-              <Button className="bg-gradient-to-r from-delight-600 to-delight-700 hover:from-delight-700 hover:to-delight-800 text-white px-8 py-6 rounded-lg shadow-md hover:shadow-lg transition-all text-lg">
-                تواصل معنا
-              </Button>
+              <Link to="/contact">
+                <Button className="bg-gradient-to-r from-delight-600 to-delight-700 hover:from-delight-700 hover:to-delight-800 text-white px-8 py-6 rounded-lg shadow-md hover:shadow-lg transition-all text-lg">
+                  تواصل معنا
+                </Button>
+              </Link>
             </motion.div>
           </motion.div>
         </div>

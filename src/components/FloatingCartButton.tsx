@@ -3,6 +3,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { ShoppingCart } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
+import { toast } from '@/components/ui/use-toast';
 
 const FloatingCartButton: React.FC = () => {
   const { itemCount } = useCart();
@@ -12,6 +13,14 @@ const FloatingCartButton: React.FC = () => {
     const cartButton = document.querySelector('[data-cart-toggle]');
     if (cartButton && cartButton instanceof HTMLElement) {
       cartButton.click();
+    } else {
+      // Fallback: if button not found, show a toast message
+      toast({
+        title: "تعذر فتح السلة",
+        description: "يرجى المحاولة مرة أخرى أو استخدام زر السلة في القائمة الجانبية",
+        variant: "destructive",
+      });
+      console.log("Cart toggle button not found in the DOM");
     }
   };
 
