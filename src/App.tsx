@@ -22,8 +22,9 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false,
-      retry: 1,
+      retry: 2,
       staleTime: 5 * 60 * 1000, // 5 minutes
+      networkMode: 'always', // Ensure queries run even if there are network issues
     },
   },
 });
@@ -47,7 +48,7 @@ const AnimatedRoutes = () => {
         }}
         className="flex-1 min-h-screen w-full"
       >
-        <Suspense fallback={<PageLoader />}>
+        <Suspense fallback={<PageLoader message="جاري تحميل الصفحة..." />}>
           <Routes location={location}>
             <Route path="/" element={<Index />} />
             <Route path="/contact" element={<ContactPage />} />

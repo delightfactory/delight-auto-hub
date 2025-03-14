@@ -38,8 +38,9 @@ const WhatsAppButton: React.FC<WhatsAppButtonProps> = ({ phoneNumber }) => {
             }}
           >
             <MessageCircle className="h-6 w-6" />
-            <motion.span 
-              className="absolute -top-1 -right-1 bg-red-500 w-3 h-3 rounded-full"
+            <motion.div
+              className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-[10px] font-bold"
+              initial={{ scale: 0 }}
               animate={{ 
                 scale: [1, 1.2, 1],
               }}
@@ -47,6 +48,21 @@ const WhatsAppButton: React.FC<WhatsAppButtonProps> = ({ phoneNumber }) => {
                 duration: 1.5,
                 repeat: Infinity,
                 repeatType: "reverse"
+              }}
+            >
+              1
+            </motion.div>
+            <motion.div
+              className="absolute -z-10 inset-0 rounded-full bg-white opacity-30"
+              initial={{ scale: 1 }}
+              animate={{ 
+                scale: [1, 1.5, 1],
+                opacity: [0.3, 0, 0.3]
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                repeatType: "loop"
               }}
             />
           </motion.button>

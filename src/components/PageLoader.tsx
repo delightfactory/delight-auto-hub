@@ -3,7 +3,15 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { LoaderCircle } from 'lucide-react';
 
-const PageLoader: React.FC = () => {
+interface PageLoaderProps {
+  message?: string;
+  showProgressBar?: boolean;
+}
+
+const PageLoader: React.FC<PageLoaderProps> = ({ 
+  message = "جاري التحميل...",
+  showProgressBar = true 
+}) => {
   return (
     <div className="flex flex-col items-center justify-center min-h-[70vh]">
       <motion.div
@@ -24,21 +32,23 @@ const PageLoader: React.FC = () => {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
         >
-          <div className="h-1 w-40 bg-gray-200 rounded-full overflow-hidden">
-            <motion.div
-              className="h-full bg-delight-500"
-              initial={{ width: "0%" }}
-              animate={{ width: "100%" }}
-              transition={{ duration: 2, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
-            />
-          </div>
+          {showProgressBar && (
+            <div className="h-1 w-40 bg-gray-200 rounded-full overflow-hidden">
+              <motion.div
+                className="h-full bg-delight-500"
+                initial={{ width: "0%" }}
+                animate={{ width: "100%" }}
+                transition={{ duration: 2, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
+              />
+            </div>
+          )}
           <motion.p
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
             className="mt-4 text-delight-700 font-medium text-center"
           >
-            جاري التحميل...
+            {message}
           </motion.p>
         </motion.div>
       </motion.div>
