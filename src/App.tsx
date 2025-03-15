@@ -12,9 +12,12 @@ import AboutPage from "./pages/AboutPage";
 import ProductsPage from "./pages/ProductsPage";
 import ProductPage from "./pages/ProductPage";
 import FactoryPage from "./pages/FactoryPage";
+import ArticlesPage from "./pages/ArticlesPage";
+import ArticleDetailPage from "./pages/ArticleDetailPage";
 import NotFound from "./pages/NotFound";
 import Sidebar from "./components/Sidebar";
 import { CartProvider } from "./context/CartContext";
+import { ThemeProvider } from "./context/ThemeContext";
 import WhatsAppButton from "./components/WhatsAppButton";
 import PageLoader from "./components/PageLoader";
 import FloatingCartButton from "./components/FloatingCartButton";
@@ -98,6 +101,8 @@ const AnimatedRoutes = () => {
             <Route path="/products" element={<ProductsPage />} />
             <Route path="/products/:productId" element={<ProductPage />} />
             <Route path="/factory" element={<FactoryPage />} />
+            <Route path="/articles" element={<ArticlesPage />} />
+            <Route path="/articles/:articleId" element={<ArticleDetailPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
@@ -109,41 +114,43 @@ const AnimatedRoutes = () => {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <CartProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner 
-          position="top-right" 
-          closeButton 
-          richColors
-          expand
-          toastOptions={{
-            style: {
-              background: 'rgba(255, 255, 255, 0.1)',
-              backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              color: 'white',
-              direction: 'rtl',
-            }
-          }}
-        />
-        <BrowserRouter>
-          <div className="flex flex-col lg:flex-row min-h-screen">
-            <Sidebar />
-            <motion.main 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5 }}
-              className="flex-1 min-h-screen pt-16 lg:pt-0 lg:pr-72 xl:pr-80 glass-panel"
-            >
-              <AnimatedRoutes />
-            </motion.main>
-            <WhatsAppButton phoneNumber="00201211668511" />
-            <FloatingCartButton />
-          </div>
-        </BrowserRouter>
-      </TooltipProvider>
-    </CartProvider>
+    <ThemeProvider>
+      <CartProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner 
+            position="top-right" 
+            closeButton 
+            richColors
+            expand
+            toastOptions={{
+              style: {
+                background: 'rgba(255, 255, 255, 0.1)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                color: 'white',
+                direction: 'rtl',
+              }
+            }}
+          />
+          <BrowserRouter>
+            <div className="flex flex-col lg:flex-row min-h-screen">
+              <Sidebar />
+              <motion.main 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+                className="flex-1 min-h-screen pt-16 lg:pt-0 lg:pr-72 xl:pr-80 glass-panel"
+              >
+                <AnimatedRoutes />
+              </motion.main>
+              <WhatsAppButton phoneNumber="00201211668511" />
+              <FloatingCartButton />
+            </div>
+          </BrowserRouter>
+        </TooltipProvider>
+      </CartProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 
