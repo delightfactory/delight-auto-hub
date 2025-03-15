@@ -1,19 +1,28 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingCart, X, ShoppingBag } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
-import { toast } from '@/components/ui/use-toast';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from '@/components/ui/sheet';
 import CartDropdown from './CartDropdown';
 
 const FloatingCartButton: React.FC = () => {
   const { itemCount } = useCart();
   const [isOpen, setIsOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+  
+  useEffect(() => {
+    // Ensure the component is mounted before showing any animations
+    // This prevents hydration issues
+    setIsMounted(true);
+  }, []);
   
   const handleClick = () => {
+    console.log("FloatingCartButton clicked, opening cart");
     setIsOpen(true);
   };
+
+  if (!isMounted) return null;
 
   return (
     <>

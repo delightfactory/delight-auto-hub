@@ -58,7 +58,9 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose }) => {
       description: "سنتواصل معك قريباً للتأكيد والشحن",
       variant: "default",
     });
+    // Important: Clear the cart properly when completing checkout
     clearCart();
+    // Close the checkout modal
     onClose();
   };
 
