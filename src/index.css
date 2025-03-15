@@ -181,6 +181,32 @@
       opacity: 0.05; /* Reduce opacity on mobile for better contrast */
     }
   }
+  
+  /* Large screen enhancements */
+  @media (min-width: 1536px) {
+    .container-custom {
+      max-width: 1400px; /* Wider container for 2xl screens */
+    }
+    
+    body {
+      font-size: 18px; /* Slightly larger base font for large screens */
+    }
+  }
+  
+  /* Better card styling */
+  .product-card {
+    @apply bg-white rounded-xl shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md hover:-translate-y-1;
+  }
+  
+  /* Enhanced button styles */
+  .btn-primary {
+    @apply bg-gradient-to-r from-delight-600 to-delight-700 hover:from-delight-700 hover:to-delight-800 text-white px-4 py-2 rounded-lg shadow-sm hover:shadow-md transition-all;
+  }
+  
+  /* Glass card effect */
+  .glass-card {
+    @apply bg-white/80 backdrop-blur-sm border border-white/20 rounded-xl shadow-sm;
+  }
 }
 
 @layer utilities {
@@ -217,7 +243,11 @@
 
   /* Responsive text sizes */
   .responsive-text {
-    @apply text-base md:text-lg lg:text-xl;
+    @apply text-base md:text-lg lg:text-xl xl:text-2xl;
+  }
+  
+  .responsive-heading {
+    @apply text-2xl md:text-3xl lg:text-4xl xl:text-5xl;
   }
 
   /* Mobile specific utils */
@@ -228,6 +258,25 @@
   /* Touch-friendly targets */
   .touch-target {
     @apply min-h-[44px] min-w-[44px];
+  }
+  
+  /* Large screen specific utilities */
+  .xl-container {
+    @apply max-w-screen-xl mx-auto px-8;
+  }
+  
+  .xxl-container {
+    @apply max-w-screen-2xl mx-auto px-10;
+  }
+  
+  /* For larger screens - improved layouts */
+  .xl-grid {
+    @apply grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5;
+  }
+  
+  /* Enhanced focus states for accessibility */
+  .focus-visible-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-delight-500 focus-visible:ring-offset-2;
   }
 }
 

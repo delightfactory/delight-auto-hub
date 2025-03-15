@@ -134,7 +134,7 @@ const App = () => (
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5 }}
-              className="flex-1 min-h-screen pt-16 lg:pt-0 lg:pr-72 glass-panel"
+              className="flex-1 min-h-screen pt-16 lg:pt-0 lg:pr-72 xl:pr-80 glass-panel"
             >
               <AnimatedRoutes />
             </motion.main>

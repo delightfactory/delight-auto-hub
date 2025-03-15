@@ -20,6 +20,7 @@ export default {
 				'lg': '1024px',
 				'xl': '1280px',
 				'2xl': '1536px',
+				'3xl': '1920px', // Added for ultra-wide screens
 			}
 		},
 		extend: {
@@ -133,6 +134,10 @@ export default {
 				'spin-slow': {
 					'0%': { transform: 'rotate(0deg)' },
 					'100%': { transform: 'rotate(360deg)' }
+				},
+				'bounce-light': {
+					'0%, 100%': { transform: 'translateY(0)' },
+					'50%': { transform: 'translateY(-5px)' }
 				}
 			},
 			animation: {
@@ -147,19 +152,30 @@ export default {
 				'slide-up': 'slide-up 0.5s ease-out',
 				'float': 'float 3s ease-in-out infinite',
 				'shine': 'shine 8s ease-in-out infinite',
-				'spin-slow': 'spin-slow 15s linear infinite'
+				'spin-slow': 'spin-slow 15s linear infinite',
+				'bounce-light': 'bounce-light 2s ease-in-out infinite'
 			},
 			fontFamily: {
 				sans: ['Inter', 'sans-serif'],
-				display: ['Lexend', 'sans-serif']
+				display: ['Lexend', 'sans-serif'],
+				arabic: ['Tajawal', 'sans-serif']
 			},
 			boxShadow: {
 				'glass': '0 4px 30px rgba(0, 0, 0, 0.1)',
-				'neobrut': '0.5rem 0.5rem 0 0 rgba(0, 0, 0, 1)'
+				'neobrut': '0.5rem 0.5rem 0 0 rgba(0, 0, 0, 1)',
+				'soft': '0 5px 15px rgba(0, 0, 0, 0.05)',
+				'highlight': '0 0 15px rgba(255, 215, 0, 0.3)'
 			},
 			backgroundImage: {
 				'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-				'shine': 'linear-gradient(to right, transparent, rgba(255, 255, 255, 0.2), transparent)'
+				'shine': 'linear-gradient(to right, transparent, rgba(255, 255, 255, 0.2), transparent)',
+				'gold-gradient': 'linear-gradient(45deg, #B8860B, #FFD700, #DAA520)',
+				'glass-gradient': 'linear-gradient(to right, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.2))'
+			},
+			// Added support for ultra-wide screens
+			screens: {
+				'3xl': '1920px',
+				'4xl': '2560px'
 			}
 		}
 	},

@@ -31,7 +31,7 @@ const Sidebar = () => {
           variant="outline"
           size="icon"
           onClick={toggleSidebar}
-          className="bg-white/80 backdrop-blur-sm shadow-md hover:bg-white hover:shadow-lg transition-all duration-300"
+          className="bg-white/80 backdrop-blur-sm shadow-md hover:bg-white hover:shadow-lg transition-all duration-300 touch-target"
         >
           {isOpen ? <X size={24} /> : <Menu size={24} />}
         </Button>
@@ -56,7 +56,7 @@ const Sidebar = () => {
         className={cn(
           "fixed top-0 right-0 h-full z-40 overflow-y-auto",
           "w-72 transform transition-all duration-300 ease-in-out",
-          "lg:translate-x-0 lg:static lg:w-72",
+          "lg:translate-x-0 lg:static lg:w-72 xl:w-80",
           "bg-gradient-to-b from-white to-delight-50 shadow-xl lg:shadow-md",
           isOpen ? "translate-x-0" : "translate-x-full"
         )}
@@ -95,7 +95,7 @@ const Sidebar = () => {
                     whileTap={{ scale: 0.98 }}
                     className={cn(
                       "flex items-center px-4 py-3 text-base rounded-lg transition-all duration-200",
-                      "hover:bg-delight-50/80 hover:shadow-sm",
+                      "hover:bg-delight-50/80 hover:shadow-sm touch-target",
                       isActive 
                         ? "bg-gradient-to-r from-delight-50 to-delight-100 text-delight-700 font-medium shadow-sm" 
                         : "text-gray-700"

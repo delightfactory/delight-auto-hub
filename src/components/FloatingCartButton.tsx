@@ -30,7 +30,7 @@ const FloatingCartButton: React.FC = () => {
     <>
       <motion.button
         onClick={handleClick}
-        className="fixed bottom-6 right-6 z-50 gold-gradient text-white p-4 rounded-full shadow-lg hover:shadow-xl gold-glow transition-all duration-300"
+        className="fixed bottom-6 right-6 z-50 gold-gradient text-white p-4 rounded-full shadow-lg hover:shadow-xl gold-glow transition-all duration-300 lg:bottom-8 lg:right-8 touch-target"
         whileHover={{ scale: 1.1, boxShadow: "0 0 20px rgba(245, 158, 11, 0.7)" }}
         whileTap={{ scale: 0.9 }}
         initial={{ opacity: 0, y: 20 }}
@@ -41,10 +41,10 @@ const FloatingCartButton: React.FC = () => {
           damping: 15
         }}
       >
-        <ShoppingCart className="h-6 w-6" />
+        <ShoppingCart className="h-6 w-6 lg:h-7 lg:w-7" />
         {itemCount > 0 && (
           <motion.div
-            className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center"
+            className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center lg:w-6 lg:h-6 lg:text-sm"
             initial={{ scale: 0 }}
             animate={{ 
               scale: [1, 1.2, 1],
@@ -73,28 +73,38 @@ const FloatingCartButton: React.FC = () => {
         />
       </motion.button>
 
-      <Sheet open={isOpen} onOpenChange={setIsOpen}>
-        <SheetContent 
-          side="right" 
-          className={`p-0 border-0 bg-transparent ${isMobile ? 'w-full' : 'w-full max-w-md'}`}
-        >
-          <div className="h-full bg-white rounded-l-lg shadow-xl overflow-hidden">
-            <SheetHeader className="p-4 border-b flex items-center justify-between bg-gradient-to-r from-delight-50 to-delight-100">
-              <SheetTitle className="flex items-center gap-2 text-delight-800">
-                <ShoppingBag className="h-5 w-5 text-delight-600" />
-                سلة المشتريات
-              </SheetTitle>
-              <SheetClose className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none disabled:pointer-events-none">
-                <X className="h-5 w-5" />
-                <span className="sr-only">إغلاق</span>
-              </SheetClose>
-            </SheetHeader>
-            <div className="overflow-auto h-[calc(100%-60px)]">
-              <CartDropdown inFloatingMode={true} />
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
+      <AnimatePresence>
+        {isOpen && (
+          <Sheet open={isOpen} onOpenChange={setIsOpen}>
+            <SheetContent 
+              side="right" 
+              className={`p-0 border-0 bg-transparent transition-all duration-300 ease-in-out ${isMobile ? 'w-full' : 'w-full max-w-md xl:max-w-lg'}`}
+            >
+              <motion.div 
+                className="h-full bg-white rounded-l-lg shadow-xl overflow-hidden"
+                initial={{ x: "100%" }}
+                animate={{ x: 0 }}
+                exit={{ x: "100%" }}
+                transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              >
+                <SheetHeader className="p-4 border-b flex items-center justify-between bg-gradient-to-r from-delight-50 to-delight-100">
+                  <SheetTitle className="flex items-center gap-2 text-delight-800">
+                    <ShoppingBag className="h-5 w-5 text-delight-600" />
+                    سلة المشتريات
+                  </SheetTitle>
+                  <SheetClose className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none disabled:pointer-events-none touch-target">
+                    <X className="h-5 w-5" />
+                    <span className="sr-only">إغلاق</span>
+                  </SheetClose>
+                </SheetHeader>
+                <div className="overflow-auto h-[calc(100%-60px)]">
+                  <CartDropdown inFloatingMode={true} />
+                </div>
+              </motion.div>
+            </SheetContent>
+          </Sheet>
+        )}
+      </AnimatePresence>
     </>
   );
 };
