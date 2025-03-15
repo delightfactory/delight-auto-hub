@@ -7,7 +7,7 @@ import ProductCard from '@/components/ProductCard';
 import SectionHeading from '@/components/SectionHeading';
 import { ProductService, Product } from '@/services/productService';
 import PageLoader from '@/components/PageLoader';
-import { LoaderCircle, Filter, Search, RefreshCw, SlidersHorizontal, X } from 'lucide-react';
+import { LoaderCircle, Filter, Search, RefreshCw, SlidersHorizontal, X, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';

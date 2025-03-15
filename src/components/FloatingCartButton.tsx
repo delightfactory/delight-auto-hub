@@ -5,11 +5,13 @@ import { ShoppingCart, X, ShoppingBag } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from '@/components/ui/sheet';
 import CartDropdown from './CartDropdown';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const FloatingCartButton: React.FC = () => {
   const { itemCount } = useCart();
   const [isOpen, setIsOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const isMobile = useIsMobile();
   
   useEffect(() => {
     // Ensure the component is mounted before showing any animations
@@ -72,8 +74,11 @@ const FloatingCartButton: React.FC = () => {
       </motion.button>
 
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
-        <SheetContent side="right" className="w-full max-w-md p-0 border-0 bg-transparent">
-          <div className="h-full bg-white">
+        <SheetContent 
+          side="right" 
+          className={`p-0 border-0 bg-transparent ${isMobile ? 'w-full' : 'w-full max-w-md'}`}
+        >
+          <div className="h-full bg-white rounded-l-lg shadow-xl overflow-hidden">
             <SheetHeader className="p-4 border-b flex items-center justify-between bg-gradient-to-r from-delight-50 to-delight-100">
               <SheetTitle className="flex items-center gap-2 text-delight-800">
                 <ShoppingBag className="h-5 w-5 text-delight-600" />

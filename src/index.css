@@ -167,6 +167,20 @@
     backface-visibility: hidden;
     perspective: 1000px;
   }
+
+  /* Responsive design improvements */
+  @media (max-width: 640px) {
+    .container-custom {
+      @apply px-3;
+    }
+  }
+
+  /* Fix for mobile devices */
+  @media (max-width: 768px) {
+    .stars-container {
+      opacity: 0.05; /* Reduce opacity on mobile for better contrast */
+    }
+  }
 }
 
 @layer utilities {
@@ -200,6 +214,21 @@
     backface-visibility: hidden;
     perspective: 1000px;
   }
+
+  /* Responsive text sizes */
+  .responsive-text {
+    @apply text-base md:text-lg lg:text-xl;
+  }
+
+  /* Mobile specific utils */
+  .mobile-padding {
+    @apply px-3 py-2 md:px-6 md:py-4;
+  }
+
+  /* Touch-friendly targets */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
 }
 
 @keyframes goldShimmer {
@@ -220,4 +249,17 @@
 /* Set font for Arabic */
 html[dir="rtl"] body {
   font-family: 'Tajawal', sans-serif;
+}
+
+/* Enhanced print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  .print-break-before {
+    page-break-before: always;
+  }
+  .print-break-after {
+    page-break-after: always;
+  }
 }
