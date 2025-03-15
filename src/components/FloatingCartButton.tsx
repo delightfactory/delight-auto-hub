@@ -20,7 +20,6 @@ const FloatingCartButton: React.FC = () => {
   }, []);
   
   const handleClick = () => {
-    console.log("FloatingCartButton clicked, opening cart");
     setIsOpen(true);
   };
 
@@ -78,10 +77,10 @@ const FloatingCartButton: React.FC = () => {
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetContent 
               side="right" 
-              className={`p-0 border-0 bg-transparent transition-all duration-300 ease-in-out ${isMobile ? 'w-full' : 'w-full max-w-md xl:max-w-lg'}`}
+              className="p-0 border-0 bg-transparent transition-all duration-300 ease-in-out w-full max-w-md xl:max-w-lg"
             >
               <motion.div 
-                className="h-full bg-white rounded-l-lg shadow-xl overflow-hidden"
+                className="h-full bg-white rounded-l-lg shadow-xl overflow-hidden flex flex-col"
                 initial={{ x: "100%" }}
                 animate={{ x: 0 }}
                 exit={{ x: "100%" }}
@@ -97,7 +96,7 @@ const FloatingCartButton: React.FC = () => {
                     <span className="sr-only">إغلاق</span>
                   </SheetClose>
                 </SheetHeader>
-                <div className="overflow-auto h-[calc(100%-60px)]">
+                <div className="flex-grow overflow-auto max-h-[calc(100vh-60px)]">
                   <CartDropdown inFloatingMode={true} />
                 </div>
               </motion.div>

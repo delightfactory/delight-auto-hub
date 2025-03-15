@@ -53,7 +53,7 @@ const CartDropdown: React.FC<CartDropdownProps> = ({ inFloatingMode = false }) =
           <p className="text-sm text-gray-400 mt-2">أضف منتجات من صفحة المنتجات</p>
         </motion.div>
       ) : (
-        <motion.ul layout className="space-y-4">
+        <motion.ul layout className="space-y-4 pb-4">
           {items.map((item) => (
             <CartItemCard 
               key={item.id} 
@@ -69,7 +69,7 @@ const CartDropdown: React.FC<CartDropdownProps> = ({ inFloatingMode = false }) =
 
   // Inline cart footer - used in both modes
   const renderCartFooter = () => (
-    <div className="p-4 border-t bg-gradient-to-b from-white to-delight-50">
+    <div className="p-4 border-t bg-gradient-to-b from-white to-delight-50 sticky bottom-0 z-10 mt-auto">
       <div className="flex justify-between items-center mb-4">
         <span className="font-semibold text-gray-700">المجموع:</span>
         <span className="text-lg font-bold text-delight-700">{total}</span>
@@ -94,7 +94,7 @@ const CartDropdown: React.FC<CartDropdownProps> = ({ inFloatingMode = false }) =
   // If in floating mode, just render the cart content
   if (inFloatingMode) {
     return (
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full max-h-[calc(100vh-60px)]">
         {showCheckout ? (
           <div className="flex flex-col h-full">
             <div className="p-4 border-b flex items-center justify-between bg-gradient-to-r from-delight-50 to-delight-100">
@@ -103,7 +103,7 @@ const CartDropdown: React.FC<CartDropdownProps> = ({ inFloatingMode = false }) =
                 إتمام الطلب
               </h2>
             </div>
-            <div className="flex-grow overflow-auto">
+            <div className="flex-grow overflow-auto pb-16">
               <Checkout onClose={handleCloseCheckout} />
             </div>
           </div>
@@ -184,7 +184,7 @@ const CartDropdown: React.FC<CartDropdownProps> = ({ inFloatingMode = false }) =
                       <X className="h-5 w-5" />
                     </Button>
                   </div>
-                  <div className="flex-grow overflow-auto">
+                  <div className="flex-grow overflow-auto pb-16">
                     <Checkout onClose={handleCloseCheckout} />
                   </div>
                 </div>

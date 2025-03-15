@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -15,7 +15,8 @@ import {
   ShoppingCart, 
   Book, 
   Sun, 
-  Moon
+  Moon,
+  ChevronLeft
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';
@@ -32,11 +33,27 @@ const navItems = [
   { path: '/contact', label: 'اتصل بنا', icon: Phone },
 ];
 
-const Sidebar = () => {
-  const [isOpen, setIsOpen] = useState(false);
+interface SidebarProps {
+  isOpen: boolean;
+  setIsOpen: (isOpen: boolean) => void;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
   const location = useLocation();
   const { itemCount } = useCart();
   const { theme, toggleTheme } = useTheme();
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const toggleSidebar = () => setIsOpen(!isOpen);
 
@@ -58,9 +75,25 @@ const Sidebar = () => {
         </Button>
       </div>
 
+      {/* Desktop sidebar toggle (outside the sidebar) */}
+      <div className="hidden lg:block fixed left-4 top-4 z-50">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={toggleSidebar}
+          className={`backdrop-blur-sm shadow-md hover:shadow-lg transition-all duration-300 touch-target ${
+            theme === 'dark' 
+              ? 'bg-gray-800/80 hover:bg-gray-700/80 text-white' 
+              : 'bg-white/80 hover:bg-white text-gray-800'
+          }`}
+        >
+          {isOpen ? <ChevronRight size={24} /> : <ChevronLeft size={24} />}
+        </Button>
+      </div>
+
       {/* Overlay for mobile */}
       <AnimatePresence>
-        {isOpen && (
+        {isOpen && isMobile && (
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -77,14 +110,17 @@ const Sidebar = () => {
         className={cn(
           "fixed top-0 right-0 h-full z-40 overflow-y-auto",
           "w-72 transform transition-all duration-300 ease-in-out",
-          "lg:translate-x-0 lg:static lg:w-72 xl:w-80",
           theme === 'dark'
-            ? "bg-gradient-to-b from-gray-800 to-gray-900 text-white shadow-xl lg:shadow-md"
-            : "bg-gradient-to-b from-white to-delight-50 text-gray-800 shadow-xl lg:shadow-md",
-          isOpen ? "translate-x-0" : "translate-x-full"
+            ? "bg-gradient-to-b from-gray-800 to-gray-900 text-white shadow-xl"
+            : "bg-gradient-to-b from-white to-delight-50 text-gray-800 shadow-xl",
+          isOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0 lg:w-0 lg:opacity-0"
         )}
-        initial={{ x: "100%" }}
-        animate={{ x: isOpen ? 0 : "100%" }}
+        initial={false}
+        animate={{ 
+          x: isOpen ? 0 : "100%",
+          width: isOpen ? "18rem" : (isMobile ? "18rem" : "0rem"),
+          opacity: isOpen ? 1 : (isMobile ? 1 : 0)
+        }}
         transition={{ duration: 0.3, type: "spring", stiffness: 300, damping: 30 }}
       >
         <div className="p-6">
@@ -146,7 +182,7 @@ const Sidebar = () => {
                 <Link
                   key={item.path}
                   to={item.path}
-                  onClick={() => setIsOpen(false)}
+                  onClick={() => isMobile && setIsOpen(false)}
                 >
                   <motion.div
                     whileHover={{ x: -5, backgroundColor: theme === 'dark' ? "rgba(31, 41, 55, 0.8)" : "rgba(238, 247, 255, 0.8)" }}
