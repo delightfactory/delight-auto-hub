@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useMemo } from 'react';
+
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { motion, useAnimation } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -14,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose, SheetTrigger } from '@/components/ui/sheet';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const categories = [
   { id: 'all', name: 'الكل' },
@@ -28,6 +30,23 @@ interface Filters {
   priceRange: [number, number];
   rating: number | null;
 }
+
+// Product card skeleton loader
+const ProductCardSkeleton = () => (
+  <div className="overflow-hidden rounded-xl bg-white border border-gray-100 shadow-sm p-2">
+    <Skeleton className="aspect-[4/3] w-full mb-4" />
+    <div className="p-4 space-y-3">
+      <Skeleton className="h-4 w-3/4" />
+      <Skeleton className="h-3 w-full" />
+      <Skeleton className="h-3 w-full" />
+      <Skeleton className="h-5 w-1/4" />
+      <div className="flex gap-2 pt-2">
+        <Skeleton className="h-9 w-full" />
+        <Skeleton className="h-9 w-full" />
+      </div>
+    </div>
+  </div>
+);
 
 const ProductsPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -44,26 +63,35 @@ const ProductsPage: React.FC = () => {
   const controls = useAnimation();
   const { toast } = useToast();
 
+  // Calculate price range based on products
   const priceRange = useMemo(() => {
-    if (products.length === 0) return [0, 500];
+    if (products.length === 0) {
+      // Default values when no products are loaded
+      return [0, 500];
+    }
     
     const prices = products.map(product => {
       const numericPrice = parseInt(product.price.replace(/\D/g, ''), 10);
       return isNaN(numericPrice) ? 0 : numericPrice;
     });
     
-    return [
-      Math.min(...prices),
-      Math.max(...prices)
-    ];
+    // Add small buffer to min/max for better UX
+    const min = Math.max(0, Math.floor(Math.min(...prices) * 0.9));
+    const max = Math.ceil(Math.max(...prices) * 1.1);
+    
+    return [min, max];
   }, [products]);
 
-  const loadProducts = async () => {
+  // Load products with retry mechanism
+  const loadProducts = useCallback(async () => {
     setIsLoading(true);
     setLoadingError(null);
     
     try {
+      // Simulate network delay for better UX
       await new Promise(resolve => setTimeout(resolve, 800));
+      
+      // Get products from service
       const allProducts = ProductService.getAllProducts();
       
       console.log("Fetched products:", allProducts);
@@ -72,13 +100,14 @@ const ProductsPage: React.FC = () => {
         throw new Error("لم يتم العثور على منتجات");
       }
       
+      // Set products and initialize filters with proper price range
       setProducts(allProducts);
       
-      setFilters({
-        category: 'all',
-        priceRange: [priceRange[0], priceRange[1]],
-        rating: null
-      });
+      // Initialize filters with the actual price range from products
+      setFilters(prev => ({
+        ...prev,
+        priceRange: [priceRange[0], priceRange[1]]
+      }));
       
       controls.start('visible');
       
@@ -94,30 +123,40 @@ const ProductsPage: React.FC = () => {
         title: "حدث خطأ",
         description: "لم نتمكن من تحميل المنتجات، يرجى المحاولة مرة أخرى",
         variant: "destructive",
+        duration: 5000,
       });
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [priceRange, toast, controls]);
 
+  // Load products on component mount with dependency on loadProducts
   useEffect(() => {
     console.log("ProductsPage mounted, loading products...");
     loadProducts();
     
+    // Animation timing
     const timer = setTimeout(() => {
       controls.start('visible');
     }, 1000);
     
     return () => clearTimeout(timer);
-  }, []);
+  }, [loadProducts, controls]);
 
+  // Filter products based on user selections
   const filteredProducts = useMemo(() => {
+    if (!products || products.length === 0) {
+      return [];
+    }
+    
     return products.filter(product => {
+      // Search term filter - check name and description
       const matchesSearch = 
         searchTerm === '' || 
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
         product.description.toLowerCase().includes(searchTerm.toLowerCase());
-        
+      
+      // Category filter  
       const matchesCategory = 
         filters.category === 'all' || 
         (
@@ -126,20 +165,25 @@ const ProductsPage: React.FC = () => {
           (filters.category === 'protection' && (product.name.includes('حماية') || product.name.includes('واقي') || product.description.includes('حماية') || product.description.includes('واقي'))) ||
           (filters.category === 'tire' && (product.name.includes('إطار') || product.description.includes('إطار')))
         );
-        
+      
+      // Price range filter  
       const productPrice = parseInt(product.price.replace(/\D/g, ''), 10);
       const matchesPrice = 
+        !isNaN(productPrice) && 
         productPrice >= filters.priceRange[0] && 
         productPrice <= filters.priceRange[1];
-        
+      
+      // Rating filter  
       const matchesRating = 
         filters.rating === null || 
         product.rating >= filters.rating;
-        
+      
+      // Product must match all active filters
       return matchesSearch && matchesCategory && matchesPrice && matchesRating;
     });
   }, [products, searchTerm, filters]);
 
+  // Animation variants
   const staggerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -164,7 +208,8 @@ const ProductsPage: React.FC = () => {
     }
   };
 
-  const resetFilters = () => {
+  // Reset all filters
+  const resetFilters = useCallback(() => {
     setFilters({
       category: 'all',
       priceRange: [priceRange[0], priceRange[1]],
@@ -177,31 +222,66 @@ const ProductsPage: React.FC = () => {
       description: "تم عرض جميع المنتجات",
       duration: 2000,
     });
-  };
+  }, [priceRange, toast]);
 
-  const handleCategoryChange = (categoryId: string) => {
+  // Event handlers for filters
+  const handleCategoryChange = useCallback((categoryId: string) => {
     setFilters(prev => ({
       ...prev,
       category: categoryId
     }));
-  };
+  }, []);
 
-  const handlePriceRangeChange = (value: number[]) => {
+  const handlePriceRangeChange = useCallback((value: number[]) => {
     setFilters(prev => ({
       ...prev,
       priceRange: [value[0], value[1]]
     }));
-  };
+  }, []);
 
-  const handleRatingChange = (rating: number | null) => {
+  const handleRatingChange = useCallback((rating: number | null) => {
     setFilters(prev => ({
       ...prev,
       rating
     }));
-  };
+  }, []);
 
+  // Loading skeletons
   if (isLoading) {
-    return <PageLoader message="جاري تحميل المنتجات..." />;
+    return (
+      <div className="pb-20">
+        <section className="bg-gradient-to-r from-delight-800 to-blue-900 py-20 text-white">
+          <div className="container-custom">
+            <div className="max-w-xl mx-auto">
+              <Skeleton className="h-12 w-3/4 mb-4 bg-white/20" />
+              <Skeleton className="h-4 w-full bg-white/10" />
+            </div>
+          </div>
+        </section>
+        
+        <section className="py-8 bg-delight-50/50 backdrop-blur-sm sticky top-0 z-30 border-b border-delight-100">
+          <div className="container-custom">
+            <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
+              <Skeleton className="h-10 w-full md:w-1/3" />
+              <div className="flex gap-2">
+                <Skeleton className="h-10 w-24" />
+                <Skeleton className="h-10 w-32" />
+              </div>
+            </div>
+          </div>
+        </section>
+        
+        <section className="py-16">
+          <div className="container-custom">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[...Array(6)].map((_, index) => (
+                <ProductCardSkeleton key={index} />
+              ))}
+            </div>
+          </div>
+        </section>
+      </div>
+    );
   }
 
   return (
@@ -228,7 +308,7 @@ const ProductsPage: React.FC = () => {
         </div>
       </motion.section>
 
-      <section className="py-8 bg-delight-50/50 backdrop-blur-sm sticky top-0 z-30 border-b border-delight-100">
+      <section className="py-8 bg-white sticky top-0 z-30 border-b border-gray-200 shadow-sm">
         <div className="container-custom">
           <motion.div 
             className="flex flex-col md:flex-row gap-4 justify-between items-center"
@@ -242,7 +322,7 @@ const ProductsPage: React.FC = () => {
               </div>
               <input
                 type="text"
-                className="block w-full pr-10 py-3 border border-gray-300 rounded-lg focus:ring-delight-500 focus:border-delight-500"
+                className="block w-full pr-10 py-3 border border-gray-300 rounded-lg focus:ring-amazon-link focus:border-amazon-link focus:outline-none"
                 placeholder="ابحث عن منتج..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -261,11 +341,11 @@ const ProductsPage: React.FC = () => {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="flex items-center gap-2 py-3 px-4 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50"
+                className="flex items-center gap-2 py-3 px-4 bg-amazon-light border border-gray-300 rounded-lg shadow-sm hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-amazon-orange"
                 onClick={() => loadProducts()}
               >
-                <RefreshCw className="h-5 w-5 text-delight-600" />
-                <span>تحديث</span>
+                <RefreshCw className="h-5 w-5 text-amazon-orange" />
+                <span className="text-amazon-dark font-medium">تحديث</span>
               </motion.button>
               
               <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
@@ -273,13 +353,15 @@ const ProductsPage: React.FC = () => {
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="flex items-center gap-2 py-3 px-4 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50"
+                    className="flex items-center gap-2 py-3 px-4 bg-amazon-secondary text-white border border-amazon-secondary rounded-lg shadow-sm hover:bg-amazon-primary focus:outline-none focus:ring-2 focus:ring-amazon-orange"
                   >
-                    <SlidersHorizontal className="h-5 w-5 text-delight-600" />
+                    <SlidersHorizontal className="h-5 w-5" />
                     <span>تصفية النتائج</span>
                     {(filters.category !== 'all' || filters.rating !== null || 
                       filters.priceRange[0] !== priceRange[0] || filters.priceRange[1] !== priceRange[1]) && (
-                      <Badge className="bg-delight-500 hover:bg-delight-600 mr-2">تصفية نشطة</Badge>
+                      <Badge className="bg-amazon-orange hover:bg-amazon-orange/90 mr-2">
+                        تصفية نشطة
+                      </Badge>
                     )}
                   </motion.button>
                 </SheetTrigger>
@@ -295,6 +377,7 @@ const ProductsPage: React.FC = () => {
                             id={`category-${category.id}`}
                             checked={filters.category === category.id}
                             onCheckedChange={() => handleCategoryChange(category.id)}
+                            className="data-[state=checked]:bg-amazon-orange data-[state=checked]:border-amazon-orange"
                           />
                           <label 
                             htmlFor={`category-${category.id}`}
@@ -324,23 +407,25 @@ const ProductsPage: React.FC = () => {
                       
                       <Separator />
                       
-                      {[null, 5, 4, 3, 2, 1].map((rating, i) => (
-                        <Badge 
-                          key={i}
-                          variant={filters.rating === rating ? "default" : "outline"}
-                          className={`cursor-pointer ${filters.rating === rating ? 'bg-delight-600' : ''}`}
-                          onClick={() => handleRatingChange(rating)}
-                        >
-                          {rating === null ? 'الكل' : `${rating}+`}
-                          {rating !== null && (
-                            <span className="ml-1 inline-flex">
-                              {[...Array(rating)].map((_, i) => (
-                                <Star key={i} className="w-3 h-3 fill-current" />
-                              ))}
-                            </span>
-                          )}
-                        </Badge>
-                      ))}
+                      <div className="flex flex-wrap gap-2">
+                        {[null, 5, 4, 3, 2, 1].map((rating, i) => (
+                          <Badge 
+                            key={i}
+                            variant={filters.rating === rating ? "default" : "outline"}
+                            className={`cursor-pointer ${filters.rating === rating ? 'bg-amazon-orange border-amazon-orange' : ''}`}
+                            onClick={() => handleRatingChange(rating)}
+                          >
+                            {rating === null ? 'الكل' : `${rating}+`}
+                            {rating !== null && (
+                              <span className="mr-1 inline-flex">
+                                {[...Array(rating)].map((_, i) => (
+                                  <Star key={i} className="w-3 h-3 fill-current" />
+                                ))}
+                              </span>
+                            )}
+                          </Badge>
+                        ))}
+                      </div>
                     </div>
                     
                     <div className="mt-8 space-y-2">
@@ -353,7 +438,7 @@ const ProductsPage: React.FC = () => {
                       </Button>
                       <Button 
                         onClick={() => setIsFilterSheetOpen(false)}
-                        className="w-full"
+                        className="w-full bg-amazon-orange hover:bg-amazon-orange/90 text-white"
                       >
                         عرض {filteredProducts.length} منتج
                       </Button>
@@ -417,7 +502,7 @@ const ProductsPage: React.FC = () => {
                 variant="ghost" 
                 size="sm" 
                 onClick={resetFilters}
-                className="text-xs"
+                className="text-xs text-amazon-link hover:text-amazon-orange hover:bg-transparent"
               >
                 إعادة ضبط الكل
               </Button>
@@ -441,7 +526,7 @@ const ProductsPage: React.FC = () => {
                 </div>
                 <Button 
                   onClick={loadProducts}
-                  className="bg-delight-500 hover:bg-delight-600 transition-colors"
+                  className="bg-amazon-orange hover:bg-amazon-orange/90 text-white transition-colors"
                 >
                   <RefreshCw className="w-5 h-5 ml-2" />
                   إعادة المحاولة
@@ -461,7 +546,7 @@ const ProductsPage: React.FC = () => {
                 </div>
                 <Button 
                   onClick={resetFilters}
-                  className="bg-delight-500 hover:bg-delight-600 transition-colors"
+                  className="bg-amazon-orange hover:bg-amazon-orange/90 text-white transition-colors"
                 >
                   إعادة ضبط التصفية
                 </Button>
@@ -499,14 +584,14 @@ const ProductsPage: React.FC = () => {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.8 }}
               >
-                <p className="text-delight-700 mb-4">تم عرض {filteredProducts.length} من {products.length} منتج</p>
+                <p className="text-amazon-orange font-medium mb-4">تم عرض {filteredProducts.length} من {products.length} منتج</p>
               </motion.div>
             </>
           )}
         </div>
       </section>
 
-      <section className="bg-delight-50 py-16">
+      <section className="bg-amazon-light py-16">
         <div className="container-custom text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -527,7 +612,7 @@ const ProductsPage: React.FC = () => {
               className="mt-8"
             >
               <Link to="/contact">
-                <Button className="bg-gradient-to-r from-delight-600 to-delight-700 hover:from-delight-700 hover:to-delight-800 text-white px-8 py-6 rounded-lg shadow-md hover:shadow-lg transition-all text-lg">
+                <Button className="amazon-btn-primary px-8 py-6 rounded-lg shadow-md hover:shadow-lg transition-all text-lg">
                   تواصل معنا
                 </Button>
               </Link>

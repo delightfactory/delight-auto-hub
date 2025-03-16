@@ -53,6 +53,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
     toast({
       title: "تمت الإضافة إلى السلة",
       description: `تمت إضافة ${name} إلى سلة التسوق بنجاح.`,
+      duration: 3000,
     });
   };
 
@@ -65,6 +66,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
       toast({
         title: "تمت الإضافة للمفضلة",
         description: `تم إضافة ${name} إلى المفضلة.`,
+        duration: 3000,
       });
     }
   };
@@ -76,7 +78,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
       transition={{ duration: 0.5 }}
       whileHover={{ y: -8, boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)" }}
       className={cn(
-        'group overflow-hidden rounded-xl bg-white/90 backdrop-blur-sm border border-white/20 shadow-lg hover:shadow-xl transition-all duration-300',
+        'group overflow-hidden rounded-xl bg-white border border-gray-200 shadow-sm hover:shadow-xl transition-all duration-300',
         className
       )}
     >
@@ -88,7 +90,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
           className="absolute top-3 right-3 z-10 bg-white/80 backdrop-blur-sm p-2 rounded-full shadow-sm"
         >
           <Heart 
-            className={`w-4 h-4 ${isLiked ? 'fill-red-500 text-red-500' : 'text-gray-500'}`} 
+            className={`w-4 h-4 ${isLiked ? 'fill-amazon-warning text-amazon-warning' : 'text-gray-500'}`} 
           />
         </motion.button>
         
@@ -98,6 +100,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
           src={image}
           alt={name}
           className="h-full w-full object-cover transition-all"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.src = 'https://placehold.co/600x400/e2e8f0/1e293b?text=Delight+Car+Products';
+          }}
         />
         
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -124,7 +130,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
             onClick={handleAddToCart}
             className="flex-1"
           >
-            <Button className="w-full gold-gradient hover:brightness-110 text-white shadow-md group">
+            <Button className="w-full bg-amazon-yellow hover:bg-amber-400 text-amazon-dark shadow-md group">
               {isAddedToCart ? (
                 <>
                   <Check className="w-4 h-4 ml-2" />
@@ -147,7 +153,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
             {[...Array(5)].map((_, i) => (
               <Star 
                 key={i} 
-                className={`w-3 h-3 ${i < Math.floor(rating) ? 'fill-amber-400 text-amber-400' : 'fill-gray-200 text-gray-200'}`} 
+                className={`w-3 h-3 ${i < Math.floor(rating) ? 'fill-amazon-orange text-amazon-orange' : 'fill-gray-200 text-gray-200'}`} 
               />
             ))}
             <span className="text-xs font-medium text-gray-500 mr-1">({rating})</span>
@@ -167,7 +173,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
           </AnimatePresence>
         </div>
         
-        <h3 className="text-xl font-bold mb-2 text-gray-800 line-clamp-1 group-hover:text-delight-700 transition-colors">
+        <h3 className="text-xl font-bold mb-2 text-amazon-dark line-clamp-1 group-hover:text-amazon-link transition-colors">
           {name}
         </h3>
         
@@ -176,13 +182,13 @@ const ProductCard: React.FC<ProductCardProps> = ({
         </p>
         
         {price && (
-          <div className="text-delight-700 font-bold mb-4 text-lg">{price}</div>
+          <div className="amazon-price mb-4 text-lg">{price}</div>
         )}
         
         <div className="flex justify-between">
           <Link to={`/products/${id}`}>
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button variant="outline" className="border-delight-200 text-delight-700 hover:bg-delight-50 hover:text-delight-800">
+              <Button variant="outline" className="border-gray-200 text-amazon-link hover:bg-gray-50 hover:text-amazon-link hover:border-gray-300">
                 <Eye className="w-4 h-4 ml-2" />
                 <span>التفاصيل</span>
               </Button>
@@ -200,7 +206,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 "transition-all duration-300",
                 isAddedToCart
                   ? "bg-green-600 hover:bg-green-700 text-white"
-                  : "bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-600 hover:to-amber-500 text-white"
+                  : "amazon-btn-primary"
               )}
               onClick={handleAddToCart}
             >
