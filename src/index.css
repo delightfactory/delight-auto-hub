@@ -2,86 +2,100 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Import Amazon Ember font */
-@import url('https://fonts.cdnfonts.com/css/amazon-ember');
-
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 20 14.3% 4.1%;
+    --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
-    --card-foreground: 20 14.3% 4.1%;
+    --card-foreground: 222.2 84% 4.9%;
  
     --popover: 0 0% 100%;
-    --popover-foreground: 20 14.3% 4.1%;
+    --popover-foreground: 222.2 84% 4.9%;
  
-    --primary: 24 9.8% 10%;
-    --primary-foreground: 60 9.1% 97.8%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 210 40% 98%;
  
-    --secondary: 60 4.8% 95.9%;
-    --secondary-foreground: 24 9.8% 10%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
  
-    --muted: 60 4.8% 95.9%;
-    --muted-foreground: 25 5.3% 44.7%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
  
-    --accent: 60 4.8% 95.9%;
-    --accent-foreground: 24 9.8% 10%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
  
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 60 9.1% 97.8%;
+    --destructive-foreground: 210 40% 98%;
 
-    --border: 20 5.9% 90%;
-    --input: 20 5.9% 90%;
-    --ring: 24 5.4% 63.9%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 217 91% 60%;
  
-    --radius: 0.3rem;
+    --radius: 0.5rem;
 
-    /* Amazon-specific colors */
-    --amazon-primary: 214 42% 10%;    /* #131921 - Dark blue/black */
-    --amazon-secondary: 215 28% 17%;  /* #232f3e - Slightly lighter blue */
-    --amazon-orange: 36 100% 50%;     /* #FF9900 - Amazon orange */
-    --amazon-yellow: 48 100% 50%;     /* #FFD814 - Button yellow */
-    --amazon-link: 196 100% 47%;      /* #007bff - Link blue */
-    --amazon-warning: 0 100% 42%;     /* #B12704 - Red for warnings/pricing */
-    --amazon-success: 165 83% 32%;    /* #067D62 - Green for success */
-    --amazon-light: 0 0% 96%;         /* #F5F5F5 - Light gray bg */
-    --amazon-dark: 210 7% 5%;         /* #0F1111 - Very dark text */
+    /* Delight Theme Colors - Updated to match modern e-commerce */
+    --delight-50: 210 100% 96%;
+    --delight-100: 210 96% 91%;
+    --delight-200: 209 96% 81%;
+    --delight-300: 214 96% 71%;
+    --delight-400: 217 96% 59%;
+    --delight-500: 218 92% 50%;
+    --delight-600: 221 92% 43%;
+    --delight-700: 224 94% 36%;
+    --delight-800: 226 92% 28%;
+    --delight-900: 228 86% 22%;
+    --delight-950: 230 80% 17%;
+
+    /* Sidebar Colors */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 222.2 84% 4.9%;
+    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 210 40% 96.1%;
+    --sidebar-accent-foreground: 222.2 47.4% 11.2%;
+    --sidebar-border: 214.3 31.8% 91.4%;
+    --sidebar-ring: 217 91% 60%;
   }
   
   .dark {
-    --background: 20 14.3% 4.1%;
-    --foreground: 60 9.1% 97.8%;
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
  
-    --card: 20 14.3% 4.1%;
-    --card-foreground: 60 9.1% 97.8%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
  
-    --popover: 20 14.3% 4.1%;
-    --popover-foreground: 60 9.1% 97.8%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
  
-    --primary: 60 9.1% 97.8%;
-    --primary-foreground: 24 9.8% 10%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 240 5.9% 10%;
  
-    --secondary: 12 6.5% 15.1%;
-    --secondary-foreground: 60 9.1% 97.8%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
  
-    --muted: 12 6.5% 15.1%;
-    --muted-foreground: 24 5.4% 63.9%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
  
-    --accent: 12 6.5% 15.1%;
-    --accent-foreground: 60 9.1% 97.8%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
  
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 60 9.1% 97.8%;
+    --destructive-foreground: 0 0% 98%;
  
-    --border: 12 6.5% 15.1%;
-    --input: 12 6.5% 15.1%;
-    --ring: 24 5.7% 82.9%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 217 91% 60%;
 
-    /* Amazon dark theme colors */
-    --amazon-primary: 215 28% 12%;    /* Darker navigation */
-    --amazon-secondary: 214 42% 8%;   /* Very dark header */
-    --amazon-light: 210 7% 15%;       /* Darker background */
+    /* Sidebar Colors */
+    --sidebar-background: 240 10% 3.9%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary-foreground: 240 5.9% 10%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217 91% 60%;
   }
 
   * {
@@ -89,9 +103,8 @@
   }
 
   body {
-    @apply bg-background text-foreground rtl:font-amazon transition-colors duration-300 overflow-x-hidden;
+    @apply bg-background text-foreground rtl:font-sans transition-colors duration-300 overflow-x-hidden;
     font-feature-settings: "rlig" 1, "calt" 1;
-    font-family: 'Amazon Ember', 'Helvetica Neue', Arial, sans-serif;
   }
 
   /* Direction handling */
@@ -105,66 +118,177 @@
     @apply container mx-auto px-4 sm:px-6 max-w-7xl;
   }
 
-  /* Amazon-specific components - updated */
-  .amazon-btn-primary {
-    @apply bg-gradient-to-b from-amazon-yellow to-amber-500 hover:from-amber-300 hover:to-amber-500 text-amazon-dark font-medium px-3 py-1 text-sm rounded border border-amber-600 transition-all;
-  }
-  
-  .amazon-btn-secondary {
-    @apply bg-gradient-to-b from-gray-200 to-gray-300 hover:from-gray-300 hover:to-gray-400 text-amazon-dark font-medium px-3 py-1 text-sm rounded border border-gray-400 transition-all;
-  }
-  
-  .amazon-btn-buy {
-    @apply bg-gradient-to-b from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white font-medium px-3 py-1 text-sm rounded border border-orange-700 transition-all;
-  }
-  
-  .amazon-input {
-    @apply rounded-md border border-gray-300 focus:border-amazon-orange focus:ring-1 focus:ring-amazon-orange text-sm py-1 px-2;
+  .gold-gradient {
+    background: linear-gradient(45deg, #3b82f6, #60a5fa, #2563eb);
+    background-size: 200% 200%;
+    animation: goldShimmer 10s ease infinite;
   }
 
+  .glass-panel {
+    @apply bg-white/60 backdrop-blur-md dark:bg-gray-900/70;
+  }
+
+  .gold-glow {
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+  }
+
+  /* Amazon-like button */
+  .amazon-button {
+    @apply relative inline-flex items-center justify-center py-2 px-4 overflow-hidden bg-gradient-to-b from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-white font-medium rounded-md transition-all;
+  }
+
+  /* For dark backgrounds */
+  .text-gold-gradient {
+    background: linear-gradient(45deg, #3b82f6, #60a5fa, #2563eb);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    animation: goldTextShimmer 8s ease infinite;
+  }
+
+  /* Star background styling */
+  .stars-container {
+    z-index: -5;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: radial-gradient(ellipse at bottom, #1B2735 0%, #090A0F 100%);
+    opacity: 0.1;
+  }
+
+  /* Page transition helpers */
+  .page-transition-container {
+    @apply min-h-screen w-full transition-all duration-300;
+    will-change: transform, opacity;
+  }
+
+  /* Loading optimizations */
+  img, video {
+    content-visibility: auto;
+  }
+
+  .lazy-load {
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+  }
+
+  .lazy-load.loaded {
+    opacity: 1;
+  }
+  
+  /* Optimize page transitions */
+  .router-transition {
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    will-change: opacity, transform;
+    transform-origin: center;
+    backface-visibility: hidden;
+    perspective: 1000px;
+  }
+
+  /* Amazon-like product card */
   .amazon-card {
-    @apply bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-sm hover:shadow-md transition-all duration-200;
+    @apply bg-white rounded-md border border-gray-200 transition-all duration-200 hover:shadow-md overflow-hidden;
   }
-  
-  .amazon-link {
-    @apply text-amazon-link hover:text-orange-600 hover:underline transition-colors;
-  }
-  
-  .amazon-price {
-    @apply text-amazon-warning font-bold;
-  }
-  
-  .amazon-header {
-    @apply bg-amazon-primary text-white py-2 px-4 flex items-center;
-  }
-  
-  .amazon-nav {
-    @apply bg-amazon-secondary text-white py-1 px-4;
-  }
-  
-  .amazon-footer {
-    @apply bg-amazon-secondary text-white py-8 mt-8;
-  }
-  
-  .amazon-footer-links {
-    @apply grid grid-cols-2 md:grid-cols-4 gap-6 max-w-6xl mx-auto px-4;
-  }
-  
+
+  /* Amazon-like badge */
   .amazon-badge {
-    @apply inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800;
+    @apply inline-flex items-center rounded-md bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 ring-1 ring-inset ring-blue-700/10;
+  }
+
+  /* Responsive design improvements */
+  @media (max-width: 640px) {
+    .container-custom {
+      @apply px-3;
+    }
+  }
+
+  /* Fix for mobile devices */
+  @media (max-width: 768px) {
+    .stars-container {
+      opacity: 0.05; /* Reduce opacity on mobile for better contrast */
+    }
   }
   
-  .amazon-badge-prime {
-    @apply bg-blue-500 text-white;
+  /* Large screen enhancements */
+  @media (min-width: 1536px) {
+    .container-custom {
+      max-width: 1400px; /* Wider container for 2xl screens */
+    }
+    
+    body {
+      font-size: 16px; /* Slightly larger base font for large screens */
+    }
   }
   
-  .amazon-star {
-    @apply text-amazon-orange;
+  /* Better card styling */
+  .product-card {
+    @apply bg-white rounded-md shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md border border-gray-200 hover:-translate-y-1;
   }
   
-  /* Updated responsive toast */
-  .toast-compact {
-    @apply max-w-sm text-sm rounded-md shadow-md;
+  /* Enhanced button styles */
+  .btn-primary {
+    @apply bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-2 rounded-md shadow-sm hover:shadow-md transition-all;
+  }
+  
+  /* Glass card effect */
+  .glass-card {
+    @apply bg-white/80 backdrop-blur-sm border border-white/20 rounded-md shadow-sm;
+  }
+
+  /* Dark mode specific components */
+  .dark .glass-panel {
+    @apply bg-gray-900/70 backdrop-blur-md;
+  }
+
+  .dark .glass-card {
+    @apply bg-gray-800/80 backdrop-blur-sm border border-gray-700/50 shadow-lg;
+  }
+
+  .dark .product-card {
+    @apply bg-gray-800 shadow-md hover:shadow-lg border border-gray-700;
+  }
+
+  .dark .btn-primary {
+    @apply bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700;
+  }
+  
+  /* Fix for cart bottom buttons visibility */
+  .fixed-bottom-action {
+    @apply sticky bottom-0 z-10 bg-white dark:bg-gray-800 py-3 px-4 border-t;
+  }
+  
+  /* Fix for sidebar toggle */
+  .sidebar-toggle {
+    @apply fixed z-50 transition-all duration-300;
+  }
+  
+  /* Better scrolling in panels and modals */
+  .scrollable-content {
+    @apply overflow-auto overscroll-contain max-h-[calc(100vh-100px)];
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Amazon-like price */
+  .price-tag {
+    @apply text-red-600 font-medium;
+  }
+
+  /* Amazon-like review stars */
+  .review-stars {
+    @apply flex items-center text-yellow-400;
+  }
+
+  /* Amazon-like navigation */
+  .amazon-nav {
+    @apply bg-gray-900 text-white py-2;
+  }
+  
+  /* Amazon-like search */
+  .amazon-search {
+    @apply flex items-center bg-white rounded-md overflow-hidden border;
   }
 }
 
@@ -275,70 +399,76 @@
   100% { background-position: 0% 50%; }
 }
 
-@keyframes toast-slide-in {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-@keyframes toast-slide-out {
-  from {
-    transform: translateX(0);
-    opacity: 1;
-  }
-  to {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-}
-
-.toast-enter {
-  animation: toast-slide-in 0.2s ease-out forwards;
-}
-
-.toast-exit {
-  animation: toast-slide-out 0.2s ease-in forwards;
-}
-
-/* Import Amazon Ember Arabic font for RTL */
-@import url('https://fonts.cdnfonts.com/css/amazon-ember-arabic');
+/* Import Arabic font */
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap');
 
 /* Set font for Arabic */
 html[dir="rtl"] body {
-  font-family: 'Amazon Ember Arabic', 'Tajawal', sans-serif;
+  font-family: 'Tajawal', sans-serif;
 }
 
-/* Amazon-specific typography */
-.amazon-title-xl {
-  @apply text-2xl font-bold text-amazon-dark dark:text-white;
+/* Enhanced print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  .print-break-before {
+    page-break-before: always;
+  }
+  .print-break-after {
+    page-break-after: always;
+  }
 }
 
-.amazon-title-lg {
-  @apply text-xl font-bold text-amazon-dark dark:text-white;
+/* Fix any remaining scrollbar issues */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 
-.amazon-title-md {
-  @apply text-lg font-bold text-amazon-dark dark:text-white;
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
-.amazon-title-sm {
-  @apply text-base font-medium text-amazon-dark dark:text-white;
-}
-
-.amazon-text {
-  @apply text-sm text-gray-700 dark:text-gray-300;
-}
-
-.amazon-text-small {
-  @apply text-xs text-gray-500 dark:text-gray-400;
-}
-
-/* Make bottom action buttons always visible */
+/* Make bottom action buttons always visible even in scroll */
 .sticky-bottom {
-  @apply sticky bottom-0 z-10 bg-white dark:bg-gray-900 py-3 px-4 border-t border-gray-200 dark:border-gray-700 shadow-md;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  background: inherit;
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+/* Ensure sheet content is properly scrollable */
+.sheet-scrollable-content {
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+  padding-bottom: 80px; /* Ensure space for buttons */
+}
+
+/* Amazon price styling */
+.amazon-price {
+  @apply text-lg text-red-700 font-medium;
+}
+
+/* Amazon checkout button */
+.amazon-checkout-btn {
+  @apply w-full py-2 px-4 bg-gradient-to-b from-yellow-300 to-yellow-400 
+  hover:from-yellow-400 hover:to-yellow-500 text-black font-medium 
+  rounded-md border border-yellow-700 transition-colors;
+}
+
+/* Amazon-like small icons */
+.amazon-icon-small {
+  @apply w-4 h-4 text-gray-500;
+}
+
+/* Amazon-like medium icons */
+.amazon-icon-medium {
+  @apply w-5 h-5 text-blue-600;
+}
+
+/* Amazon-like large icons */
+.amazon-icon-large {
+  @apply w-6 h-6 text-blue-700;
 }
