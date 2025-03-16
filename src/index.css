@@ -4,6 +4,7 @@
 
 /* Import Amazon Ember font */
 @import url('https://fonts.cdnfonts.com/css/amazon-ember');
+@import url('https://fonts.cdnfonts.com/css/amazon-ember-arabic');
 
 @layer base {
   :root {
@@ -91,16 +92,16 @@
   body {
     @apply bg-background text-foreground transition-colors duration-300 overflow-x-hidden;
     font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Apply Amazon font and RTL handling properly */
+  body {
     font-family: 'Amazon Ember', 'Helvetica Neue', Arial, sans-serif;
   }
 
-  /* Direction handling */
-  html[dir="rtl"] * {
-    letter-spacing: 0;
-  }
-  
   html[dir="rtl"] body {
-    @apply font-amazon;
+    font-family: 'Amazon Ember Arabic', 'Tajawal', sans-serif;
+    letter-spacing: 0;
   }
 }
 
@@ -309,14 +310,6 @@
   animation: toast-slide-out 0.2s ease-in forwards;
 }
 
-/* Import Amazon Ember Arabic font for RTL */
-@import url('https://fonts.cdnfonts.com/css/amazon-ember-arabic');
-
-/* Set font for Arabic */
-html[dir="rtl"] body {
-  font-family: 'Amazon Ember Arabic', 'Tajawal', sans-serif;
-}
-
 /* Amazon-specific typography */
 .amazon-title-xl {
   @apply text-2xl font-bold text-amazon-dark dark:text-white;
@@ -345,4 +338,34 @@ html[dir="rtl"] body {
 /* Make bottom action buttons always visible */
 .sticky-bottom {
   @apply sticky bottom-0 z-10 bg-white dark:bg-gray-900 py-3 px-4 border-t border-gray-200 dark:border-gray-700 shadow-md;
+}
+
+.text-gradient {
+  background: linear-gradient(to right, #FF9900, #FFA41C, #FFAB00, #F0B800);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glass panel effect */
+.glass-panel {
+  @apply bg-white/80 dark:bg-gray-900/80 backdrop-blur-md;
+}
+
+.glass-card {
+  @apply bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-md border border-gray-100 dark:border-gray-700;
+}
+
+/* Section spacing */
+.section {
+  @apply py-16 md:py-24;
+}
+
+/* Navigation link styling */
+.nav-link {
+  @apply text-gray-600 dark:text-gray-300 hover:text-amazon-orange dark:hover:text-amazon-orange transition-colors font-medium;
+}
+
+.nav-link-active {
+  @apply text-amazon-orange font-semibold;
 }

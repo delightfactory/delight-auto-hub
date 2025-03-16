@@ -30,6 +30,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const { addItem, items } = useCart();
   const [isLiked, setIsLiked] = React.useState(false);
   const [isAddedToCart, setIsAddedToCart] = React.useState(false);
+  const [imageError, setImageError] = React.useState(false);
   
   // Check if item is already in cart
   React.useEffect(() => {
@@ -71,6 +72,12 @@ const ProductCard: React.FC<ProductCardProps> = ({
     }
   };
 
+  const handleImageError = () => {
+    setImageError(true);
+  };
+
+  const fallbackImage = 'https://placehold.co/600x400/e2e8f0/1e293b?text=Delight+Car+Products';
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 30 }}
@@ -97,13 +104,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
         <motion.img
           whileHover={{ scale: 1.15, rotate: -2 }}
           transition={{ duration: 0.6 }}
-          src={image}
+          src={imageError ? fallbackImage : image}
           alt={name}
           className="h-full w-full object-cover transition-all"
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.src = 'https://placehold.co/600x400/e2e8f0/1e293b?text=Delight+Car+Products';
-          }}
+          onError={handleImageError}
         />
         
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>

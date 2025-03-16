@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Check, CreditCard, MapPin, Truck, ChevronRight, Mail, Phone, User } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -25,6 +25,16 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose }) => {
     city: '',
     paymentMethod: 'card',
   });
+  
+  // Calculate total including shipping
+  const [totalWithShipping, setTotalWithShipping] = useState('0');
+  
+  useEffect(() => {
+    // Parse the total price from string format (e.g., "120 ريال") to number
+    const numericTotal = parseInt(total.replace(/\D/g, '')) || 0;
+    const shipping = 15; // Shipping cost
+    setTotalWithShipping(`${numericTotal + shipping} ريال`);
+  }, [total]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -58,10 +68,19 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose }) => {
       description: "سنتواصل معك قريباً للتأكيد والشحن",
       variant: "default",
     });
-    // Important: Clear the cart properly when completing checkout
-    clearCart();
+    
+    // Clear the cart properly
+    try {
+      clearCart();
+      console.log("Cart cleared successfully");
+    } catch (error) {
+      console.error("Error clearing cart:", error);
+    }
+    
     // Close the checkout modal
-    onClose();
+    setTimeout(() => {
+      onClose();
+    }, 500);
   };
 
   return (
@@ -236,7 +255,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose }) => {
                 <Separator className="my-2" />
                 <div className="flex justify-between font-bold">
                   <span>الإجمالي:</span>
-                  <span className="text-delight-700">{parseInt(total.replace(/\D/g, '')) + 15} ريال</span>
+                  <span className="text-delight-700">{totalWithShipping}</span>
                 </div>
               </div>
               
