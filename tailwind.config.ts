@@ -70,6 +70,18 @@ export default {
 					800: '#075985',
 					900: '#0c4a6e',
 				},
+				amazon: {
+					primary: '#131921',
+					secondary: '#232f3e',
+					yellow: '#FFD814',
+					orange: '#FF9900',
+					link: '#007185',
+					button: '#f0c14b',
+					warning: '#c40000',
+					success: '#067D62',
+					light: '#F5F5F5',
+					dark: '#0F1111',
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
@@ -87,7 +99,7 @@ export default {
 						'--tw-prose-body': theme('colors.gray.700'),
 						'--tw-prose-headings': theme('colors.gray.900'),
 						'--tw-prose-lead': theme('colors.gray.600'),
-						'--tw-prose-links': theme('colors.delight.700'),
+						'--tw-prose-links': theme('colors.blue.700'),
 						'--tw-prose-bold': theme('colors.gray.900'),
 						'--tw-prose-counters': theme('colors.gray.500'),
 						'--tw-prose-bullets': theme('colors.gray.300'),
@@ -103,7 +115,7 @@ export default {
 						'--tw-prose-invert-body': theme('colors.gray.300'),
 						'--tw-prose-invert-headings': theme('colors.white'),
 						'--tw-prose-invert-lead': theme('colors.gray.400'),
-						'--tw-prose-invert-links': theme('colors.delight.400'),
+						'--tw-prose-invert-links': theme('colors.blue.400'),
 						'--tw-prose-invert-bold': theme('colors.white'),
 						'--tw-prose-invert-counters': theme('colors.gray.400'),
 						'--tw-prose-invert-bullets': theme('colors.gray.600'),
@@ -202,12 +214,14 @@ export default {
 				'glass': '0 4px 30px rgba(0, 0, 0, 0.1)',
 				'neobrut': '0.5rem 0.5rem 0 0 rgba(0, 0, 0, 1)',
 				'soft': '0 5px 15px rgba(0, 0, 0, 0.05)',
-				'highlight': '0 0 15px rgba(255, 215, 0, 0.3)'
+				'highlight': '0 0 15px rgba(59, 130, 246, 0.3)',
+				'amazon': '0 2px 5px rgba(15, 17, 17, 0.15)'
 			},
 			backgroundImage: {
 				'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
 				'shine': 'linear-gradient(to right, transparent, rgba(255, 255, 255, 0.2), transparent)',
-				'gold-gradient': 'linear-gradient(45deg, #B8860B, #FFD700, #DAA520)',
+				'blue-gradient': 'linear-gradient(45deg, #0284c7, #38bdf8, #0ea5e9)',
+				'amazon-button': 'linear-gradient(to bottom, #f7dfa5, #f0c14b)',
 				'glass-gradient': 'linear-gradient(to right, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.2))'
 			},
 			// Added support for ultra-wide screens

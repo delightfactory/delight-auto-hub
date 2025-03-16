@@ -29,9 +29,9 @@ const FloatingCartButton: React.FC = () => {
     <>
       <motion.button
         onClick={handleClick}
-        className="fixed bottom-6 right-6 z-50 gold-gradient text-white p-4 rounded-full shadow-lg hover:shadow-xl gold-glow transition-all duration-300 lg:bottom-8 lg:right-8 touch-target"
-        whileHover={{ scale: 1.1, boxShadow: "0 0 20px rgba(245, 158, 11, 0.7)" }}
-        whileTap={{ scale: 0.9 }}
+        className="fixed bottom-6 right-6 z-50 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 lg:bottom-8 lg:right-8 touch-target"
+        whileHover={{ scale: 1.05, boxShadow: "0 0 20px rgba(37, 99, 235, 0.5)" }}
+        whileTap={{ scale: 0.95 }}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{
@@ -40,36 +40,17 @@ const FloatingCartButton: React.FC = () => {
           damping: 15
         }}
       >
-        <ShoppingCart className="h-6 w-6 lg:h-7 lg:w-7" />
+        <ShoppingCart className="h-6 w-6 lg:h-6 lg:w-6" />
         {itemCount > 0 && (
           <motion.div
-            className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center lg:w-6 lg:h-6 lg:text-sm"
+            className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center"
             initial={{ scale: 0 }}
-            animate={{ 
-              scale: [1, 1.2, 1],
-            }}
-            transition={{
-              duration: 1.5,
-              repeat: Infinity,
-              repeatType: "reverse"
-            }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 0.2 }}
           >
             {itemCount}
           </motion.div>
         )}
-        <motion.div
-          className="absolute -z-10 inset-0 rounded-full bg-amber-400/50 opacity-30"
-          initial={{ scale: 1 }}
-          animate={{ 
-            scale: [1, 1.5, 1],
-            opacity: [0.3, 0, 0.3]
-          }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-            repeatType: "loop"
-          }}
-        />
       </motion.button>
 
       <AnimatePresence>
@@ -86,9 +67,9 @@ const FloatingCartButton: React.FC = () => {
                 exit={{ x: "100%" }}
                 transition={{ type: "spring", damping: 25, stiffness: 300 }}
               >
-                <SheetHeader className="p-4 border-b flex items-center justify-between bg-gradient-to-r from-delight-50 to-delight-100">
-                  <SheetTitle className="flex items-center gap-2 text-delight-800">
-                    <ShoppingBag className="h-5 w-5 text-delight-600" />
+                <SheetHeader className="p-4 border-b flex items-center justify-between bg-gray-50">
+                  <SheetTitle className="flex items-center gap-2 text-gray-800">
+                    <ShoppingBag className="h-5 w-5 text-blue-600" />
                     سلة المشتريات
                   </SheetTitle>
                   <SheetClose className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none disabled:pointer-events-none touch-target">

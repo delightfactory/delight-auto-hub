@@ -1,3 +1,4 @@
+
 #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -12,10 +13,10 @@
   transition: filter 300ms;
 }
 .logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+  filter: drop-shadow(0 0 2em rgba(59, 130, 246, 0.6));
 }
 .logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+  filter: drop-shadow(0 0 2em rgba(59, 130, 246, 0.6));
 }
 
 @keyframes logo-spin {
@@ -35,8 +36,108 @@
 
 .card {
   padding: 2em;
+  border-radius: 8px;
+  border: 1px solid #eee;
+  transition: 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
 }
 
 .read-the-docs {
-  color: #888;
+  color: #666;
+  font-size: 0.9em;
+  margin-top: 1rem;
+}
+
+/* Amazon-like styles */
+.amazon-header {
+  background-color: #131921;
+  color: white;
+  padding: 0.5rem 1rem;
+}
+
+.amazon-nav {
+  background-color: #232f3e;
+  color: white;
+  padding: 0.5rem 1rem;
+}
+
+.amazon-footer {
+  background-color: #232f3e;
+  color: white;
+  padding: 2rem 1rem;
+  margin-top: 2rem;
+}
+
+.amazon-button {
+  background: linear-gradient(to bottom, #f7dfa5, #f0c14b);
+  border-color: #a88734 #9c7e31 #846a29;
+  color: #111;
+  border-radius: 3px;
+  border-style: solid;
+  border-width: 1px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.amazon-button:hover {
+  background: linear-gradient(to bottom, #f5d78e, #eeb933);
+}
+
+.amazon-link {
+  color: #007185;
+  text-decoration: none;
+}
+
+.amazon-link:hover {
+  color: #c7511f;
+  text-decoration: underline;
+}
+
+.amazon-price {
+  color: #B12704;
+  font-weight: 700;
+}
+
+.amazon-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 3px;
+}
+
+.amazon-badge-prime {
+  background-color: #00A8E1;
+  color: white;
+}
+
+.amazon-badge-sale {
+  background-color: #CC0C39;
+  color: white;
+}
+
+.amazon-rating {
+  color: #FF9900;
+  display: flex;
+  align-items: center;
+}
+
+.amazon-input {
+  border: 1px solid #a6a6a6;
+  border-top-color: #949494;
+  border-radius: 3px;
+  box-shadow: 0 1px 0 rgba(255,255,255,.5), 0 1px 0 rgba(0,0,0,.07) inset;
+  padding: 0.5rem;
+  width: 100%;
+}
+
+.amazon-input:focus {
+  border-color: #e77600;
+  box-shadow: 0 0 3px 2px rgba(228,121,17,.5);
+  outline: none;
 }

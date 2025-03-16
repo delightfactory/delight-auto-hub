@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -14,7 +13,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
  
-    --primary: 35 92% 33%;
+    --primary: 217 91% 60%;
     --primary-foreground: 210 40% 98%;
  
     --secondary: 210 40% 96.1%;
@@ -31,32 +30,32 @@
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 35 92% 33%;
+    --ring: 217 91% 60%;
  
     --radius: 0.5rem;
 
-    /* Delight Theme Colors */
-    --delight-50: 47 100% 96%;
-    --delight-100: 47 96% 91%;
-    --delight-200: 45 96% 81%;
-    --delight-300: 43 96% 71%;
-    --delight-400: 42 96% 59%;
-    --delight-500: 38 92% 50%;
-    --delight-600: 35 92% 33%;
-    --delight-700: 32 94% 26%;
-    --delight-800: 30 92% 18%;
-    --delight-900: 28 86% 12%;
-    --delight-950: 26 80% 7%;
+    /* Delight Theme Colors - Updated to match modern e-commerce */
+    --delight-50: 210 100% 96%;
+    --delight-100: 210 96% 91%;
+    --delight-200: 209 96% 81%;
+    --delight-300: 214 96% 71%;
+    --delight-400: 217 96% 59%;
+    --delight-500: 218 92% 50%;
+    --delight-600: 221 92% 43%;
+    --delight-700: 224 94% 36%;
+    --delight-800: 226 92% 28%;
+    --delight-900: 228 86% 22%;
+    --delight-950: 230 80% 17%;
 
     /* Sidebar Colors */
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 222.2 84% 4.9%;
-    --sidebar-primary: 35 92% 33%;
+    --sidebar-primary: 217 91% 60%;
     --sidebar-primary-foreground: 210 40% 98%;
     --sidebar-accent: 210 40% 96.1%;
     --sidebar-accent-foreground: 222.2 47.4% 11.2%;
     --sidebar-border: 214.3 31.8% 91.4%;
-    --sidebar-ring: 35 92% 33%;
+    --sidebar-ring: 217 91% 60%;
   }
   
   .dark {
@@ -69,7 +68,7 @@
     --popover: 240 10% 3.9%;
     --popover-foreground: 0 0% 98%;
  
-    --primary: 35 92% 50%;
+    --primary: 217 91% 60%;
     --primary-foreground: 240 5.9% 10%;
  
     --secondary: 240 3.7% 15.9%;
@@ -86,17 +85,17 @@
  
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
-    --ring: 35 92% 50%;
+    --ring: 217 91% 60%;
 
     /* Sidebar Colors */
     --sidebar-background: 240 10% 3.9%;
     --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 35 92% 50%;
+    --sidebar-primary: 217 91% 60%;
     --sidebar-primary-foreground: 240 5.9% 10%;
     --sidebar-accent: 240 3.7% 15.9%;
     --sidebar-accent-foreground: 0 0% 98%;
     --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 35 92% 50%;
+    --sidebar-ring: 217 91% 60%;
   }
 
   * {
@@ -120,7 +119,7 @@
   }
 
   .gold-gradient {
-    background: linear-gradient(45deg, #B8860B, #FFD700, #DAA520);
+    background: linear-gradient(45deg, #3b82f6, #60a5fa, #2563eb);
     background-size: 200% 200%;
     animation: goldShimmer 10s ease infinite;
   }
@@ -130,12 +129,17 @@
   }
 
   .gold-glow {
-    box-shadow: 0 0 10px rgba(218, 165, 32, 0.3);
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+  }
+
+  /* Amazon-like button */
+  .amazon-button {
+    @apply relative inline-flex items-center justify-center py-2 px-4 overflow-hidden bg-gradient-to-b from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-white font-medium rounded-md transition-all;
   }
 
   /* For dark backgrounds */
   .text-gold-gradient {
-    background: linear-gradient(45deg, #FFD700, #FFC107, #FFD700);
+    background: linear-gradient(45deg, #3b82f6, #60a5fa, #2563eb);
     background-clip: text;
     -webkit-background-clip: text;
     color: transparent;
@@ -184,6 +188,16 @@
     perspective: 1000px;
   }
 
+  /* Amazon-like product card */
+  .amazon-card {
+    @apply bg-white rounded-md border border-gray-200 transition-all duration-200 hover:shadow-md overflow-hidden;
+  }
+
+  /* Amazon-like badge */
+  .amazon-badge {
+    @apply inline-flex items-center rounded-md bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 ring-1 ring-inset ring-blue-700/10;
+  }
+
   /* Responsive design improvements */
   @media (max-width: 640px) {
     .container-custom {
@@ -205,23 +219,23 @@
     }
     
     body {
-      font-size: 18px; /* Slightly larger base font for large screens */
+      font-size: 16px; /* Slightly larger base font for large screens */
     }
   }
   
   /* Better card styling */
   .product-card {
-    @apply bg-white rounded-xl shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md hover:-translate-y-1;
+    @apply bg-white rounded-md shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md border border-gray-200 hover:-translate-y-1;
   }
   
   /* Enhanced button styles */
   .btn-primary {
-    @apply bg-gradient-to-r from-delight-600 to-delight-700 hover:from-delight-700 hover:to-delight-800 text-white px-4 py-2 rounded-lg shadow-sm hover:shadow-md transition-all;
+    @apply bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-2 rounded-md shadow-sm hover:shadow-md transition-all;
   }
   
   /* Glass card effect */
   .glass-card {
-    @apply bg-white/80 backdrop-blur-sm border border-white/20 rounded-xl shadow-sm;
+    @apply bg-white/80 backdrop-blur-sm border border-white/20 rounded-md shadow-sm;
   }
 
   /* Dark mode specific components */
@@ -238,7 +252,7 @@
   }
 
   .dark .btn-primary {
-    @apply bg-gradient-to-r from-delight-500 to-delight-600 hover:from-delight-600 hover:to-delight-700;
+    @apply bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700;
   }
   
   /* Fix for cart bottom buttons visibility */
@@ -255,6 +269,26 @@
   .scrollable-content {
     @apply overflow-auto overscroll-contain max-h-[calc(100vh-100px)];
     -webkit-overflow-scrolling: touch;
+  }
+
+  /* Amazon-like price */
+  .price-tag {
+    @apply text-red-600 font-medium;
+  }
+
+  /* Amazon-like review stars */
+  .review-stars {
+    @apply flex items-center text-yellow-400;
+  }
+
+  /* Amazon-like navigation */
+  .amazon-nav {
+    @apply bg-gray-900 text-white py-2;
+  }
+  
+  /* Amazon-like search */
+  .amazon-search {
+    @apply flex items-center bg-white rounded-md overflow-hidden border;
   }
 }
 
@@ -325,7 +359,7 @@
   
   /* Enhanced focus states for accessibility */
   .focus-visible-ring {
-    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-delight-500 focus-visible:ring-offset-2;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2;
   }
   
   /* Prevent content from being hidden beneath floating elements */
@@ -341,6 +375,15 @@
   /* Better touch area for buttons */
   .better-touch-button {
     @apply p-3 touch-target flex items-center justify-center;
+  }
+
+  /* Amazon specific utilities */
+  .amazon-focus {
+    @apply focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2;
+  }
+
+  .amazon-hover {
+    @apply hover:bg-yellow-50;
   }
 }
 
@@ -401,4 +444,31 @@ html[dir="rtl"] body {
   max-height: calc(100vh - 120px);
   overflow-y: auto;
   padding-bottom: 80px; /* Ensure space for buttons */
+}
+
+/* Amazon price styling */
+.amazon-price {
+  @apply text-lg text-red-700 font-medium;
+}
+
+/* Amazon checkout button */
+.amazon-checkout-btn {
+  @apply w-full py-2 px-4 bg-gradient-to-b from-yellow-300 to-yellow-400 
+  hover:from-yellow-400 hover:to-yellow-500 text-black font-medium 
+  rounded-md border border-yellow-700 transition-colors;
+}
+
+/* Amazon-like small icons */
+.amazon-icon-small {
+  @apply w-4 h-4 text-gray-500;
+}
+
+/* Amazon-like medium icons */
+.amazon-icon-medium {
+  @apply w-5 h-5 text-blue-600;
+}
+
+/* Amazon-like large icons */
+.amazon-icon-large {
+  @apply w-6 h-6 text-blue-700;
 }

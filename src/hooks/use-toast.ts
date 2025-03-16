@@ -1,3 +1,4 @@
+
 import * as React from "react"
 
 import type {
@@ -5,8 +6,8 @@ import type {
   ToastProps,
 } from "@/components/ui/toast"
 
-const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 1000000
+const TOAST_LIMIT = 5
+const TOAST_REMOVE_DELAY = 3000
 
 type ToasterToast = ToastProps & {
   id: string
@@ -167,6 +168,23 @@ function toast({ ...props }: Toast) {
     update,
   }
 }
+
+// Enhanced toast functions for different types
+toast.success = (props: Omit<Toast, "variant">) => {
+  return toast({ ...props, variant: "success" });
+};
+
+toast.error = (props: Omit<Toast, "variant">) => {
+  return toast({ ...props, variant: "destructive" });
+};
+
+toast.warning = (props: Omit<Toast, "variant">) => {
+  return toast({ ...props, variant: "warning" });
+};
+
+toast.info = (props: Omit<Toast, "variant">) => {
+  return toast({ ...props, variant: "info" });
+};
 
 function useToast() {
   const [state, setState] = React.useState<State>(memoryState)
