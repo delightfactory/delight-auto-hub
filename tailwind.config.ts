@@ -208,8 +208,7 @@ export default {
 			fontFamily: {
 				sans: ['Inter', 'sans-serif'],
 				display: ['Lexend', 'sans-serif'],
-				arabic: ['Tajawal', 'sans-serif'],
-				amazon: ['Amazon Ember', 'Helvetica Neue', 'Arial', 'sans-serif']
+				arabic: ['Tajawal', 'sans-serif']
 			},
 			boxShadow: {
 				'glass': '0 4px 30px rgba(0, 0, 0, 0.1)',
