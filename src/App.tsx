@@ -15,14 +15,18 @@ import ArticlesPage from "./pages/ArticlesPage";
 import ArticleDetailPage from "./pages/ArticleDetailPage";
 import NotFound from "./pages/NotFound";
 import OrdersPage from "./pages/OrdersPage";
+import AuthPage from "./pages/AuthPage";
+import ProfilePage from "./pages/ProfilePage";
 import Sidebar from "./components/Sidebar";
 import { CartProvider } from "./context/CartContext";
 import { ThemeProvider } from "./context/ThemeContext";
+import { AuthProvider } from "./context/AuthContext";
 import WhatsAppButton from "./components/WhatsAppButton";
 import PageLoader from "./components/PageLoader";
 import FloatingCartButton from "./components/FloatingCartButton";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import MainLayout from "./components/MainLayout";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -88,14 +92,18 @@ const AnimatedRoutes = () => {
       >
         <Suspense fallback={<PageLoader message="جاري تحميل الصفحة..." />}>
           <Routes location={location}>
-            <Route path="/" element={<Index />} />
-            <Route path="/contact" element={<ContactPage />} />
-            <Route path="/about" element={<AboutPage />} />
-            <Route path="/products" element={<ProductsPage />} />
-            <Route path="/products/:productId" element={<ProductPage />} />
-            <Route path="/factory" element={<FactoryPage />} />
-            <Route path="/articles/:slug" element={<ArticleDetailPage />} />
-            <Route path="/orders" element={<OrdersPage />} />
+            <Route path="/" element={<MainLayout />}>
+              <Route index element={<Index />} />
+              <Route path="/contact" element={<ContactPage />} />
+              <Route path="/about" element={<AboutPage />} />
+              <Route path="/products" element={<ProductsPage />} />
+              <Route path="/products/:productId" element={<ProductPage />} />
+              <Route path="/factory" element={<FactoryPage />} />
+              <Route path="/articles/:slug" element={<ArticleDetailPage />} />
+              <Route path="/orders" element={<OrdersPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+            </Route>
+            <Route path="/auth" element={<AuthPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
@@ -130,45 +138,35 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <CartProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner 
-              position="top-right" 
-              closeButton 
-              richColors
-              expand
-              toastOptions={{
-                style: {
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  backdropFilter: 'blur(10px)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  color: 'white',
-                  direction: 'rtl',
-                }
-              }}
-            />
-            <BrowserRouter>
-              <div className="flex flex-col min-h-screen">
-                <Header />
-                <div className="flex flex-col lg:flex-row flex-1">
-                  <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
-                  <motion.main
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.5 }}
-                    className="flex-1 min-h-screen pt-16 lg:pt-0 glass-panel transition-all duration-300"
-                  >
-                    <AnimatedRoutes />
-                  </motion.main>
+        <AuthProvider>
+          <CartProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner 
+                position="top-right" 
+                closeButton 
+                richColors
+                expand
+                toastOptions={{
+                  style: {
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    backdropFilter: 'blur(10px)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    color: 'white',
+                    direction: 'rtl',
+                  }
+                }}
+              />
+              <BrowserRouter>
+                <div className="flex flex-col min-h-screen">
+                  <AnimatedRoutes />
+                  <WhatsAppButton phoneNumber="00201211668511" />
+                  <FloatingCartButton />
                 </div>
-                <Footer />
-                <WhatsAppButton phoneNumber="00201211668511" />
-                <FloatingCartButton />
-              </div>
-            </BrowserRouter>
-          </TooltipProvider>
-        </CartProvider>
+              </BrowserRouter>
+            </TooltipProvider>
+          </CartProvider>
+        </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );

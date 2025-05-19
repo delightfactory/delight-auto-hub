@@ -19,16 +19,13 @@ export const placeOrder = async (customerData: CustomerData, orderData: OrderDat
     // 1. إضافة أو تحديث بيانات العميل
     const { data: customerRecord, error: customerError } = await supabase
       .from('customers')
-      .upsert(
-        { 
-          email: customerData.email,
-          name: customerData.name,
-          phone: customerData.phone,
-          address: customerData.address,
-          city: customerData.city
-        },
-        { onConflict: 'email' }
-      )
+      .upsert({ 
+        email: customerData.email,
+        name: customerData.name,
+        phone: customerData.phone,
+        address: customerData.address,
+        city: customerData.city
+      })
       .select()
       .single();
 
@@ -38,10 +35,10 @@ export const placeOrder = async (customerData: CustomerData, orderData: OrderDat
     }
     
     // استرجاع سلة المشتريات من المتصفح
-    const cartItems = JSON.parse(localStorage.getItem('cart') || '{"items":[],"total":"0 ريال","itemCount":0}');
+    const cartItems = JSON.parse(localStorage.getItem('cart') || '{"items":[],"total":"0 ج.م","itemCount":0}');
     
     // حساب السعر الإجمالي عددياً
-    const numericTotal = parseInt(cartItems.total.replace(/\D/g, '')) || 0;
+    const numericTotal = parseInt(cartItems.total?.replace(/\D/g, '')) || 0;
     
     // 2. إنشاء الطلب
     const { data: order, error: orderError } = await supabase
@@ -68,7 +65,7 @@ export const placeOrder = async (customerData: CustomerData, orderData: OrderDat
       order_id: order.id,
       product_id: item.id,
       product_name: item.name,
-      product_price: parseInt(item.price.replace(/\D/g, '')),
+      product_price: parseInt(item.price?.replace(/\D/g, '')) || 0,
       quantity: item.quantity
     }));
 
