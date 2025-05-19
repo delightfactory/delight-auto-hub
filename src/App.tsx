@@ -93,8 +93,8 @@ const AnimatedRoutes = () => {
             <Route path="/products" element={<ProductsPage />} />
             <Route path="/products/:productId" element={<ProductPage />} />
             <Route path="/factory" element={<FactoryPage />} />
-            <Route path="/articles" element={<ArticlesPage />} />
-            <Route path="/articles/:articleId" element={<ArticleDetailPage />} />
+            <Route path="/articles/:slug" element={<ArticleDetailPage />} />
+            <Route path="/orders" element={<OrdersPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

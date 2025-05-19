@@ -9,6 +9,8 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { useCart } from '@/context/CartContext';
 import { toast } from '@/components/ui/use-toast';
+import { placeOrder } from '@/services/orderService';
+import { Textarea } from '@/components/ui/textarea';
 
 interface CheckoutProps {
   onClose: () => void;
@@ -17,13 +19,16 @@ interface CheckoutProps {
 const Checkout: React.FC<CheckoutProps> = ({ onClose }) => {
   const { items, total, clearCart } = useCart();
   const [step, setStep] = useState<'shipping' | 'payment' | 'confirmation'>('shipping');
+  const [loading, setLoading] = useState(false);
+  const [orderId, setOrderId] = useState<string>("");
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
     address: '',
     city: '',
-    paymentMethod: 'card',
+    paymentMethod: 'cod',
+    notes: ''
   });
   
   // Calculate total including shipping
@@ -36,7 +41,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose }) => {
     setTotalWithShipping(`${numericTotal + shipping} ريال`);
   }, [total]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
@@ -51,15 +56,72 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose }) => {
       });
       return;
     }
+    
+    // التحقق من صحة البريد الإلكتروني
+    const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailPattern.test(formData.email)) {
+      toast({
+        title: "خطأ في البريد الإلكتروني",
+        description: "الرجاء إدخال بريد إلكتروني صحيح",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // التحقق من صحة رقم الهاتف
+    const phonePattern = /^(\+\d{1,3})?[\s.-]?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$/;
+    if (!phonePattern.test(formData.phone)) {
+      toast({
+        title: "خطأ في رقم الهاتف",
+        description: "الرجاء إدخال رقم هاتف صحيح",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setStep('payment');
   };
 
-  const handleSubmitPayment = (e: React.FormEvent) => {
+  const handleSubmitPayment = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate payment processing
-    setTimeout(() => {
-      setStep('confirmation');
-    }, 1000);
+    setLoading(true);
+    
+    try {
+      // إرسال الطلب إلى خدمة الطلبات
+      const result = await placeOrder(
+        {
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          address: formData.address,
+          city: formData.city,
+        },
+        {
+          paymentMethod: formData.paymentMethod,
+          notes: formData.notes
+        }
+      );
+      
+      if (result.success) {
+        setOrderId(result.orderId);
+        setStep('confirmation');
+      } else {
+        toast({
+          title: "خطأ في إتمام الطلب",
+          description: result.error || "حدث خطأ أثناء معالجة الطلب. الرجاء المحاولة مرة أخرى.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error("Error placing order:", error);
+      toast({
+        title: "خطأ في النظام",
+        description: "حدث خطأ أثناء معالجة الطلب. الرجاء المحاولة مرة أخرى.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCompleteCheckout = () => {
@@ -241,6 +303,18 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose }) => {
                 </div>
               )}
               
+              <div className="space-y-2">
+                <Label htmlFor="notes">ملاحظات إضافية (اختياري)</Label>
+                <Textarea 
+                  id="notes" 
+                  name="notes" 
+                  value={formData.notes} 
+                  onChange={handleInputChange} 
+                  placeholder="أي ملاحظات أو تعليمات خاصة بالطلب"
+                  className="min-h-[100px]"
+                />
+              </div>
+              
               <Separator className="my-4" />
               
               <div className="space-y-2">
@@ -260,11 +334,20 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose }) => {
               </div>
               
               <div className="pt-4 flex gap-3">
-                <Button variant="outline" onClick={() => setStep('shipping')} className="flex-1">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setStep('shipping')} 
+                  className="flex-1"
+                  disabled={loading}
+                >
                   العودة
                 </Button>
-                <Button type="submit" className="flex-1">
-                  إتمام الدفع
+                <Button 
+                  type="submit" 
+                  className="flex-1"
+                  disabled={loading}
+                >
+                  {loading ? 'جاري المعالجة...' : 'إتمام الطلب'}
                 </Button>
               </div>
             </form>
@@ -293,7 +376,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose }) => {
             <div className="bg-gray-50 p-4 rounded-lg mb-6 text-right">
               <div className="mb-2">
                 <span className="text-gray-600">رقم الطلب: </span>
-                <span className="font-mono">{Math.floor(Math.random() * 1000000).toString().padStart(6, '0')}#</span>
+                <span className="font-mono">{orderId.substring(0, 8)}</span>
               </div>
               <div className="mb-2">
                 <span className="text-gray-600">الاسم: </span>
