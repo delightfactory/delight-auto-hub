@@ -1,6 +1,6 @@
 /* stylelint-disable at-rule-no-unknown */
-@import url('https://fonts.cdnfonts.com/css/amazon-ember');
-@import url('https://fonts.cdnfonts.com/css/amazon-ember-arabic');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -8,46 +8,62 @@
 
 @layer base {
   :root {
+    /* Modern Color Palette */
     --background: 0 0% 100%;
-    --foreground: 20 14.3% 4.1%;
-
+    --foreground: 222.2 47.4% 11.2%;
+    
     --card: 0 0% 100%;
-    --card-foreground: 20 14.3% 4.1%;
- 
+    --card-foreground: 222.2 47.4% 11.2%;
+    
     --popover: 0 0% 100%;
-    --popover-foreground: 20 14.3% 4.1%;
- 
-    --primary: 24 9.8% 10%;
-    --primary-foreground: 60 9.1% 97.8%;
- 
-    --secondary: 60 4.8% 95.9%;
-    --secondary-foreground: 24 9.8% 10%;
- 
-    --muted: 60 4.8% 95.9%;
-    --muted-foreground: 25 5.3% 44.7%;
- 
-    --accent: 60 4.8% 95.9%;
-    --accent-foreground: 24 9.8% 10%;
- 
+    --popover-foreground: 222.2 47.4% 11.2%;
+    
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 60 9.1% 97.8%;
-
-    --border: 20 5.9% 90%;
-    --input: 20 5.9% 90%;
-    --ring: 24 5.4% 63.9%;
- 
-    --radius: 0.3rem;
-
-    /* Amazon-specific colors */
-    --amazon-primary: 214 42% 10%;    /* #131921 - Dark blue/black */
-    --amazon-secondary: 215 28% 17%;  /* #232f3e - Slightly lighter blue */
-    --amazon-orange: 36 100% 50%;     /* #FF9900 - Amazon orange */
-    --amazon-yellow: 48 100% 50%;     /* #FFD814 - Button yellow */
-    --amazon-link: 196 100% 47%;      /* #007bff - Link blue */
-    --amazon-warning: 0 100% 42%;     /* #B12704 - Red for warnings/pricing */
-    --amazon-success: 165 83% 32%;    /* #067D62 - Green for success */
-    --amazon-light: 0 0% 96%;         /* #F5F5F5 - Light gray bg */
-    --amazon-dark: 210 7% 5%;         /* #0F1111 - Very dark text */
+    --destructive-foreground: 210 40% 98%;
+    
+    --success: 142.1 76.2% 36.3%;
+    --success-foreground: 210 40% 98%;
+    
+    --warning: 38 92% 50%;
+    --warning-foreground: 210 40% 98%;
+    
+    --info: 217.2 91.2% 59.8%;
+    --info-foreground: 210 40% 98%;
+    
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    
+    --radius: 0.5rem;
+    
+    /* Custom Brand Colors */
+    --brand: 4 100% 50%;
+    --brand-light: 4 100% 95%;
+    --brand-dark: 4 100% 40%;
+    
+    /* Modern Shadows */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    
+    /* Fonts */
+    --font-sans: 'Inter', 'Tajawal', sans-serif;
+    --font-arabic: 'Tajawal', 'Inter', sans-serif;
+    --font-arabic: 'Tajawal', sans-serif;
   }
   
   .dark {
@@ -94,13 +110,13 @@
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 
-  /* Apply Amazon font and RTL handling properly */
+  /* Apply custom fonts */
   body {
-    font-family: 'Amazon Ember', 'Helvetica Neue', Arial, sans-serif;
+    font-family: var(--font-sans);
   }
 
   html[dir="rtl"] body {
-    font-family: 'Amazon Ember Arabic', 'Tajawal', sans-serif;
+    font-family: var(--font-arabic);
     letter-spacing: 0;
   }
 }
@@ -311,8 +327,78 @@
 }
 
 /* Amazon-specific typography */
-.amazon-title-xl {
-  @apply text-2xl font-bold text-amazon-dark dark:text-white;
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+.animate-slide-up {
+  animation: slideInUp 0.3s ease-out forwards;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  @apply w-2 h-2;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-background;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-muted-foreground/20 rounded-full hover:bg-muted-foreground/30;
+}
+
+/* Selection styles */
+::selection {
+  @apply bg-primary/20 text-foreground;
+}
+
+/* Focus styles */
+.focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background;
+}
+
+/* Custom utilities */
+.sr-only {
+  @apply absolute w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0;
+  clip: rect(0, 0, 0, 0);
+}
+
+/* RTL support */
+[dir='rtl'] .rtl\:flip {
+  transform: scaleX(-1);
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    @apply hidden;
+  }
+  
+  * {
+    @apply !bg-transparent !text-foreground;
+  }
+  
+  a {
+    @apply text-inherit underline;
+  }
 }
 
 .amazon-title-lg {

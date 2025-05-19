@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -108,34 +107,41 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
   
   const signIn = async (email: string, password: string) => {
+    setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-      
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
-        toast({
-          title: "خطأ في تسجيل الدخول",
-          description: error.message,
-          variant: "destructive"
-        });
+        toast({ title: "خطأ في تسجيل الدخول", description: error.message, variant: "destructive" });
         return { error };
       }
-      
-      toast({
-        title: "تم تسجيل الدخول بنجاح",
-        description: "مرحباً بك في ديلايت",
-      });
-      
+      const authUser = data.user;
+      if (authUser) {
+        const { data: profileData, error: profileError } = await supabase
+          .from('customers')
+          .select('*')
+          .eq('id', authUser.id)
+          .single();
+        if (!profileError && profileData) {
+          setUser({
+            id: authUser.id,
+            email: authUser.email,
+            name: profileData.name,
+            phone: profileData.phone,
+            address: profileData.address,
+            city: profileData.city,
+          });
+        } else {
+          setUser({ id: authUser.id, email: authUser.email });
+        }
+      }
+      toast({ title: "تم تسجيل الدخول بنجاح", description: "مرحباً بك في ديلايت" });
       return { error: null };
-    } catch (error) {
-      toast({
-        title: "خطأ في تسجيل الدخول",
-        description: "حدث خطأ غير متوقع",
-        variant: "destructive"
-      });
-      return { error };
+    } catch (err) {
+      console.error("signIn error", err);
+      toast({ title: "خطأ في تسجيل الدخول", description: "حدث خطأ غير متوقع", variant: "destructive" });
+      return { error: err as Error };
+    } finally {
+      setLoading(false);
     }
   };
   
@@ -148,11 +154,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       });
       
       if (authError) {
-        toast({
-          title: "خطأ في إنشاء الحساب",
-          description: authError.message,
-          variant: "destructive"
-        });
+        toast({ title: "خطأ في إنشاء الحساب", description: authError.message, variant: "destructive" });
         return { error: authError };
       }
       
@@ -167,27 +169,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           });
           
         if (profileError) {
-          toast({
-            title: "خطأ في إنشاء الملف الشخصي",
-            description: profileError.message,
-            variant: "destructive"
-          });
+          toast({ title: "خطأ في إنشاء الملف الشخصي", description: profileError.message, variant: "destructive" });
           return { error: profileError };
         }
       }
       
-      toast({
-        title: "تم إنشاء الحساب بنجاح",
-        description: "مرحباً بك في ديلايت",
-      });
+      toast({ title: "تم إنشاء الحساب بنجاح", description: "مرحباً بك في ديلايت" });
       
       return { error: null };
     } catch (error) {
-      toast({
-        title: "خطأ في إنشاء الحساب",
-        description: "حدث خطأ غير متوقع",
-        variant: "destructive"
-      });
+      toast({ title: "خطأ في إنشاء الحساب", description: "حدث خطأ غير متوقع", variant: "destructive" });
       return { error };
     }
   };
@@ -195,15 +186,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const signOut = async () => {
     try {
       await supabase.auth.signOut();
-      toast({
-        title: "تم تسجيل الخروج بنجاح",
-      });
+      toast({ title: "تم تسجيل الخروج بنجاح" });
     } catch (error) {
-      toast({
-        title: "خطأ في تسجيل الخروج",
-        description: "حدث خطأ غير متوقع",
-        variant: "destructive"
-      });
+      toast({ title: "خطأ في تسجيل الخروج", description: "حدث خطأ غير متوقع", variant: "destructive" });
     }
   };
   
@@ -224,28 +209,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         .eq('email', user.email);
         
       if (error) {
-        toast({
-          title: "خطأ في تحديث الملف الشخصي",
-          description: error.message,
-          variant: "destructive"
-        });
+        toast({ title: "خطأ في تحديث الملف الشخصي", description: error.message, variant: "destructive" });
         return { error };
       }
       
       // Update local state
       setUser({ ...user, ...data });
       
-      toast({
-        title: "تم تحديث الملف الشخصي بنجاح",
-      });
+      toast({ title: "تم تحديث الملف الشخصي بنجاح" });
       
       return { error: null };
     } catch (error) {
-      toast({
-        title: "خطأ في تحديث الملف الشخصي",
-        description: "حدث خطأ غير متوقع",
-        variant: "destructive"
-      });
+      toast({ title: "خطأ في تحديث الملف الشخصي", description: "حدث خطأ غير متوقع", variant: "destructive" });
       return { error };
     }
   };

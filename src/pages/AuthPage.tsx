@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -27,24 +26,25 @@ const AuthPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
-    try {
-      if (isLogin) {
-        await signIn(email, password);
-      } else {
-        if (!name.trim()) {
-          alert("الرجاء إدخال الاسم");
-          setIsSubmitting(false);
-          return;
-        }
-        await signUp(email, password, name);
-      }
-      navigate('/');
-    } catch (error) {
-      console.error("Authentication error:", error);
-    } finally {
+
+    if (!isLogin && !name.trim()) {
+      alert("الرجاء إدخال الاسم");
       setIsSubmitting(false);
+      return;
     }
+
+    const result = isLogin
+      ? await signIn(email, password)
+      : await signUp(email, password, name);
+
+    setIsSubmitting(false);
+
+    if (result.error) {
+      console.error("Authentication error:", result.error);
+      return;
+    }
+
+    navigate('/');
   };
   
   return (
