@@ -1,600 +1,732 @@
 
-import React, { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { toast } from 'sonner';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { getCustomerOrders } from '@/services/orderService';
-import { Bell, LogOut, User, ShoppingBag, Home, Phone, Settings, Bookmark, CreditCard, Shield, HelpCircle } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import PageTransition from '@/components/PageTransition';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
+import { 
+  Tabs, 
+  TabsContent, 
+  TabsList, 
+  TabsTrigger 
+} from "@/components/ui/tabs";
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardFooter, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { supabase } from '@/integrations/supabase/client';
+import { 
+  User, 
+  MapPin, 
+  Phone, 
+  Mail, 
+  Package, 
+  Bell, 
+  Settings, 
+  LogOut, 
+  Upload,
+  Camera
+} from 'lucide-react';
+import { toast } from "@/components/ui/use-toast";
+import { IconButton } from '@/components/ui/icon-button';
+import { motion } from 'framer-motion';
 
 const ProfilePage = () => {
   const { user, loading, signOut, updateProfile } = useAuth();
-  const [name, setName] = useState(user?.name || '');
-  const [phone, setPhone] = useState(user?.phone || '');
-  const [address, setAddress] = useState(user?.address || '');
-  const [city, setCity] = useState(user?.city || '');
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("profile");
   const [isUpdating, setIsUpdating] = useState(false);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const [marketingEmails, setMarketingEmails] = useState(false);
-  const [orderUpdates, setOrderUpdates] = useState(true);
-  const [theme, setTheme] = useState('system');
-  const [language, setLanguage] = useState('ar');
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(false);
   
-  // Fetch orders for this user
-  const { data: orderData, isLoading: ordersLoading } = useQuery({
-    queryKey: ['orders', user?.email],
-    queryFn: () => user?.email ? getCustomerOrders(user.email) : { orders: [] },
-    enabled: !!user?.email
+  // Form state
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    address: '',
+    city: '',
+    preferences: {
+      notifications: true,
+      marketing: false,
+      theme: 'system',
+      language: 'ar'
+    }
   });
   
-  // Redirect to login if not authenticated
-  if (!loading && !user) {
-    return <Navigate to="/auth" replace />;
-  }
+  // Redirect if not logged in
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/auth');
+    }
+  }, [user, loading, navigate]);
   
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-red-600 border-r-transparent"></div>
-          <p className="mt-4 text-lg font-medium text-gray-700">جاري تحميل الملف الشخصي...</p>
-        </div>
-      </div>
-    );
-  }
+  // Initialize form data from user object
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        address: user.address || '',
+        city: user.city || '',
+        preferences: user.preferences || {
+          notifications: true,
+          marketing: false,
+          theme: 'system',
+          language: 'ar'
+        }
+      });
+      
+      setAvatarUrl(user.avatar_url || null);
+      
+      // Fetch user orders
+      fetchOrders();
+    }
+  }, [user]);
   
-  const handleUpdateProfile = async () => {
-    setIsUpdating(true);
+  const fetchOrders = async () => {
+    if (!user) return;
+    
+    setLoadingOrders(true);
     try {
-      await updateProfile({ name, phone, address, city });
-      toast.success("تم تحديث الملف الشخصي بنجاح");
+      const { data, error } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          order_items (*)
+        `)
+        .eq('customer_id', user.id)
+        .order('created_at', { ascending: false });
+        
+      if (error) {
+        throw error;
+      }
+      
+      setOrders(data || []);
     } catch (error) {
-      toast.error("حدث خطأ أثناء تحديث الملف الشخصي");
+      console.error('Error fetching orders:', error);
+      toast({
+        title: "خطأ في تحميل الطلبات",
+        description: "لم نتمكن من تحميل سجل طلباتك. يرجى المحاولة مرة أخرى.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoadingOrders(false);
+    }
+  };
+  
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+  
+  const handlePreferenceChange = (key: string, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      preferences: {
+        ...prev.preferences,
+        [key]: value
+      }
+    }));
+  };
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsUpdating(true);
+    
+    try {
+      const result = await updateProfile({
+        name: formData.name,
+        phone: formData.phone,
+        address: formData.address,
+        city: formData.city,
+        preferences: formData.preferences
+      });
+      
+      if (result.error) {
+        throw result.error;
+      }
+      
+      toast({
+        title: "تم تحديث الملف الشخصي",
+        description: "تم حفظ التغييرات بنجاح",
+      });
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      toast({
+        title: "خطأ في التحديث",
+        description: "لم نتمكن من تحديث ملفك الشخصي. يرجى المحاولة مرة أخرى.",
+        variant: "destructive"
+      });
     } finally {
       setIsUpdating(false);
     }
   };
   
-  const handleSignOut = async () => {
-    await signOut();
-    toast.info("تم تسجيل الخروج بنجاح");
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || !e.target.files.length) {
+      return;
+    }
+    
+    const file = e.target.files[0];
+    setUploadingAvatar(true);
+    
+    try {
+      // Upload to Supabase Storage
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user?.id}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
+      
+      // TODO: Create a storage bucket named 'avatars' in Supabase
+      // For now, we'll just simulate an upload
+      
+      // Simulate a successful upload
+      setTimeout(async () => {
+        // In a real implementation, you would upload to Supabase
+        // and then update the user profile with the URL
+        
+        // For now, just create an object URL
+        const url = URL.createObjectURL(file);
+        setAvatarUrl(url);
+        
+        // Update the user profile with the new URL
+        const result = await updateProfile({
+          avatar_url: url // In a real implementation, this would be the Supabase URL
+        });
+        
+        if (result.error) {
+          throw result.error;
+        }
+        
+        toast({
+          title: "تم تحديث الصورة الشخصية",
+          description: "تم رفع الصورة بنجاح",
+        });
+        
+        setUploadingAvatar(false);
+      }, 1500);
+      
+    } catch (error) {
+      console.error("Error uploading avatar:", error);
+      toast({
+        title: "خطأ في رفع الصورة",
+        description: "لم نتمكن من تحديث صورتك الشخصية. يرجى المحاولة مرة أخرى.",
+        variant: "destructive"
+      });
+      setUploadingAvatar(false);
+    }
   };
   
+  const handleLogout = async () => {
+    await signOut();
+  };
+  
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-[60vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-600"></div>
+      </div>
+    );
+  }
+  
   return (
-    <PageTransition>
-      <div className="container mx-auto px-4 py-10">
-        <Tabs defaultValue="personal" className="w-full">
-          <div className="flex flex-col md:flex-row gap-8">
-            {/* Sidebar */}
-            <div className="md:w-1/4">
-              <Card className="sticky top-20 border-2 border-red-100 dark:border-red-900/30">
-                <CardHeader className="text-center border-b border-gray-100 dark:border-gray-800 pb-6">
-                  <div className="mx-auto mb-4">
-                    <Avatar className="h-24 w-24 mx-auto border-4 border-red-100 dark:border-red-900/30">
-                      <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${user?.name || user?.email}`} alt={user?.name} />
-                      <AvatarFallback className="text-2xl bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400">
-                        {user?.name?.charAt(0) || user?.email?.charAt(0)}
-                      </AvatarFallback>
-                    </Avatar>
+    <div className="container mx-auto py-8 px-4 mb-16">
+      <div className="max-w-6xl mx-auto">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">حسابي</h1>
+          <p className="text-gray-600 dark:text-gray-400">إدارة حسابك الشخصي ومتابعة طلباتك وتفضيلاتك</p>
+        </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Profile sidebar */}
+          <div className="lg:col-span-1">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Card className="sticky top-24">
+                <CardContent className="p-4">
+                  <div className="flex flex-col items-center py-6">
+                    <div className="relative group mb-4">
+                      <div className={`w-24 h-24 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center border-4 border-white shadow-md ${uploadingAvatar ? 'opacity-50' : ''}`}>
+                        {avatarUrl ? (
+                          <img 
+                            src={avatarUrl} 
+                            alt="صورة المستخدم" 
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <User className="h-12 w-12 text-gray-400" />
+                        )}
+                      </div>
+                      <label 
+                        htmlFor="avatar-upload" 
+                        className="absolute bottom-0 right-0 bg-red-600 hover:bg-red-700 text-white p-2 rounded-full cursor-pointer shadow-md transition-all"
+                      >
+                        {uploadingAvatar ? (
+                          <span className="animate-spin block w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
+                        ) : (
+                          <Camera className="h-4 w-4" />
+                        )}
+                      </label>
+                      <input 
+                        id="avatar-upload" 
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden"
+                        onChange={handleAvatarUpload} 
+                        disabled={uploadingAvatar}
+                      />
+                    </div>
+                    <h3 className="text-xl font-bold mb-1">{user?.name || 'المستخدم'}</h3>
+                    <p className="text-sm text-gray-500 mb-3">{user?.email}</p>
+                    <div className="w-full mt-2">
+                      <Button 
+                        variant="destructive" 
+                        className="w-full flex items-center justify-center gap-2"
+                        onClick={handleLogout}
+                      >
+                        <LogOut className="h-4 w-4" />
+                        <span>تسجيل الخروج</span>
+                      </Button>
+                    </div>
                   </div>
-                  <CardTitle className="text-xl font-bold">{user?.name || 'مستخدم ديلايت'}</CardTitle>
-                  <CardDescription className="text-red-600 dark:text-red-400">{user?.email}</CardDescription>
-                </CardHeader>
-                
-                <CardContent className="pt-6">
-                  <TabsList className="flex flex-col w-full bg-transparent space-y-1">
-                    <TabsTrigger 
-                      value="personal" 
-                      className="w-full justify-start gap-2 text-right hover:bg-red-50 dark:hover:bg-red-900/20 data-[state=active]:bg-red-100 dark:data-[state=active]:bg-red-900/30"
-                    >
-                      <User className="h-4 w-4" />
-                      <span>البيانات الشخصية</span>
-                    </TabsTrigger>
-                    
-                    <TabsTrigger 
-                      value="orders" 
-                      className="w-full justify-start gap-2 text-right hover:bg-red-50 dark:hover:bg-red-900/20 data-[state=active]:bg-red-100 dark:data-[state=active]:bg-red-900/30"
-                    >
-                      <ShoppingBag className="h-4 w-4" />
-                      <span>الطلبات</span>
-                    </TabsTrigger>
-                    
-                    <TabsTrigger 
-                      value="notifications" 
-                      className="w-full justify-start gap-2 text-right hover:bg-red-50 dark:hover:bg-red-900/20 data-[state=active]:bg-red-100 dark:data-[state=active]:bg-red-900/30"
-                    >
-                      <Bell className="h-4 w-4" />
-                      <span>الإشعارات</span>
-                    </TabsTrigger>
-                    
-                    <TabsTrigger 
-                      value="favorites" 
-                      className="w-full justify-start gap-2 text-right hover:bg-red-50 dark:hover:bg-red-900/20 data-[state=active]:bg-red-100 dark:data-[state=active]:bg-red-900/30"
-                    >
-                      <Bookmark className="h-4 w-4" />
-                      <span>المفضلة</span>
-                    </TabsTrigger>
-                    
-                    <TabsTrigger 
-                      value="payments" 
-                      className="w-full justify-start gap-2 text-right hover:bg-red-50 dark:hover:bg-red-900/20 data-[state=active]:bg-red-100 dark:data-[state=active]:bg-red-900/30"
-                    >
-                      <CreditCard className="h-4 w-4" />
-                      <span>وسائل الدفع</span>
-                    </TabsTrigger>
-                    
-                    <TabsTrigger 
-                      value="security" 
-                      className="w-full justify-start gap-2 text-right hover:bg-red-50 dark:hover:bg-red-900/20 data-[state=active]:bg-red-100 dark:data-[state=active]:bg-red-900/30"
-                    >
-                      <Shield className="h-4 w-4" />
-                      <span>الأمان</span>
-                    </TabsTrigger>
-                    
-                    <TabsTrigger 
-                      value="preferences" 
-                      className="w-full justify-start gap-2 text-right hover:bg-red-50 dark:hover:bg-red-900/20 data-[state=active]:bg-red-100 dark:data-[state=active]:bg-red-900/30"
-                    >
-                      <Settings className="h-4 w-4" />
-                      <span>التفضيلات</span>
-                    </TabsTrigger>
-                    
-                    <TabsTrigger 
-                      value="help" 
-                      className="w-full justify-start gap-2 text-right hover:bg-red-50 dark:hover:bg-red-900/20 data-[state=active]:bg-red-100 dark:data-[state=active]:bg-red-900/30"
-                    >
-                      <HelpCircle className="h-4 w-4" />
-                      <span>المساعدة</span>
-                    </TabsTrigger>
-                  </TabsList>
+                  
+                  <div className="mt-2">
+                    <div className="flex flex-col space-y-1">
+                      <TabsList className="grid grid-cols-1 h-auto bg-transparent mb-4">
+                        {[
+                          { id: "profile", icon: <User className="h-4 w-4 ml-2" />, label: "المعلومات الشخصية" },
+                          { id: "orders", icon: <Package className="h-4 w-4 ml-2" />, label: "طلباتي" },
+                          { id: "notifications", icon: <Bell className="h-4 w-4 ml-2" />, label: "الإشعارات" },
+                          { id: "settings", icon: <Settings className="h-4 w-4 ml-2" />, label: "الإعدادات" }
+                        ].map(item => (
+                          <TabsTrigger 
+                            key={item.id}
+                            value={item.id} 
+                            className={`flex items-center justify-start p-3 mb-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 ${activeTab === item.id ? 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400' : ''}`}
+                            onClick={() => setActiveTab(item.id)}
+                          >
+                            {item.icon}
+                            <span>{item.label}</span>
+                          </TabsTrigger>
+                        ))}
+                      </TabsList>
+                    </div>
+                  </div>
                 </CardContent>
-                
-                <CardFooter className="border-t border-gray-100 dark:border-gray-800 pt-4">
-                  <Button 
-                    variant="outline" 
-                    className="w-full flex items-center justify-center gap-2 border-red-300 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20"
-                    onClick={handleSignOut}
-                  >
-                    <LogOut className="h-4 w-4" />
-                    <span>تسجيل الخروج</span>
-                  </Button>
-                </CardFooter>
               </Card>
-            </div>
-            
-            {/* Main Content */}
-            <div className="md:w-3/4">
-              <TabsContent value="personal">
-                <Card className="border-2 border-red-100 dark:border-red-900/30">
-                  <CardHeader className="border-b border-gray-100 dark:border-gray-800">
-                    <CardTitle className="text-xl flex items-center gap-2">
-                      <User className="h-5 w-5 text-red-600 dark:text-red-400" />
-                      البيانات الشخصية
-                    </CardTitle>
-                    <CardDescription>
-                      تحديث بياناتك الشخصية ومعلومات الاتصال
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-6">
-                    <form className="space-y-4">
-                      <div className="grid gap-4 md:grid-cols-2">
-                        <div className="space-y-2">
-                          <Label htmlFor="name">الاسم الكامل</Label>
-                          <Input 
-                            id="name" 
-                            value={name} 
-                            onChange={(e) => setName(e.target.value)}
-                            placeholder="أدخل اسمك الكامل" 
-                            className="border-gray-200 dark:border-gray-700 focus:border-red-300 dark:focus:border-red-700"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="phone">رقم الهاتف</Label>
-                          <Input 
-                            id="phone" 
-                            value={phone} 
-                            onChange={(e) => setPhone(e.target.value)}
-                            placeholder="01xxxxxxxxx" 
-                            dir="ltr"
-                            className="text-right border-gray-200 dark:border-gray-700 focus:border-red-300 dark:focus:border-red-700"
-                          />
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="address">العنوان</Label>
-                        <Input 
-                          id="address" 
-                          value={address} 
-                          onChange={(e) => setAddress(e.target.value)}
-                          placeholder="العنوان التفصيلي" 
-                          className="border-gray-200 dark:border-gray-700 focus:border-red-300 dark:focus:border-red-700"
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="city">المدينة</Label>
-                        <Select value={city} onValueChange={setCity}>
-                          <SelectTrigger className="border-gray-200 dark:border-gray-700 focus:border-red-300 dark:focus:border-red-700">
-                            <SelectValue placeholder="اختر المدينة" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="القاهرة">القاهرة</SelectItem>
-                            <SelectItem value="الإسكندرية">الإسكندرية</SelectItem>
-                            <SelectItem value="الجيزة">الجيزة</SelectItem>
-                            <SelectItem value="المنصورة">المنصورة</SelectItem>
-                            <SelectItem value="طنطا">طنطا</SelectItem>
-                            <SelectItem value="الإسماعيلية">الإسماعيلية</SelectItem>
-                            <SelectItem value="أسيوط">أسيوط</SelectItem>
-                            <SelectItem value="بورسعيد">بورسعيد</SelectItem>
-                            <SelectItem value="السويس">السويس</SelectItem>
-                            <SelectItem value="الأقصر">الأقصر</SelectItem>
-                            <SelectItem value="أسوان">أسوان</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </form>
-                  </CardContent>
-                  <CardFooter className="border-t border-gray-100 dark:border-gray-800 pt-4 flex justify-end">
-                    <Button 
-                      className="bg-red-600 hover:bg-red-700 text-white dark:bg-red-800 dark:hover:bg-red-700"
-                      onClick={handleUpdateProfile}
-                      disabled={isUpdating}
-                    >
-                      {isUpdating ? 'جاري الحفظ...' : 'حفظ التغييرات'}
-                    </Button>
-                  </CardFooter>
-                </Card>
-              </TabsContent>
-              
-              <TabsContent value="orders">
-                <Card className="border-2 border-red-100 dark:border-red-900/30">
-                  <CardHeader className="border-b border-gray-100 dark:border-gray-800">
-                    <CardTitle className="text-xl flex items-center gap-2">
-                      <ShoppingBag className="h-5 w-5 text-red-600 dark:text-red-400" />
-                      طلباتي
-                    </CardTitle>
-                    <CardDescription>
-                      تتبع وإدارة طلباتك الحالية والسابقة
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-6">
-                    {ordersLoading ? (
-                      <div className="text-center py-8">
-                        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-red-600 border-r-transparent"></div>
-                        <p className="mt-2">جاري تحميل الطلبات...</p>
-                      </div>
-                    ) : orderData?.orders?.length ? (
-                      <div className="space-y-4">
-                        {orderData.orders.map((order: any) => (
-                          <div key={order.id} className="border rounded-md p-4 hover:shadow-md transition-shadow">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <p className="font-medium">طلب #{order.id.slice(0, 8)}</p>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">{new Date(order.created_at).toLocaleDateString('ar-EG')}</p>
-                              </div>
-                              <div>
-                                <span className={`inline-block px-2 py-1 rounded-full text-xs ${
-                                  order.status === 'pending' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' : 
-                                  order.status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 
-                                  order.status === 'cancelled' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' : 
-                                  'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
-                                }`}>
-                                  {order.status === 'pending' ? 'قيد الانتظار' : 
-                                    order.status === 'completed' ? 'مكتمل' : 
-                                    order.status === 'cancelled' ? 'ملغي' : 
-                                    'قيد التنفيذ'}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="mt-2">
-                              <p className="text-sm">عدد المنتجات: {order.items?.length || 0}</p>
-                              <p className="font-medium text-red-600 dark:text-red-400 mt-1">المبلغ: {order.total_amount} ج.م</p>
+            </motion.div>
+          </div>
+          
+          {/* Main content area */}
+          <div className="lg:col-span-3">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              {/* Profile Tab */}
+              <TabsContent value="profile" className="mt-0">
+                <motion.div
+                  key="profile"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>المعلومات الشخصية</CardTitle>
+                      <CardDescription>قم بتحديث معلوماتك الشخصية وبيانات التواصل</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <form onSubmit={handleSubmit}>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                          <div className="space-y-2">
+                            <Label htmlFor="name">الاسم</Label>
+                            <div className="relative">
+                              <User className="absolute right-3 top-2.5 h-5 w-5 text-gray-400" />
+                              <Input
+                                id="name"
+                                name="name"
+                                value={formData.name}
+                                onChange={handleInputChange}
+                                className="pr-10"
+                                placeholder="الاسم الكامل"
+                              />
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-12 border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-lg">
-                        <ShoppingBag className="h-12 w-12 mx-auto mb-2 text-gray-300 dark:text-gray-600" />
-                        <p className="text-gray-500 dark:text-gray-400">لا توجد طلبات حتى الآن</p>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="email">البريد الإلكتروني</Label>
+                            <div className="relative">
+                              <Mail className="absolute right-3 top-2.5 h-5 w-5 text-gray-400" />
+                              <Input
+                                id="email"
+                                name="email"
+                                value={formData.email}
+                                disabled
+                                className="pr-10 bg-gray-50 cursor-not-allowed"
+                              />
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="phone">رقم الهاتف</Label>
+                            <div className="relative">
+                              <Phone className="absolute right-3 top-2.5 h-5 w-5 text-gray-400" />
+                              <Input
+                                id="phone"
+                                name="phone"
+                                value={formData.phone}
+                                onChange={handleInputChange}
+                                className="pr-10"
+                                placeholder="01xxxxxxxxx"
+                                dir="ltr"
+                              />
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="city">المدينة</Label>
+                            <div className="relative">
+                              <MapPin className="absolute right-3 top-2.5 h-5 w-5 text-gray-400" />
+                              <Input
+                                id="city"
+                                name="city"
+                                value={formData.city}
+                                onChange={handleInputChange}
+                                className="pr-10"
+                                placeholder="المدينة"
+                              />
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-2 md:col-span-2">
+                            <Label htmlFor="address">العنوان</Label>
+                            <Textarea
+                              id="address"
+                              name="address"
+                              value={formData.address}
+                              onChange={handleInputChange}
+                              placeholder="العنوان التفصيلي"
+                              className="min-h-[80px]"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="mt-6">
+                          <Button 
+                            type="submit" 
+                            className="bg-red-600 hover:bg-red-700 text-white"
+                            disabled={isUpdating}
+                          >
+                            {isUpdating ? (
+                              <>
+                                <span className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
+                                جاري الحفظ...
+                              </>
+                            ) : (
+                              'حفظ التغييرات'
+                            )}
+                          </Button>
+                        </div>
+                      </form>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              </TabsContent>
+              
+              {/* Orders Tab */}
+              <TabsContent value="orders" className="mt-0">
+                <motion.div
+                  key="orders"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>طلباتي</CardTitle>
+                      <CardDescription>تتبع وإدارة طلباتك السابقة</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      {loadingOrders ? (
+                        <div className="py-12 flex justify-center">
+                          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-red-600"></div>
+                        </div>
+                      ) : orders.length === 0 ? (
+                        <div className="text-center py-12">
+                          <Package className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+                          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">لا توجد طلبات</h3>
+                          <p className="text-gray-500 mb-4">لم تقم بأي طلبات حتى الآن</p>
+                          <Button 
+                            variant="default" 
+                            className="bg-red-600 hover:bg-red-700 text-white"
+                            onClick={() => navigate('/products')}
+                          >
+                            تصفح المنتجات
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {orders.map((order) => (
+                            <div 
+                              key={order.id} 
+                              className="border border-gray-200 dark:border-gray-800 rounded-lg p-4 hover:shadow-md transition-shadow"
+                            >
+                              <div className="flex flex-wrap justify-between items-start mb-3">
+                                <div>
+                                  <h4 className="text-sm font-medium text-gray-500">
+                                    رقم الطلب: <span className="font-mono">{order.id.substring(0, 8)}</span>
+                                  </h4>
+                                  <p className="text-xs text-gray-500">
+                                    {new Date(order.created_at).toLocaleDateString('ar-EG', {
+                                      year: 'numeric',
+                                      month: 'long',
+                                      day: 'numeric',
+                                      hour: '2-digit',
+                                      minute: '2-digit'
+                                    })}
+                                  </p>
+                                </div>
+                                <div>
+                                  <span 
+                                    className={`inline-block px-3 py-1 text-xs rounded-full font-medium ${
+                                      order.status === 'completed' ? 'bg-green-100 text-green-800' : 
+                                      order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                      order.status === 'processing' ? 'bg-blue-100 text-blue-800' :
+                                      order.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                                      'bg-gray-100 text-gray-800'
+                                    }`}
+                                  >
+                                    {order.status === 'pending' ? 'قيد الانتظار' :
+                                     order.status === 'processing' ? 'قيد التجهيز' :
+                                     order.status === 'completed' ? 'مكتمل' :
+                                     order.status === 'cancelled' ? 'ملغي' :
+                                     order.status}
+                                  </span>
+                                </div>
+                              </div>
+                              
+                              <div className="mb-3">
+                                <div className="text-sm font-medium mb-1">المنتجات:</div>
+                                <div className="space-y-2">
+                                  {order.order_items?.map((item: any) => (
+                                    <div key={item.id} className="flex justify-between text-sm">
+                                      <span>
+                                        {item.product_name} × {item.quantity}
+                                      </span>
+                                      <span>
+                                        {item.product_price * item.quantity} ريال
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                              
+                              <div className="flex justify-between border-t pt-3 mt-3">
+                                <span className="font-medium">الإجمالي:</span>
+                                <span className="font-bold text-red-600">{order.total_amount} ريال</span>
+                              </div>
+                              
+                              <div className="mt-4 flex flex-wrap gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-xs"
+                                  onClick={() => {
+                                    // View order details
+                                    toast({
+                                      title: "قريباً",
+                                      description: "سيتم إضافة هذه الميزة قريباً",
+                                    });
+                                  }}
+                                >
+                                  تفاصيل الطلب
+                                </Button>
+                                
+                                {order.status === 'pending' && (
+                                  <Button
+                                    variant="destructive"
+                                    size="sm"
+                                    className="text-xs"
+                                    onClick={() => {
+                                      // Cancel order
+                                      toast({
+                                        title: "قريباً",
+                                        description: "سيتم إضافة هذه الميزة قريباً",
+                                      });
+                                    }}
+                                  >
+                                    إلغاء الطلب
+                                  </Button>
+                                )}
+                                
+                                {order.status === 'completed' && (
+                                  <Button
+                                    variant="default"
+                                    size="sm"
+                                    className="text-xs bg-red-600 hover:bg-red-700 text-white"
+                                    onClick={() => {
+                                      // Reorder
+                                      toast({
+                                        title: "قريباً",
+                                        description: "سيتم إضافة هذه الميزة قريباً",
+                                      });
+                                    }}
+                                  >
+                                    إعادة الطلب
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              </TabsContent>
+              
+              {/* Notifications Tab */}
+              <TabsContent value="notifications" className="mt-0">
+                <motion.div
+                  key="notifications"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>إعدادات الإشعارات</CardTitle>
+                      <CardDescription>تحكم في كيفية تلقي الإشعارات والتنبيهات</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-6">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h4 className="text-base font-medium">إشعارات الطلبات</h4>
+                            <p className="text-sm text-gray-500">تلقي إشعارات عند تغيير حالة طلباتك</p>
+                          </div>
+                          <Switch 
+                            checked={formData.preferences.notifications}
+                            onCheckedChange={(checked) => handlePreferenceChange('notifications', checked)}
+                          />
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h4 className="text-base font-medium">العروض والتخفيضات</h4>
+                            <p className="text-sm text-gray-500">تلقي إشعارات بالعروض والتخفيضات الجديدة</p>
+                          </div>
+                          <Switch 
+                            checked={formData.preferences.marketing}
+                            onCheckedChange={(checked) => handlePreferenceChange('marketing', checked)}
+                          />
+                        </div>
+                        
                         <Button 
-                          variant="link" 
-                          className="mt-2 text-red-600 dark:text-red-400"
-                          onClick={() => window.location.href = "/products"}
+                          className="mt-4 bg-red-600 hover:bg-red-700 text-white"
+                          onClick={handleSubmit}
+                          disabled={isUpdating}
                         >
-                          تصفح المنتجات
+                          {isUpdating ? 'جاري الحفظ...' : 'حفظ التفضيلات'}
                         </Button>
                       </div>
-                    )}
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                </motion.div>
               </TabsContent>
               
-              <TabsContent value="notifications">
-                <Card className="border-2 border-red-100 dark:border-red-900/30">
-                  <CardHeader className="border-b border-gray-100 dark:border-gray-800">
-                    <CardTitle className="text-xl flex items-center gap-2">
-                      <Bell className="h-5 w-5 text-red-600 dark:text-red-400" />
-                      إعدادات الإشعارات
-                    </CardTitle>
-                    <CardDescription>
-                      تخصيص إعدادات الإشعارات والتنبيهات
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-6 space-y-6">
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label className="text-base">تفعيل الإشعارات</Label>
-                        <p className="text-sm text-muted-foreground">استلام إشعارات حول الطلبات والعروض</p>
+              {/* Settings Tab */}
+              <TabsContent value="settings" className="mt-0">
+                <motion.div
+                  key="settings"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>إعدادات الحساب</CardTitle>
+                      <CardDescription>تخصيص إعدادات الحساب والتفضيلات</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-6">
+                        <div>
+                          <h3 className="text-lg font-medium mb-3">المظهر</h3>
+                          <div className="grid grid-cols-3 gap-3">
+                            {[
+                              { id: 'light', label: 'فاتح' },
+                              { id: 'dark', label: 'داكن' },
+                              { id: 'system', label: 'تلقائي' }
+                            ].map(theme => (
+                              <div 
+                                key={theme.id}
+                                className={`border rounded-lg p-3 cursor-pointer hover:border-red-500 transition-colors ${
+                                  formData.preferences.theme === theme.id ? 'border-red-500 bg-red-50 dark:bg-red-900/10' : 'border-gray-200 dark:border-gray-700'
+                                }`}
+                                onClick={() => handlePreferenceChange('theme', theme.id)}
+                              >
+                                <div className={`w-full h-12 rounded mb-2 ${
+                                  theme.id === 'light' ? 'bg-gray-100' : 
+                                  theme.id === 'dark' ? 'bg-gray-800' : 
+                                  'bg-gradient-to-r from-gray-100 to-gray-800'
+                                }`}></div>
+                                <p className="text-center text-sm font-medium">{theme.label}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <h3 className="text-lg font-medium mb-3">اللغة</h3>
+                          <div className="grid grid-cols-2 gap-3">
+                            {[
+                              { id: 'ar', label: 'العربية' },
+                              { id: 'en', label: 'English' }
+                            ].map(lang => (
+                              <div 
+                                key={lang.id}
+                                className={`border rounded-lg p-3 cursor-pointer hover:border-red-500 transition-colors ${
+                                  formData.preferences.language === lang.id ? 'border-red-500 bg-red-50 dark:bg-red-900/10' : 'border-gray-200 dark:border-gray-700'
+                                }`}
+                                onClick={() => handlePreferenceChange('language', lang.id)}
+                              >
+                                <p className="text-center text-sm font-medium">{lang.label}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <Button 
+                          className="mt-4 bg-red-600 hover:bg-red-700 text-white"
+                          onClick={handleSubmit}
+                          disabled={isUpdating}
+                        >
+                          {isUpdating ? 'جاري الحفظ...' : 'حفظ الإعدادات'}
+                        </Button>
                       </div>
-                      <Switch 
-                        checked={notificationsEnabled} 
-                        onCheckedChange={setNotificationsEnabled} 
-                      />
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label className="text-base">رسائل بريدية تسويقية</Label>
-                        <p className="text-sm text-muted-foreground">استلام عروض وتخفيضات خاصة على بريدك الإلكتروني</p>
-                      </div>
-                      <Switch 
-                        checked={marketingEmails} 
-                        onCheckedChange={setMarketingEmails}
-                        disabled={!notificationsEnabled} 
-                      />
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label className="text-base">تحديثات الطلبات</Label>
-                        <p className="text-sm text-muted-foreground">استلام إشعارات عن حالة طلباتك وتتبعها</p>
-                      </div>
-                      <Switch 
-                        checked={orderUpdates} 
-                        onCheckedChange={setOrderUpdates}
-                        disabled={!notificationsEnabled} 
-                      />
-                    </div>
-                  </CardContent>
-                  <CardFooter className="border-t border-gray-100 dark:border-gray-800 pt-4 flex justify-end">
-                    <Button 
-                      className="bg-red-600 hover:bg-red-700 text-white dark:bg-red-800 dark:hover:bg-red-700"
-                      onClick={() => toast.success("تم حفظ إعدادات الإشعارات")}
-                    >
-                      حفظ الإعدادات
-                    </Button>
-                  </CardFooter>
-                </Card>
+                    </CardContent>
+                  </Card>
+                </motion.div>
               </TabsContent>
-              
-              <TabsContent value="preferences">
-                <Card className="border-2 border-red-100 dark:border-red-900/30">
-                  <CardHeader className="border-b border-gray-100 dark:border-gray-800">
-                    <CardTitle className="text-xl flex items-center gap-2">
-                      <Settings className="h-5 w-5 text-red-600 dark:text-red-400" />
-                      تفضيلات المستخدم
-                    </CardTitle>
-                    <CardDescription>
-                      تخصيص إعدادات العرض واللغة
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-6 space-y-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="theme">المظهر</Label>
-                      <Select value={theme} onValueChange={setTheme}>
-                        <SelectTrigger className="border-gray-200 dark:border-gray-700 focus:border-red-300 dark:focus:border-red-700">
-                          <SelectValue placeholder="اختر المظهر" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="light">فاتح</SelectItem>
-                          <SelectItem value="dark">داكن</SelectItem>
-                          <SelectItem value="system">حسب النظام</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="language">اللغة</Label>
-                      <Select value={language} onValueChange={setLanguage}>
-                        <SelectTrigger className="border-gray-200 dark:border-gray-700 focus:border-red-300 dark:focus:border-red-700">
-                          <SelectValue placeholder="اختر اللغة" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="ar">العربية</SelectItem>
-                          <SelectItem value="en">English</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </CardContent>
-                  <CardFooter className="border-t border-gray-100 dark:border-gray-800 pt-4 flex justify-end">
-                    <Button 
-                      className="bg-red-600 hover:bg-red-700 text-white dark:bg-red-800 dark:hover:bg-red-700"
-                      onClick={() => toast.success("تم حفظ التفضيلات بنجاح")}
-                    >
-                      حفظ التفضيلات
-                    </Button>
-                  </CardFooter>
-                </Card>
-              </TabsContent>
-              
-              <TabsContent value="favorites">
-                <Card className="border-2 border-red-100 dark:border-red-900/30 min-h-[400px] flex items-center justify-center">
-                  <div className="text-center p-8">
-                    <Bookmark className="h-12 w-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
-                    <h3 className="text-lg font-medium mb-2">لا توجد منتجات مفضلة</h3>
-                    <p className="text-gray-500 dark:text-gray-400 mb-4">قم بإضافة منتجات إلى المفضلة لتظهر هنا</p>
-                    <Button 
-                      variant="outline" 
-                      className="border-red-300 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20"
-                      onClick={() => window.location.href = "/products"}
-                    >
-                      استعرض المنتجات
-                    </Button>
-                  </div>
-                </Card>
-              </TabsContent>
-              
-              <TabsContent value="payments">
-                <Card className="border-2 border-red-100 dark:border-red-900/30 min-h-[400px] flex items-center justify-center">
-                  <div className="text-center p-8">
-                    <CreditCard className="h-12 w-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
-                    <h3 className="text-lg font-medium mb-2">لا توجد وسائل دفع محفوظة</h3>
-                    <p className="text-gray-500 dark:text-gray-400 mb-4">أضف بطاقات الدفع لتسهيل عملية الشراء</p>
-                    <Button 
-                      variant="outline" 
-                      className="border-red-300 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20"
-                      onClick={() => toast.info("هذه الميزة قيد التطوير حالياً")}
-                    >
-                      إضافة وسيلة دفع
-                    </Button>
-                  </div>
-                </Card>
-              </TabsContent>
-              
-              <TabsContent value="security">
-                <Card className="border-2 border-red-100 dark:border-red-900/30">
-                  <CardHeader className="border-b border-gray-100 dark:border-gray-800">
-                    <CardTitle className="text-xl flex items-center gap-2">
-                      <Shield className="h-5 w-5 text-red-600 dark:text-red-400" />
-                      الأمان والخصوصية
-                    </CardTitle>
-                    <CardDescription>
-                      إدارة إعدادات الأمان وحماية حسابك
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-6">
-                    <div className="space-y-4">
-                      <Button 
-                        variant="outline" 
-                        className="w-full justify-start text-right border-gray-200 dark:border-gray-700"
-                        onClick={() => toast.info("هذه الميزة قيد التطوير حالياً")}
-                      >
-                        تغيير كلمة المرور
-                      </Button>
-                      
-                      <Button 
-                        variant="outline" 
-                        className="w-full justify-start text-right border-gray-200 dark:border-gray-700"
-                        onClick={() => toast.info("هذه الميزة قيد التطوير حالياً")}
-                      >
-                        تفعيل المصادقة الثنائية
-                      </Button>
-                      
-                      <Button 
-                        variant="outline" 
-                        className="w-full justify-start text-right border-gray-200 dark:border-gray-700"
-                        onClick={() => toast.info("هذه الميزة قيد التطوير حالياً")}
-                      >
-                        إدارة الأجهزة المتصلة
-                      </Button>
-                      
-                      <Button 
-                        variant="outline" 
-                        className="w-full justify-start text-right text-red-600 border-red-200 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20"
-                        onClick={() => toast.info("هذه الميزة قيد التطوير حالياً")}
-                      >
-                        حذف الحساب
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-              
-              <TabsContent value="help">
-                <Card className="border-2 border-red-100 dark:border-red-900/30">
-                  <CardHeader className="border-b border-gray-100 dark:border-gray-800">
-                    <CardTitle className="text-xl flex items-center gap-2">
-                      <HelpCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
-                      المساعدة والدعم
-                    </CardTitle>
-                    <CardDescription>
-                      الحصول على المساعدة والإجابة على الأسئلة الشائعة
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-6">
-                    <div className="space-y-4">
-                      <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                        <h3 className="font-medium mb-2">كيف يمكنني تتبع طلبي؟</h3>
-                        <p className="text-gray-600 dark:text-gray-300 text-sm">يمكنك تتبع طلبك من خلال الانتقال إلى قسم "الطلبات" في حسابك الشخصي.</p>
-                      </div>
-                      
-                      <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                        <h3 className="font-medium mb-2">ما هي سياسة الإرجاع؟</h3>
-                        <p className="text-gray-600 dark:text-gray-300 text-sm">يمكنك إرجاع المنتج خلال 14 يوم من تاريخ الاستلام إذا كان بحالته الأصلية.</p>
-                      </div>
-                      
-                      <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                        <h3 className="font-medium mb-2">كم تستغرق عملية التوصيل؟</h3>
-                        <p className="text-gray-600 dark:text-gray-300 text-sm">يتم التوصيل عادة خلال 2-5 أيام عمل داخل القاهرة والجيزة، و5-7 أيام للمحافظات الأخرى.</p>
-                      </div>
-                    </div>
-                    
-                    <div className="mt-6">
-                      <Button 
-                        className="w-full bg-red-600 hover:bg-red-700 text-white dark:bg-red-800 dark:hover:bg-red-700"
-                        onClick={() => window.location.href = "/contact"}
-                      >
-                        اتصل بنا للمساعدة
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </div>
+            </Tabs>
           </div>
-        </Tabs>
-        
-        {/* Notifications Sheet */}
-        <div className="fixed bottom-6 left-6 z-40">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button className="rounded-full h-14 w-14 bg-red-600 hover:bg-red-700 text-white shadow-lg">
-                <Bell className="h-6 w-6" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="bottom" className="h-[70vh] rounded-t-xl">
-              <SheetHeader>
-                <SheetTitle className="text-center text-xl">الإشعارات</SheetTitle>
-                <SheetDescription className="text-center">
-                  إشعارات حسابك وتحديثات طلباتك
-                </SheetDescription>
-              </SheetHeader>
-              <div className="mt-6 space-y-4">
-                <div className="bg-blue-50 border-r-4 border-blue-500 p-4 rounded-md dark:bg-blue-900/20 dark:border-blue-500/50 dark:text-blue-100">
-                  <p className="font-medium">مرحباً بك في ديلايت!</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">شكراً لانضمامك إلينا. استمتع بتجربة تسوق مميزة.</p>
-                  <p className="text-xs text-gray-400 mt-2">منذ {user ? new Date(new Date().getTime() - 1000*60*60*24).toLocaleDateString('ar-EG') : 'يوم واحد'}</p>
-                </div>
-                
-                <div className="bg-green-50 border-r-4 border-green-500 p-4 rounded-md dark:bg-green-900/20 dark:border-green-500/50 dark:text-green-100">
-                  <p className="font-medium">عروض خاصة</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">خصم 15% على جميع المنتجات لفترة محدودة! استخدم كود: DELIGHT15</p>
-                  <p className="text-xs text-gray-400 mt-2">منذ 3 أيام</p>
-                </div>
-                
-                <div className="bg-yellow-50 border-r-4 border-yellow-500 p-4 rounded-md dark:bg-yellow-900/20 dark:border-yellow-500/50 dark:text-yellow-100">
-                  <p className="font-medium">منتجات جديدة</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">تم إضافة منتجات جديدة للعناية بالسيارات. تصفحها الآن!</p>
-                  <p className="text-xs text-gray-400 mt-2">منذ أسبوع</p>
-                </div>
-              </div>
-            </SheetContent>
-          </Sheet>
         </div>
       </div>
-    </PageTransition>
+    </div>
   );
 };
 

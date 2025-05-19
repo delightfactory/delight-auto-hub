@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Mail, Lock, User } from 'lucide-react';
-import bgImage from '/assets/auth-bg.jpg';
+import { motion } from 'framer-motion';
 
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -27,34 +28,48 @@ const AuthPage = () => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    if (!isLogin && !name.trim()) {
-      alert("الرجاء إدخال الاسم");
+    try {
+      if (!isLogin && !name.trim()) {
+        alert("الرجاء إدخال الاسم");
+        setIsSubmitting(false);
+        return;
+      }
+
+      const result = isLogin
+        ? await signIn(email, password)
+        : await signUp(email, password, name);
+
+      if (result.error) {
+        console.error("Authentication error:", result.error);
+        setIsSubmitting(false);
+        return;
+      }
+
+      navigate('/');
+    } catch (error) {
+      console.error("Submission error:", error);
       setIsSubmitting(false);
-      return;
     }
-
-    const result = isLogin
-      ? await signIn(email, password)
-      : await signUp(email, password, name);
-
-    setIsSubmitting(false);
-
-    if (result.error) {
-      console.error("Authentication error:", result.error);
-      return;
-    }
-
-    navigate('/');
   };
   
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-delight-700 to-delight-900 p-4">
-      <div className="w-full max-w-md">
-        <Card className="border-2 border-delight-200/20 backdrop-blur-sm bg-white/90 shadow-xl">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-delight-800">{isLogin ? 'تسجيل الدخول' : 'إنشاء حساب جديد'}</CardTitle>
-            <CardDescription className="text-delight-600">
-              {isLogin ? 'أهلاً بعودتك! سجل الدخول للوصول إلى حسابك' : 'أهلاً بك في ديلايت! أنشئ حسابك للاستمتاع بخدماتنا'}
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-red-700 to-red-900 p-4">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="w-full max-w-md"
+      >
+        <Card className="border-0 shadow-2xl overflow-hidden">
+          <div className="bg-red-600 h-2 w-full"></div>
+          <CardHeader className="text-center pb-4">
+            <CardTitle className="text-2xl font-bold text-red-600 mb-2">
+              {isLogin ? 'تسجيل الدخول' : 'إنشاء حساب جديد'}
+            </CardTitle>
+            <CardDescription className="text-gray-600">
+              {isLogin 
+                ? 'أهلاً بعودتك! سجل الدخول للوصول إلى حسابك' 
+                : 'أهلاً بك! أنشئ حسابك للاستمتاع بخدماتنا'}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -96,7 +111,16 @@ const AuthPage = () => {
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password" className="font-medium">كلمة المرور</Label>
                   {isLogin && (
-                    <a href="#" className="text-sm text-delight-600 hover:text-delight-500">نسيت كلمة المرور؟</a>
+                    <button 
+                      type="button" 
+                      className="text-sm text-red-600 hover:text-red-500"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        alert('سيتم تفعيل هذه الخاصية قريباً');
+                      }}
+                    >
+                      نسيت كلمة المرور؟
+                    </button>
                   )}
                 </div>
                 <div className="relative">
@@ -116,19 +140,24 @@ const AuthPage = () => {
               
               <Button 
                 type="submit" 
-                className="w-full bg-delight-600 hover:bg-delight-700 text-white"
+                className="w-full bg-red-600 hover:bg-red-700 text-white"
                 disabled={isSubmitting}
               >
-                {isLogin 
-                  ? (isSubmitting ? 'جاري تسجيل الدخول...' : 'تسجيل الدخول') 
-                  : (isSubmitting ? 'جاري إنشاء الحساب...' : 'إنشاء حساب')}
+                {isSubmitting ? (
+                  <span className="flex items-center gap-2">
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    {isLogin ? 'جاري تسجيل الدخول...' : 'جاري إنشاء الحساب...'}
+                  </span>
+                ) : (
+                  isLogin ? 'تسجيل الدخول' : 'إنشاء حساب'
+                )}
               </Button>
             </form>
           </CardContent>
           <CardFooter className="flex justify-center">
             <Button 
               variant="link" 
-              className="text-delight-600 hover:text-delight-800"
+              className="text-red-600 hover:text-red-800"
               onClick={() => setIsLogin(!isLogin)}
             >
               {isLogin 
@@ -137,7 +166,7 @@ const AuthPage = () => {
             </Button>
           </CardFooter>
         </Card>
-      </div>
+      </motion.div>
     </div>
   );
 };
