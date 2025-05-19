@@ -1,4 +1,3 @@
-
 import { type Config } from "tailwindcss";
 import { fontFamily } from "tailwindcss/defaultTheme";
 
@@ -100,9 +99,29 @@ const config = {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
       },
+      typography: theme => ({
+        DEFAULT: {
+          css: {
+            color: theme('colors.gray.800'),
+            a: {
+              color: theme('colors.amazon-link'),
+              '&:hover': { color: theme('colors.amazon-orange') },
+            },
+            h2: { fontWeight: '700', color: theme('colors.amazon-dark') },
+            h3: { fontWeight: '600', color: theme('colors.amazon-dark') },
+            p: { lineHeight: '1.75' },
+          },
+        },
+        dark: {
+          css: {
+            color: theme('colors.gray.200'),
+            a: { color: theme('colors.amazon-link') },
+          },
+        },
+      }),
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
 } satisfies Config;
 
 export default config;

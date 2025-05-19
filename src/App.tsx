@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -21,6 +20,8 @@ import { ThemeProvider } from "./context/ThemeContext";
 import WhatsAppButton from "./components/WhatsAppButton";
 import PageLoader from "./components/PageLoader";
 import FloatingCartButton from "./components/FloatingCartButton";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -104,16 +105,14 @@ const AnimatedRoutes = () => {
 };
 
 const App = () => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
   // Effect to handle responsive sidebar on resize
   useEffect(() => {
     const handleResize = () => {
-      // Close sidebar automatically on small screens
+      // Close sidebar on small screens only
       if (window.innerWidth < 1024) {
         setIsSidebarOpen(false);
-      } else {
-        setIsSidebarOpen(true);
       }
     };
     
@@ -149,16 +148,20 @@ const App = () => {
               }}
             />
             <BrowserRouter>
-              <div className="flex flex-col lg:flex-row min-h-screen">
-                <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
-                <motion.main 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.5 }}
-                  className={`flex-1 min-h-screen pt-16 lg:pt-0 glass-panel ${isSidebarOpen ? 'lg:mr-72 xl:mr-80' : 'lg:mr-0'} transition-all duration-300`}
-                >
-                  <AnimatedRoutes />
-                </motion.main>
+              <div className="flex flex-col min-h-screen">
+                <Header />
+                <div className="flex flex-col lg:flex-row flex-1">
+                  <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+                  <motion.main
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.5 }}
+                    className="flex-1 min-h-screen pt-16 lg:pt-0 glass-panel transition-all duration-300"
+                  >
+                    <AnimatedRoutes />
+                  </motion.main>
+                </div>
+                <Footer />
                 <WhatsAppButton phoneNumber="00201211668511" />
                 <FloatingCartButton />
               </div>

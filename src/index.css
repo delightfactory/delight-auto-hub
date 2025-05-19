@@ -1,10 +1,10 @@
+/* stylelint-disable at-rule-no-unknown */
+@import url('https://fonts.cdnfonts.com/css/amazon-ember');
+@import url('https://fonts.cdnfonts.com/css/amazon-ember-arabic');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Import Amazon Ember font */
-@import url('https://fonts.cdnfonts.com/css/amazon-ember');
-@import url('https://fonts.cdnfonts.com/css/amazon-ember-arabic');
 
 @layer base {
   :root {

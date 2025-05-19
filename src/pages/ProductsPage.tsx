@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { motion, useAnimation } from 'framer-motion';
 import { Link } from 'react-router-dom';
@@ -130,7 +129,7 @@ const ProductsPage: React.FC = () => {
     }
   }, [priceRange, toast, controls]);
 
-  // Load products on component mount with dependency on loadProducts
+  // Load products on component mount
   useEffect(() => {
     console.log("ProductsPage mounted, loading products...");
     loadProducts();
@@ -141,7 +140,8 @@ const ProductsPage: React.FC = () => {
     }, 1000);
     
     return () => clearTimeout(timer);
-  }, [loadProducts, controls]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Filter products based on user selections
   const filteredProducts = useMemo(() => {
