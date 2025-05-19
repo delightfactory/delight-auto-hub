@@ -14,6 +14,7 @@ import FactoryPage from "./pages/FactoryPage";
 import ArticlesPage from "./pages/ArticlesPage";
 import ArticleDetailPage from "./pages/ArticleDetailPage";
 import NotFound from "./pages/NotFound";
+import OrdersPage from "./pages/OrdersPage";
 import Sidebar from "./components/Sidebar";
 import { CartProvider } from "./context/CartContext";
 import { ThemeProvider } from "./context/ThemeContext";

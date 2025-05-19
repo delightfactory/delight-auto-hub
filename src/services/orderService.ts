@@ -1,6 +1,5 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { useCart } from "@/context/CartContext";
 
 interface CustomerData {
   name: string;
@@ -28,7 +27,7 @@ export const placeOrder = async (customerData: CustomerData, orderData: OrderDat
           address: customerData.address,
           city: customerData.city
         },
-        { onConflict: 'email', returning: 'minimal' }
+        { onConflict: 'email' }
       )
       .select()
       .single();

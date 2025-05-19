@@ -1,213 +1,201 @@
 
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { Search, Calendar, Package, Truck, Check, ArrowRight } from 'lucide-react';
-import { toast } from '@/components/ui/use-toast';
+import { useQuery } from '@tanstack/react-query';
 import { getCustomerOrders } from '@/services/orderService';
-import { formatDistanceToNow } from 'date-fns';
-import { ar } from 'date-fns/locale';
 import PageHeader from '@/components/PageHeader';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Loader2, Package } from 'lucide-react';
+import { useToast } from "@/hooks/use-toast";
+import { Separator } from '@/components/ui/separator';
+import { format } from 'date-fns';
 
 const OrdersPage: React.FC = () => {
   const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [orders, setOrders] = useState<any[]>([]);
-  const [searched, setSearched] = useState(false);
+  const [searchSubmitted, setSearchSubmitted] = useState(false);
+  const { toast } = useToast();
 
-  const handleSearch = async (e: React.FormEvent) => {
+  const {
+    data,
+    isLoading,
+    error,
+    refetch
+  } = useQuery({
+    queryKey: ['customerOrders', email],
+    queryFn: () => getCustomerOrders(email),
+    enabled: searchSubmitted && email.trim() !== '',
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email) {
+    if (!email.trim()) {
       toast({
-        title: "بريد إلكتروني مطلوب",
-        description: "الرجاء إدخال البريد الإلكتروني المرتبط بالطلبات",
-        variant: "destructive"
+        title: "خطأ",
+        description: "الرجاء إدخال البريد الإلكتروني",
+        variant: "destructive",
       });
       return;
     }
     
-    setLoading(true);
-    try {
-      const { orders: customerOrders } = await getCustomerOrders(email);
-      setOrders(customerOrders);
-      setSearched(true);
-      
-      if (customerOrders.length === 0) {
-        toast({
-          title: "لم يتم العثور على طلبات",
-          description: "لا توجد طلبات مرتبطة بهذا البريد الإلكتروني",
-          variant: "default"
-        });
-      }
-    } catch (error) {
-      console.error("Error fetching orders:", error);
-      toast({
-        title: "خطأ في النظام",
-        description: "حدث خطأ أثناء البحث عن الطلبات. الرجاء المحاولة مرة أخرى.",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
+    setSearchSubmitted(true);
+    refetch();
   };
 
-  // تحويل حالة الطلب إلى العربية
-  const getStatusText = (status: string) => {
-    const statusMap: { [key: string]: string } = {
-      'pending': 'قيد المراجعة',
-      'processing': 'قيد التجهيز',
-      'shipped': 'تم الشحن',
-      'delivered': 'تم التوصيل',
-      'cancelled': 'ملغي'
-    };
-    return statusMap[status] || status;
-  };
-
-  // عرض رمز حالة الطلب
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return <Calendar className="h-5 w-5 text-yellow-500" />;
-      case 'processing':
-        return <Package className="h-5 w-5 text-blue-500" />;
-      case 'shipped':
-        return <Truck className="h-5 w-5 text-purple-500" />;
-      case 'delivered':
-        return <Check className="h-5 w-5 text-green-500" />;
-      default:
-        return <Calendar className="h-5 w-5 text-gray-500" />;
-    }
-  };
-
-  // تنسيق التاريخ بالعربية
   const formatDate = (dateString: string) => {
     try {
-      return formatDistanceToNow(new Date(dateString), { 
-        addSuffix: true,
-        locale: ar
-      });
-    } catch (error) {
+      const date = new Date(dateString);
+      return format(date, 'yyyy-MM-dd HH:mm'); 
+    } catch (e) {
       return dateString;
     }
   };
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'text-green-600 bg-green-100 border-green-300';
+      case 'processing':
+        return 'text-blue-600 bg-blue-100 border-blue-300';
+      case 'pending':
+        return 'text-yellow-600 bg-yellow-100 border-yellow-300';
+      case 'cancelled':
+        return 'text-red-600 bg-red-100 border-red-300';
+      default:
+        return 'text-gray-600 bg-gray-100 border-gray-300';
+    }
+  };
+
+  const translateStatus = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'مكتمل';
+      case 'processing':
+        return 'قيد المعالجة';
+      case 'pending':
+        return 'قيد الانتظار';
+      case 'cancelled':
+        return 'ملغي';
+      default:
+        return status;
+    }
+  };
+
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 max-w-screen-xl">
       <PageHeader 
-        title="تتبع الطلبات" 
-        description="تتبع طلباتك السابقة والحالية وتفقد حالتها"
+        title="تتبع طلباتك" 
+        subtitle="تابع حالة طلباتك وتفاصيلها"
       />
-      
-      <div className="max-w-2xl mx-auto mt-8">
+
+      <div className="my-8">
         <Card>
           <CardHeader>
-            <CardTitle className="text-xl font-bold">البحث عن طلباتك</CardTitle>
+            <CardTitle className="text-xl">ابحث عن طلباتك</CardTitle>
+            <CardDescription>أدخل البريد الإلكتروني الذي استخدمته عند تقديم الطلب</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSearch} className="space-y-4">
-              <div className="space-y-2">
-                <label htmlFor="email" className="text-sm font-medium">
-                  البريد الإلكتروني المستخدم في الطلب
-                </label>
-                <div className="relative">
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="أدخل البريد الإلكتروني"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10"
-                  />
-                  <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-                </div>
-              </div>
-              
-              <Button 
-                type="submit" 
-                className="w-full"
-                disabled={loading}
-              >
-                {loading ? 'جاري البحث...' : 'البحث عن الطلبات'}
+            <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4">
+              <Input
+                type="email"
+                placeholder="البريد الإلكتروني"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="flex-grow"
+              />
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'بحث'}
               </Button>
             </form>
           </CardContent>
         </Card>
-        
-        {searched && (
-          <div className="mt-8 space-y-6">
-            <h2 className="text-xl font-bold">نتائج البحث</h2>
-            
-            {orders.length === 0 ? (
-              <Card>
-                <CardContent className="py-10 text-center">
-                  <p className="text-gray-500">لم يتم العثور على طلبات مرتبطة بهذا البريد الإلكتروني</p>
-                </CardContent>
-              </Card>
-            ) : (
-              orders.map((order) => (
-                <Card key={order.id} className="border-gray-200 hover:border-gray-300 transition-colors">
-                  <CardHeader className="pb-2">
-                    <div className="flex justify-between items-center">
-                      <CardTitle className="text-lg font-medium">
-                        طلب #{order.id.substring(0, 8)}
-                      </CardTitle>
-                      <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-gray-100 text-xs">
-                        {getStatusIcon(order.status)}
-                        <span>{getStatusText(order.status)}</span>
+      </div>
+
+      {searchSubmitted && (
+        <div className="my-8">
+          {isLoading ? (
+            <div className="flex justify-center items-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-amazon-primary" />
+            </div>
+          ) : error ? (
+            <Card className="border-red-300 bg-red-50">
+              <CardContent className="pt-6 text-center text-red-600">
+                حدث خطأ أثناء البحث عن طلباتك. الرجاء المحاولة مرة أخرى.
+              </CardContent>
+            </Card>
+          ) : data?.orders.length === 0 ? (
+            <Card className="border-yellow-300 bg-yellow-50">
+              <CardContent className="pt-6 text-center text-yellow-800">
+                لم يتم العثور على طلبات مرتبطة بهذا البريد الإلكتروني.
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold">طلباتك</h2>
+              {data?.orders.map((order) => (
+                <Card key={order.id} className="overflow-hidden">
+                  <CardHeader className="bg-gray-50">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between">
+                      <div>
+                        <CardTitle className="text-lg">طلب #{order.id.substring(0, 8)}</CardTitle>
+                        <CardDescription>{formatDate(order.created_at)}</CardDescription>
+                      </div>
+                      <div className="mt-2 md:mt-0">
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(order.status)}`}>
+                          {translateStatus(order.status)}
+                        </span>
                       </div>
                     </div>
-                    <p className="text-sm text-gray-500">
-                      {formatDate(order.created_at)}
-                    </p>
                   </CardHeader>
-                  
-                  <CardContent>
+                  <CardContent className="pt-6">
                     <div className="space-y-4">
                       <div>
-                        <h4 className="text-sm font-medium mb-2">المنتجات</h4>
+                        <h3 className="text-sm font-medium text-gray-500">تفاصيل الشحن</h3>
+                        <p className="mt-1">{order.shipping_address}، {order.shipping_city}</p>
+                      </div>
+                      
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-500">طريقة الدفع</h3>
+                        <p className="mt-1">{order.payment_method}</p>
+                      </div>
+
+                      <Separator />
+                      
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-500 mb-2">المنتجات</h3>
                         <ul className="space-y-2">
-                          {order.items.map((item: any) => (
-                            <li key={item.id} className="flex justify-between text-sm">
-                              <div>
-                                {item.product_name}
-                                <span className="text-gray-500"> × {item.quantity}</span>
+                          {order.items.map((item) => (
+                            <li key={item.id} className="flex justify-between">
+                              <div className="flex items-center">
+                                <Package className="h-4 w-4 mr-2 text-gray-400" />
+                                <span>{item.product_name}</span>
+                                <span className="text-gray-500 mx-2">×</span>
+                                <span>{item.quantity}</span>
                               </div>
-                              <div>{item.product_price} ريال</div>
+                              <span>{item.product_price} ريال</span>
                             </li>
                           ))}
                         </ul>
                       </div>
-                      
-                      <Separator />
-                      
-                      <div className="flex justify-between font-medium">
-                        <span>المجموع</span>
-                        <span>{order.total_amount} ريال</span>
-                      </div>
                     </div>
                   </CardContent>
-                  
-                  <CardFooter className="pt-0">
-                    <div className="w-full flex justify-end">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        className="text-xs"
-                      >
-                        تفاصيل الطلب
-                        <ArrowRight className="mr-1 h-3 w-3 rtl:rotate-180" />
-                      </Button>
+                  <CardFooter className="flex justify-between bg-gray-50 border-t">
+                    {order.notes && (
+                      <div className="text-sm text-gray-500">
+                        <span className="font-medium">ملاحظات:</span> {order.notes}
+                      </div>
+                    )}
+                    <div className="text-lg font-bold">
+                      الإجمالي: {order.total_amount} ريال
                     </div>
                   </CardFooter>
                 </Card>
-              ))
-            )}
-          </div>
-        )}
-      </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
