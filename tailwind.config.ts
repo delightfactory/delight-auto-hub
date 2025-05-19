@@ -64,17 +64,17 @@ const config = {
         "amazon-light": "hsl(var(--amazon-light))",
         "amazon-dark": "hsl(var(--amazon-dark))",
         "delight": {
-          "50": "#f0f9ff",
-          "100": "#e0f2fe",
-          "200": "#bae6fd",
-          "300": "#7dd3fc",
-          "400": "#38bdf8",
-          "500": "#0ea5e9",
-          "600": "#0284c7",
-          "700": "#0369a1",
-          "800": "#075985",
-          "900": "#0c4a6e",
-          "950": "#082f49"
+          "50": "#fff1f1",
+          "100": "#ffdfdf",
+          "200": "#ffc5c5",
+          "300": "#ff9d9d",
+          "400": "#ff6464",
+          "500": "#ff3333",
+          "600": "#ff0f0f",
+          "700": "#e60000",
+          "800": "#c50000",
+          "900": "#a10000",
+          "950": "#570000"
         },
       },
       borderRadius: {
@@ -95,28 +95,48 @@ const config = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        "fade-in": {
+          from: { opacity: "0" },
+          to: { opacity: "1" },
+        },
+        "fade-out": {
+          from: { opacity: "1" },
+          to: { opacity: "0" },
+        },
+        "slide-in": {
+          from: { transform: "translateX(100%)" },
+          to: { transform: "translateX(0)" },
+        },
+        "slide-out": {
+          from: { transform: "translateX(0)" },
+          to: { transform: "translateX(100%)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "fade-in": "fade-in 0.3s ease-out",
+        "fade-out": "fade-out 0.3s ease-out",
+        "slide-in": "slide-in 0.3s ease-out",
+        "slide-out": "slide-out 0.3s ease-out",
       },
       typography: theme => ({
         DEFAULT: {
           css: {
             color: theme('colors.gray.800'),
             a: {
-              color: theme('colors.amazon-link'),
-              '&:hover': { color: theme('colors.amazon-orange') },
+              color: theme('colors.red.600'),
+              '&:hover': { color: theme('colors.red.700') },
             },
-            h2: { fontWeight: '700', color: theme('colors.amazon-dark') },
-            h3: { fontWeight: '600', color: theme('colors.amazon-dark') },
+            h2: { fontWeight: '700', color: theme('colors.gray.900') },
+            h3: { fontWeight: '600', color: theme('colors.gray.900') },
             p: { lineHeight: '1.75' },
           },
         },
         dark: {
           css: {
             color: theme('colors.gray.200'),
-            a: { color: theme('colors.amazon-link') },
+            a: { color: theme('colors.red.400') },
           },
         },
       }),

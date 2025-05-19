@@ -1,21 +1,49 @@
 
-import React from 'react';
-import { Outlet } from 'react-router-dom';
-import Navbar from './Navbar';
-import Footer from './Footer';
+import React, { useEffect } from 'react';
+import { Outlet, useLocation } from 'react-router-dom';
 import { useTheme } from '@/context/ThemeContext';
+import Header from './Header';
+import Footer from './Footer';
+import {
+  SidebarProvider,
+  Sidebar,
+  SidebarContent,
+  SidebarRail,
+  SidebarInset
+} from '@/components/ui/sidebar';
+import { SidebarMenu } from './SidebarMenu';
 
 const MainLayout: React.FC = () => {
-  const { theme, toggleTheme } = useTheme();
+  const { theme } = useTheme();
+  const location = useLocation();
+  
+  // Scroll to top on route change for smoother navigation
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
   
   return (
-    <div className="flex flex-col min-h-screen" dir="rtl">
-      <Navbar isDarkTheme={theme === 'dark'} toggleTheme={toggleTheme} />
-      <main className="flex-grow">
-        <Outlet />
-      </main>
-      <Footer />
-    </div>
+    <SidebarProvider defaultOpen={false}>
+      <div className="flex flex-col min-h-screen w-full" dir="rtl">
+        <Header />
+        
+        <div className="flex flex-1 pt-14"> {/* Add padding top to account for fixed header */}
+          <Sidebar side="right" variant="floating" className="hidden lg:flex"> 
+            <SidebarContent>
+              <SidebarMenu />
+            </SidebarContent>
+            <SidebarRail />
+          </Sidebar>
+          
+          <SidebarInset>
+            <main className="flex-grow transition-all duration-300">
+              <Outlet />
+            </main>
+            <Footer />
+          </SidebarInset>
+        </div>
+      </div>
+    </SidebarProvider>
   );
 };
 
