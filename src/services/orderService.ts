@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 interface CustomerData {
@@ -19,13 +18,16 @@ export const placeOrder = async (customerData: CustomerData, orderData: OrderDat
     // 1. إضافة أو تحديث بيانات العميل
     const { data: customerRecord, error: customerError } = await supabase
       .from('customers')
-      .upsert({ 
-        email: customerData.email,
-        name: customerData.name,
-        phone: customerData.phone,
-        address: customerData.address,
-        city: customerData.city
-      })
+      .upsert(
+        { 
+          email: customerData.email,
+          name: customerData.name,
+          phone: customerData.phone,
+          address: customerData.address,
+          city: customerData.city
+        },
+        { onConflict: 'email' }
+      )
       .select()
       .single();
 
@@ -112,31 +114,33 @@ export const getOrderById = async (orderId: string) => {
 };
 
 export const getCustomerOrders = async (email: string) => {
-  // أولاً، ابحث عن العميل حسب البريد الإلكتروني
-  const { data: customer, error: customerError } = await supabase
-    .from('customers')
-    .select('id')
-    .eq('email', email)
-    .single();
-
-  if (customerError || !customer) {
-    return { orders: [] };
-  }
-
-  // ثم استرجع طلبات هذا العميل
-  const { data: orders, error: ordersError } = await supabase
+  const { data: orders, error } = await supabase
     .from('orders')
     .select(`
       *,
-      items:order_items(*)
+      items:order_items(*),
+      customer:customers(email)
     `)
-    .eq('customer_id', customer.id)
+    .eq('customer.email', email)
     .order('created_at', { ascending: false });
 
-  if (ordersError) {
-    console.error("خطأ في استرجاع طلبات العميل:", ordersError);
-    throw ordersError;
+  if (error) {
+    console.error("خطأ في استرجاع طلبات العميل:", error);
+    throw error;
   }
 
   return { orders: orders || [] };
+};
+
+// Function to cancel an order by its ID
+export const cancelOrder = async (orderId: string) => {
+  const { error } = await supabase
+    .from('orders')
+    .update({ status: 'cancelled' })
+    .eq('id', orderId);
+  if (error) {
+    console.error("خطأ في إلغاء الطلب:", error);
+    throw error;
+  }
+  return { success: true };
 };

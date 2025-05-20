@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Tabs, TabsContent } from "@/components/ui/tabs";
-import { supabase } from '@/integrations/supabase/client';
+import { getCustomerOrders } from '@/services/orderService';
 import { useToast } from "@/hooks/use-toast";
 
 // Import refactored components
@@ -99,20 +98,8 @@ const ProfilePage = () => {
     
     setLoadingOrders(true);
     try {
-      const { data, error } = await supabase
-        .from('orders')
-        .select(`
-          *,
-          order_items (*)
-        `)
-        .eq('customer_id', user.id)
-        .order('created_at', { ascending: false });
-        
-      if (error) {
-        throw error;
-      }
-      
-      setOrders(data || []);
+      const { orders } = await getCustomerOrders(user.email);
+      setOrders(orders);
     } catch (error) {
       console.error('Error fetching orders:', error);
       toast({
@@ -282,7 +269,7 @@ const ProfilePage = () => {
             
             {/* Orders Tab */}
             <TabsContent value="orders" className="mt-0">
-              <OrdersTab orders={orders} loadingOrders={loadingOrders} />
+              <OrdersTab orders={orders} loadingOrders={loadingOrders} refreshOrders={fetchOrders} />
             </TabsContent>
             
             {/* Notifications Tab */}
