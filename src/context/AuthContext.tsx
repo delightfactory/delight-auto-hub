@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -9,7 +10,8 @@ type User = {
   phone?: string;
   address?: string;
   city?: string;
-  avatar_url?: string; // Added for profile picture
+  avatar_url?: string;
+  location_coordinates?: { lat: number; lng: number } | null;
   preferences?: {
     notifications?: boolean;
     marketing?: boolean;
@@ -73,10 +75,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         .maybeSingle();
       
       if (data) {
-        // Treat data row as any to access extended fields
-        const row = data as any;
         // Parse preferences if needed
-        let preferences = row.preferences || {};
+        let preferences = data.preferences || {};
         if (typeof preferences === 'string') {
           try { preferences = JSON.parse(preferences); } catch { preferences = {}; }
         }
@@ -84,11 +84,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setUser({
           id: userId,
           email: userEmail,
-          name: row.name,
-          phone: row.phone,
-          address: row.address,
-          city: row.city,
-          avatar_url: row.avatar_url,
+          name: data.name,
+          phone: data.phone,
+          address: data.address,
+          city: data.city,
+          avatar_url: data.avatar_url,
+          location_coordinates: data.location_coordinates,
           preferences: preferences as User['preferences'],
         });
       } else {
@@ -312,6 +313,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (data.address !== undefined) updateData.address = data.address;
       if (data.city !== undefined) updateData.city = data.city;
       if (data.avatar_url !== undefined) updateData.avatar_url = data.avatar_url;
+      if (data.location_coordinates !== undefined) updateData.location_coordinates = data.location_coordinates;
       
       // Handle preferences - merge with existing preferences
       if (data.preferences) {

@@ -1,11 +1,13 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, X, Plus, Minus, Check, ShoppingBag, ShoppingBasket, ArrowRight } from 'lucide-react';
+import { ShoppingCart, X, Plus, Minus, Check, ShoppingBag, ShoppingBasket, ArrowRight, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CartItem, useCart } from '@/context/CartContext';
 import { toast } from '@/components/ui/use-toast';
 import Checkout from './Checkout';
+import { useAuth } from '@/context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 interface CartDropdownProps {
   inFloatingMode?: boolean;
@@ -15,6 +17,8 @@ const CartDropdown: React.FC<CartDropdownProps> = ({ inFloatingMode = false }) =
   const [isOpen, setIsOpen] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const { items, total, itemCount, removeItem, updateQuantity, clearCart } = useCart();
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   const toggleCart = () => {
     setIsOpen(!isOpen);
@@ -24,7 +28,27 @@ const CartDropdown: React.FC<CartDropdownProps> = ({ inFloatingMode = false }) =
   };
 
   const handleStartCheckout = () => {
-    setShowCheckout(true);
+    if (!user) {
+      // Redirect to auth page if not logged in
+      toast({ 
+        title: "يرجى تسجيل الدخول", 
+        description: "يجب تسجيل الدخول أولاً لإتمام عملية الشراء",
+        action: (
+          <Button variant="outline" onClick={() => navigate('/auth')}>
+            تسجيل الدخول
+          </Button>
+        )
+      });
+      
+      if (inFloatingMode) {
+        // Close the cart and navigate to auth page
+        setIsOpen(false);
+        navigate('/auth');
+      }
+    } else {
+      // User is logged in, proceed to checkout
+      setShowCheckout(true);
+    }
   };
 
   const handleCloseCheckout = () => {
@@ -84,8 +108,17 @@ const CartDropdown: React.FC<CartDropdownProps> = ({ inFloatingMode = false }) =
           whileHover={{ x: -4 }}
           className="flex items-center gap-2"
         >
-          إتمام الطلب
-          <Check className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+          {!user ? (
+            <>
+              تسجيل الدخول لإتمام الطلب
+              <LogIn className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+            </>
+          ) : (
+            <>
+              إتمام الطلب
+              <Check className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+            </>
+          )}
         </motion.span>
       </Button>
     </div>
@@ -223,6 +256,7 @@ const CartDropdown: React.FC<CartDropdownProps> = ({ inFloatingMode = false }) =
   );
 };
 
+// Extracting CartItemCard to a separate component for better readability
 interface CartItemCardProps {
   item: CartItem;
   removeItem: (id: string) => void;

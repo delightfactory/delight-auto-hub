@@ -18,8 +18,6 @@ export type Database = {
           id: string
           name: string
           phone: string | null
-          avatar_url: string | null
-          preferences: Json | null
           updated_at: string
         }
         Insert: {
@@ -30,8 +28,6 @@ export type Database = {
           id?: string
           name: string
           phone?: string | null
-          avatar_url?: string | null
-          preferences?: Json | null
           updated_at?: string
         }
         Update: {
@@ -42,8 +38,6 @@ export type Database = {
           id?: string
           name?: string
           phone?: string | null
-          avatar_url?: string | null
-          preferences?: Json | null
           updated_at?: string
         }
         Relationships: []
