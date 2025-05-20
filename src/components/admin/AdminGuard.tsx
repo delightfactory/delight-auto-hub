@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Loader } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const AdminGuard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
@@ -13,30 +14,57 @@ const AdminGuard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   useEffect(() => {
     // Only check for admin status once auth is no longer loading
-    if (!loading) {
-      // Check if user exists and has admin role
-      const userIsAdmin = !!user && user.app_metadata?.role === 'admin';
-      setIsAdmin(userIsAdmin);
+    const checkAdminStatus = async () => {
+      if (loading) return;
       
-      // If user is not admin, redirect to home and show a toast
-      if (!userIsAdmin && user !== null) {
-        toast({
-          title: "غير مصرح",
-          description: "ليس لديك صلاحية الوصول إلى لوحة التحكم",
-          variant: "destructive"
-        });
-        navigate('/');
-      }
-      
-      // If user is not logged in, redirect to login
-      if (!user && !loading) {
+      if (!user) {
+        setIsAdmin(false);
         toast({
           title: "تسجيل الدخول مطلوب",
           description: "يرجى تسجيل الدخول للوصول إلى لوحة التحكم",
         });
         navigate('/auth', { state: { returnUrl: '/admin' } });
+        return;
       }
-    }
+      
+      // Check if the user is an admin by querying the customers table
+      try {
+        const { data, error } = await supabase
+          .from('customers')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+          
+        const userIsAdmin = data?.role === 'admin';
+        setIsAdmin(userIsAdmin);
+        
+        if (!userIsAdmin) {
+          toast({
+            title: "غير مصرح",
+            description: "ليس لديك صلاحية الوصول إلى لوحة التحكم",
+            variant: "destructive"
+          });
+          navigate('/');
+        }
+        
+        if (error) {
+          console.error("Error checking admin status:", error);
+          setIsAdmin(false);
+          toast({
+            title: "خطأ في التحقق",
+            description: "حدث خطأ أثناء التحقق من الصلاحيات",
+            variant: "destructive"
+          });
+          navigate('/');
+        }
+      } catch (err) {
+        console.error("Error in admin check:", err);
+        setIsAdmin(false);
+        navigate('/');
+      }
+    };
+    
+    checkAdminStatus();
   }, [user, loading, navigate, toast]);
 
   // Show loading state when authentication is being checked
