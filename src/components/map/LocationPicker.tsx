@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, Loader } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -22,7 +21,8 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ initialLocation, onLoca
 
   // Load the Google Maps script
   useEffect(() => {
-    if (!window.google) {
+    // First check if the script is already loaded
+    if (typeof window.google === 'undefined') {
       const script = document.createElement('script');
       script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
       script.async = true;
@@ -65,15 +65,15 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ initialLocation, onLoca
         ],
       };
       
-      googleMapRef.current = new google.maps.Map(mapRef.current, mapOptions);
+      googleMapRef.current = new window.google.maps.Map(mapRef.current, mapOptions);
       
       // Create a marker if there's a current location
       if (currentLocation) {
-        markerRef.current = new google.maps.Marker({
+        markerRef.current = new window.google.maps.Marker({
           position: currentLocation,
           map: googleMapRef.current,
           draggable: true,
-          animation: google.maps.Animation.DROP,
+          animation: window.google.maps.Animation.DROP,
         });
         
         // Update location when marker is dragged
@@ -98,11 +98,11 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ initialLocation, onLoca
           if (markerRef.current) {
             markerRef.current.setPosition(clickedLocation);
           } else {
-            markerRef.current = new google.maps.Marker({
+            markerRef.current = new window.google.maps.Marker({
               position: clickedLocation,
               map: googleMapRef.current,
               draggable: true,
-              animation: google.maps.Animation.DROP,
+              animation: window.google.maps.Animation.DROP,
             });
             
             // Add drag listener to new marker
@@ -153,11 +153,11 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ initialLocation, onLoca
             if (markerRef.current) {
               markerRef.current.setPosition(userLocation);
             } else {
-              markerRef.current = new google.maps.Marker({
+              markerRef.current = new window.google.maps.Marker({
                 position: userLocation,
                 map: googleMapRef.current,
                 draggable: true,
-                animation: google.maps.Animation.DROP,
+                animation: window.google.maps.Animation.DROP,
               });
               
               // Add drag listener
