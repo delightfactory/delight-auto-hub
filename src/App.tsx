@@ -28,6 +28,16 @@ const OrdersPage = lazy(() => import("./pages/OrdersPage"));
 const AuthPage = lazy(() => import("./pages/AuthPage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 
+// Admin Pages
+const AdminLayout = lazy(() => import("./layouts/AdminLayout"));
+const DashboardPage = lazy(() => import("./pages/admin/DashboardPage"));
+const AdminProductsPage = lazy(() => import("./pages/admin/ProductsPage"));
+const AdminOrdersPage = lazy(() => import("./pages/admin/OrdersPage"));
+const AdminCustomersPage = lazy(() => import("./pages/admin/CustomersPage"));
+const AdminArticlesPage = lazy(() => import("./pages/admin/ArticlesPage"));
+const AdminCategoriesPage = lazy(() => import("./pages/admin/CategoriesPage"));
+const AdminSettingsPage = lazy(() => import("./pages/admin/SettingsPage"));
+
 // Create custom QueryClient with optimized settings
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -79,6 +89,17 @@ const AnimatedRoutes = () => {
               <Route path="*" element={<NotFound />} />
             </Route>
             <Route path="/auth" element={<AuthPage />} />
+            
+            {/* لوحة التحكم للمسؤولين */}
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<DashboardPage />} />
+              <Route path="products" element={<AdminProductsPage />} />
+              <Route path="orders" element={<AdminOrdersPage />} />
+              <Route path="customers" element={<AdminCustomersPage />} />
+              <Route path="articles" element={<AdminArticlesPage />} />
+              <Route path="categories" element={<AdminCategoriesPage />} />
+              <Route path="settings" element={<AdminSettingsPage />} />
+            </Route>
           </Routes>
         </Suspense>
       </motion.div>

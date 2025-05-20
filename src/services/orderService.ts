@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 interface CustomerData {
@@ -24,7 +25,8 @@ export const placeOrder = async (customerData: CustomerData, orderData: OrderDat
           name: customerData.name,
           phone: customerData.phone,
           address: customerData.address,
-          city: customerData.city
+          city: customerData.city,
+          role: 'customer' // إضافة الدور الافتراضي
         },
         { onConflict: 'email' }
       )
