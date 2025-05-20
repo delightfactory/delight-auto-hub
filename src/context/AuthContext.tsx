@@ -1,7 +1,7 @@
-
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { Json } from '@/integrations/supabase/types';
 
 type User = {
   id: string;
@@ -38,6 +38,38 @@ export function useAuth() {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
+}
+
+// Function to safely parse location coordinates from JSON
+function parseLocationCoordinates(coords: Json | null): { lat: number; lng: number } | null {
+  if (!coords) return null;
+  
+  try {
+    // Handle case when coords is already an object with lat/lng
+    if (typeof coords === 'object' && coords !== null && 'lat' in coords && 'lng' in coords) {
+      const lat = Number(coords.lat);
+      const lng = Number(coords.lng);
+      if (!isNaN(lat) && !isNaN(lng)) {
+        return { lat, lng };
+      }
+    }
+    
+    // Handle case when coords is a string that needs parsing
+    if (typeof coords === 'string') {
+      const parsed = JSON.parse(coords);
+      if (typeof parsed === 'object' && parsed !== null && 'lat' in parsed && 'lng' in parsed) {
+        const lat = Number(parsed.lat);
+        const lng = Number(parsed.lng);
+        if (!isNaN(lat) && !isNaN(lng)) {
+          return { lat, lng };
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Error parsing location coordinates:", error);
+  }
+  
+  return null;
 }
 
 // Function to clean up auth state - important to prevent session conflicts
@@ -81,6 +113,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           try { preferences = JSON.parse(preferences); } catch { preferences = {}; }
         }
 
+        // Parse location coordinates properly
+        const locationCoordinates = parseLocationCoordinates(data.location_coordinates);
+
         setUser({
           id: userId,
           email: userEmail,
@@ -89,7 +124,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           address: data.address,
           city: data.city,
           avatar_url: data.avatar_url,
-          location_coordinates: data.location_coordinates,
+          location_coordinates: locationCoordinates,
           preferences: preferences as User['preferences'],
         });
       } else {
