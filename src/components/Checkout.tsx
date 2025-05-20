@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Check, CreditCard, MapPin, Truck, ChevronRight, Mail, Phone, User } from 'lucide-react';
@@ -8,9 +7,11 @@ import { Separator } from '@/components/ui/separator';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
 import { toast } from '@/components/ui/use-toast';
 import { placeOrder } from '@/services/orderService';
 import { Textarea } from '@/components/ui/textarea';
+import { useNavigate } from 'react-router-dom';
 
 interface CheckoutProps {
   onClose: () => void;
@@ -18,6 +19,8 @@ interface CheckoutProps {
 
 const Checkout: React.FC<CheckoutProps> = ({ onClose }) => {
   const { items, total, clearCart } = useCart();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [step, setStep] = useState<'shipping' | 'payment' | 'confirmation'>('shipping');
   const [loading, setLoading] = useState(false);
   const [orderId, setOrderId] = useState<string>("");
@@ -33,6 +36,29 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose }) => {
   
   // Calculate total including shipping
   const [totalWithShipping, setTotalWithShipping] = useState('0');
+  
+  // Fill form with user data if available
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        name: user.name || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        address: user.address || '',
+        city: user.city || '',
+      }));
+    } else {
+      // Redirect to auth if not logged in
+      toast({
+        title: "تسجيل الدخول مطلوب",
+        description: "يرجى تسجيل الدخول أو إنشاء حساب جديد لمتابعة عملية الشراء",
+        variant: "default"
+      });
+      onClose();
+      navigate('/auth');
+    }
+  }, [user, navigate, onClose]);
   
   useEffect(() => {
     // Parse the total price from string format (e.g., "120 ريال") to number

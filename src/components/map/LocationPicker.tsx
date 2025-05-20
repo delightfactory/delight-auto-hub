@@ -18,12 +18,13 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ initialLocation, onLoca
   const mapRef = useRef<HTMLDivElement>(null);
   const googleMapRef = useRef<google.maps.Map | null>(null);
   const markerRef = useRef<google.maps.Marker | null>(null);
+  const apiKey = "AIzaSyAPptCkGAVzsqKNUbOXKqP77FIL73dHkTQ"; // Google Maps API key
 
   // Load the Google Maps script
   useEffect(() => {
     if (!window.google) {
       const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyAPptCkGAVzsqKNUbOXKqP77FIL73dHkTQ&libraries=places`;
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
       script.async = true;
       script.defer = true;
       script.onload = () => setMapLoaded(true);
@@ -131,7 +132,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ initialLocation, onLoca
     } finally {
       setLoading(false);
     }
-  }, [mapLoaded, mapRef, onLocationSelected]);
+  }, [mapLoaded, mapRef, onLocationSelected, currentLocation]);
   
   // Function to get user's current location
   const getCurrentLocation = () => {

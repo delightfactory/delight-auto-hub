@@ -8,6 +8,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from '@/comp
 import CartDropdown from './CartDropdown';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useNavigate } from 'react-router-dom';
+import { toast } from '@/components/ui/use-toast';
 
 const FloatingCartButton: React.FC = () => {
   const { itemCount } = useCart();
@@ -22,17 +23,27 @@ const FloatingCartButton: React.FC = () => {
     // This prevents hydration issues
     setIsMounted(true);
   }, []);
-  
-  const handleClick = () => {
+
+  const handleCartAction = () => {
+    if (!user) {
+      toast({
+        title: "تسجيل الدخول مطلوب",
+        description: "يرجى تسجيل الدخول أو إنشاء حساب جديد لمتابعة عملية الشراء",
+        variant: "default"
+      });
+      navigate('/auth');
+      return;
+    }
+    
     setIsOpen(true);
   };
-
+  
   if (!isMounted) return null;
 
   return (
     <>
       <motion.button
-        onClick={handleClick}
+        onClick={handleCartAction}
         className="fixed bottom-6 right-6 z-50 bg-delight-orange text-delight-dark p-4 rounded-full shadow-delight hover:shadow-xl transition-all duration-300 lg:bottom-8 lg:right-8 touch-target"
         whileHover={{ scale: 1.05, boxShadow: "0 0 20px rgba(255, 153, 0, 0.5)" }}
         whileTap={{ scale: 0.95 }}
