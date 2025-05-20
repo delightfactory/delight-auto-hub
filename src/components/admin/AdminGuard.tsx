@@ -1,72 +1,60 @@
 
 import React, { useEffect, useState } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { checkIfAdmin } from '@/services/adminService';
-import { Loader2 } from 'lucide-react';
+import { Loader } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
 
-interface AdminGuardProps {
-  children: React.ReactNode;
-}
-
-const AdminGuard: React.FC<AdminGuardProps> = ({ children }) => {
-  const { user } = useAuth();
-  const location = useLocation();
+const AdminGuard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const verifyAdmin = async () => {
-      if (!user) {
-        setIsAdmin(false);
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        const adminStatus = await checkIfAdmin();
-        setIsAdmin(adminStatus);
-      } catch (error) {
-        console.error("خطأ في التحقق من صلاحيات المسؤول:", error);
+    // Only check for admin status once auth is no longer loading
+    if (!loading) {
+      // Check if user exists and has admin role
+      const userIsAdmin = !!user && user.app_metadata?.role === 'admin';
+      setIsAdmin(userIsAdmin);
+      
+      // If user is not admin, redirect to home and show a toast
+      if (!userIsAdmin && user !== null) {
         toast({
-          title: "خطأ في التحقق من الصلاحيات",
-          description: "لم نتمكن من التحقق من صلاحياتك الإدارية",
+          title: "غير مصرح",
+          description: "ليس لديك صلاحية الوصول إلى لوحة التحكم",
           variant: "destructive"
         });
-        setIsAdmin(false);
-      } finally {
-        setIsLoading(false);
+        navigate('/');
       }
-    };
+      
+      // If user is not logged in, redirect to login
+      if (!user && !loading) {
+        toast({
+          title: "تسجيل الدخول مطلوب",
+          description: "يرجى تسجيل الدخول للوصول إلى لوحة التحكم",
+        });
+        navigate('/auth', { state: { returnUrl: '/admin' } });
+      }
+    }
+  }, [user, loading, navigate, toast]);
 
-    verifyAdmin();
-  }, [user, toast]);
-
-  if (isLoading) {
+  // Show loading state when authentication is being checked
+  if (loading || isAdmin === null) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen">
-        <Loader2 className="h-12 w-12 animate-spin text-red-600 mb-4" />
-        <p className="text-lg font-medium">التحقق من الصلاحيات...</p>
+      <div className="flex items-center justify-center w-full h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="flex flex-col items-center space-y-4">
+          <Loader className="h-12 w-12 text-red-600 animate-spin" />
+          <p className="text-lg font-medium text-gray-700 dark:text-gray-300">
+            التحقق من الصلاحيات...
+          </p>
+        </div>
       </div>
     );
   }
 
-  if (!user) {
-    return <Navigate to="/auth" state={{ from: location }} replace />;
-  }
-
-  if (!isAdmin) {
-    toast({
-      title: "وصول مرفوض",
-      description: "ليس لديك صلاحيات كافية للوصول إلى لوحة التحكم",
-      variant: "destructive"
-    });
-    return <Navigate to="/" replace />;
-  }
-
-  return <>{children}</>;
+  // Only render children if user is admin
+  return isAdmin ? <>{children}</> : null;
 };
 
 export default AdminGuard;
