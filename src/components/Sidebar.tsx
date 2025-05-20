@@ -16,13 +16,17 @@ import {
   Book, 
   Sun, 
   Moon,
-  ChevronLeft
+  ChevronLeft,
+  Settings,
+  User
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';
 import CartDropdown from '@/components/CartDropdown';
 import { Switch } from '@/components/ui/switch';
 import { useTheme } from '@/context/ThemeContext';
+import { useAuth } from '@/context/AuthContext';
+import AdminSidebarLink from './AdminSidebarLink';
 
 const navItems = [
   { path: '/', label: 'الرئيسية', icon: Home },
@@ -31,6 +35,12 @@ const navItems = [
   { path: '/articles', label: 'المقالات', icon: Book },
   { path: '/about', label: 'من نحن', icon: Info },
   { path: '/contact', label: 'اتصل بنا', icon: Phone },
+];
+
+const accountItems = [
+  { path: '/profile', label: 'الملف الشخصي', icon: User },
+  { path: '/orders', label: 'طلباتي', icon: ShoppingCart },
+  { path: '/settings', label: 'الإعدادات', icon: Settings },
 ];
 
 interface SidebarProps {
@@ -42,6 +52,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
   const location = useLocation();
   const { itemCount } = useCart();
   const { theme, toggleTheme } = useTheme();
+  const { user } = useAuth();
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -225,8 +236,56 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
             })}
           </nav>
 
+          {/* User account section */}
+          {user && (
+            <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <h3 className={`font-medium mb-2 ${
+                theme === 'dark' ? 'text-gray-200' : 'text-gray-900'
+              }`}>حسابي</h3>
+              
+              <div className="space-y-1.5">
+                {accountItems.map((item) => {
+                  const isActive = location.pathname === item.path;
+                  const ItemIcon = item.icon;
+                  
+                  return (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      onClick={() => isMobile && setIsOpen(false)}
+                    >
+                      <motion.div
+                        whileHover={{ backgroundColor: theme === 'dark' ? "rgba(31, 41, 55, 0.8)" : "rgba(238, 247, 255, 0.8)" }}
+                        className={cn(
+                          "flex items-center px-3 py-2 text-sm rounded-md transition-all duration-200",
+                          isActive
+                            ? theme === 'dark'
+                              ? "bg-gray-700 text-delight-400"
+                              : "bg-delight-50 text-delight-700"
+                            : ""
+                        )}
+                      >
+                        <ItemIcon className={`ml-2 w-4 h-4 ${
+                          isActive 
+                            ? theme === 'dark' ? "text-delight-400" : "text-delight-600"
+                            : theme === 'dark' ? "text-gray-400" : "text-gray-500"
+                        }`} />
+                        <span>{item.label}</span>
+                      </motion.div>
+                    </Link>
+                  );
+                })}
+              </div>
+
+              {/* Admin link for authorized users */}
+              <AdminSidebarLink>
+                <span>لوحة التحكم</span>
+              </AdminSidebarLink>
+            </div>
+          )}
+
           {/* Cart section */}
-          <div className={`mt-8 pt-6 border-t ${
+          <div className={`mt-6 pt-4 border-t ${
             theme === 'dark' ? 'border-gray-700' : 'border-gray-200'
           }`}>
             <div className="flex items-center justify-between">
