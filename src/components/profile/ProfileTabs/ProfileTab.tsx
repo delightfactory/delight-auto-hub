@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { User, MapPin, Phone, Mail } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -122,7 +121,7 @@ const ProfileTab: React.FC<ProfileTabProps> = ({
                 />
               </div>
 
-              {/* Location picker section */}
+              {/* Location picker section - modified for better cleanup */}
               <div className="space-y-2 md:col-span-2">
                 <div className="flex justify-between items-center">
                   <Label htmlFor="location">الموقع على الخريطة</Label>
@@ -152,10 +151,12 @@ const ProfileTab: React.FC<ProfileTabProps> = ({
                   </div>
                 )}
                 
+                {/* Only mount LocationPicker when it's visible */}
                 {showLocationPicker && (
                   <LocationPicker 
                     initialLocation={formData.location_coordinates}
                     onLocationSelected={handleLocationSelected}
+                    key={`location-picker-${showLocationPicker}`} // Force remount when visibility changes
                   />
                 )}
               </div>

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, Loader } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -17,6 +18,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ initialLocation, onLoca
   const mapRef = useRef<HTMLDivElement>(null);
   const googleMapRef = useRef<google.maps.Map | null>(null);
   const markerRef = useRef<google.maps.Marker | null>(null);
+  const scriptRef = useRef<HTMLScriptElement | null>(null);
   const apiKey = "AIzaSyAPptCkGAVzsqKNUbOXKqP77FIL73dHkTQ"; // Google Maps API key
 
   // Load the Google Maps script
@@ -29,6 +31,9 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ initialLocation, onLoca
       script.defer = true;
       script.onload = () => setMapLoaded(true);
       document.head.appendChild(script);
+      
+      // Store a reference to the script
+      scriptRef.current = script;
     } else {
       setMapLoaded(true);
     }
@@ -37,6 +42,11 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ initialLocation, onLoca
       // Clean up if component unmounts during load
       if (markerRef.current) {
         markerRef.current.setMap(null);
+        markerRef.current = null;
+      }
+      
+      if (googleMapRef.current) {
+        googleMapRef.current = null;
       }
     };
   }, []);
@@ -65,63 +75,67 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ initialLocation, onLoca
         ],
       };
       
-      googleMapRef.current = new window.google.maps.Map(mapRef.current, mapOptions);
-      
-      // Create a marker if there's a current location
-      if (currentLocation) {
-        markerRef.current = new window.google.maps.Marker({
-          position: currentLocation,
-          map: googleMapRef.current,
-          draggable: true,
-          animation: window.google.maps.Animation.DROP,
-        });
+      // Make sure the map element exists before creating the map
+      if (mapRef.current) {
+        googleMapRef.current = new window.google.maps.Map(mapRef.current, mapOptions);
         
-        // Update location when marker is dragged
-        markerRef.current.addListener("dragend", () => {
-          if (markerRef.current) {
-            const position = markerRef.current.getPosition();
-            if (position) {
-              const newLocation = { lat: position.lat(), lng: position.lng() };
-              setCurrentLocation(newLocation);
-              onLocationSelected(newLocation);
+        // Create a marker if there's a current location
+        if (currentLocation) {
+          markerRef.current = new window.google.maps.Marker({
+            position: currentLocation,
+            map: googleMapRef.current,
+            draggable: true,
+            animation: window.google.maps.Animation.DROP,
+          });
+          
+          // Update location when marker is dragged
+          markerRef.current.addListener("dragend", () => {
+            if (markerRef.current) {
+              const position = markerRef.current.getPosition();
+              if (position) {
+                const newLocation = { lat: position.lat(), lng: position.lng() };
+                setCurrentLocation(newLocation);
+                onLocationSelected(newLocation);
+              }
             }
+          });
+        }
+        
+        // Allow clicking on the map to place marker
+        const map = googleMapRef.current;
+        map.addListener("click", (e: google.maps.MapMouseEvent) => {
+          if (e.latLng) {
+            const clickedLocation = { lat: e.latLng.lat(), lng: e.latLng.lng() };
+            
+            // Update existing marker or create a new one
+            if (markerRef.current) {
+              markerRef.current.setPosition(clickedLocation);
+            } else {
+              markerRef.current = new window.google.maps.Marker({
+                position: clickedLocation,
+                map: map,
+                draggable: true,
+                animation: window.google.maps.Animation.DROP,
+              });
+              
+              // Add drag listener to new marker
+              markerRef.current.addListener("dragend", () => {
+                if (markerRef.current) {
+                  const position = markerRef.current.getPosition();
+                  if (position) {
+                    const newLocation = { lat: position.lat(), lng: position.lng() };
+                    setCurrentLocation(newLocation);
+                    onLocationSelected(newLocation);
+                  }
+                }
+              });
+            }
+            
+            setCurrentLocation(clickedLocation);
+            onLocationSelected(clickedLocation);
           }
         });
       }
-      
-      // Allow clicking on the map to place marker
-      googleMapRef.current.addListener("click", (e: google.maps.MapMouseEvent) => {
-        if (e.latLng) {
-          const clickedLocation = { lat: e.latLng.lat(), lng: e.latLng.lng() };
-          
-          // Update existing marker or create a new one
-          if (markerRef.current) {
-            markerRef.current.setPosition(clickedLocation);
-          } else {
-            markerRef.current = new window.google.maps.Marker({
-              position: clickedLocation,
-              map: googleMapRef.current,
-              draggable: true,
-              animation: window.google.maps.Animation.DROP,
-            });
-            
-            // Add drag listener to new marker
-            markerRef.current.addListener("dragend", () => {
-              if (markerRef.current) {
-                const position = markerRef.current.getPosition();
-                if (position) {
-                  const newLocation = { lat: position.lat(), lng: position.lng() };
-                  setCurrentLocation(newLocation);
-                  onLocationSelected(newLocation);
-                }
-              }
-            });
-          }
-          
-          setCurrentLocation(clickedLocation);
-          onLocationSelected(clickedLocation);
-        }
-      });
     } catch (error) {
       console.error("Error initializing map:", error);
       toast({
@@ -132,6 +146,18 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ initialLocation, onLoca
     } finally {
       setLoading(false);
     }
+    
+    // Cleanup function to properly dispose of Google Maps objects
+    return () => {
+      // Remove event listeners and references
+      if (markerRef.current) {
+        markerRef.current.setMap(null);
+        markerRef.current = null;
+      }
+      
+      // Clear the map reference
+      googleMapRef.current = null;
+    };
   }, [mapLoaded, mapRef, onLocationSelected, currentLocation]);
   
   // Function to get user's current location
