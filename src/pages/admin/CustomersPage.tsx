@@ -38,6 +38,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { Link } from 'react-router-dom';
 
 const CustomersPage = () => {
   const { toast } = useToast();
@@ -180,17 +181,17 @@ const CustomersPage = () => {
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-blue-600 border-blue-200"
-                        asChild
-                      >
-                        <a href={`/admin/orders?customer=${customer.id}`}>
+                      {/* Fixed: Using Link component correctly with Button */}
+                      <Link to={`/admin/orders?customer=${customer.id}`}>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-blue-600 border-blue-200"
+                        >
                           <ShoppingBag className="h-4 w-4 ml-1" />
-                          الطلبات
-                        </a>
-                      </Button>
+                          <span>الطلبات</span>
+                        </Button>
+                      </Link>
                       
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
@@ -200,7 +201,9 @@ const CustomersPage = () => {
                             className={customer.role === 'admin' ? 'text-gray-600' : 'text-red-600 border-red-200'}
                           >
                             <Shield className="h-4 w-4 ml-1" />
-                            {customer.role === 'admin' ? 'إلغاء الإدارة' : 'ترقية لمسؤول'}
+                            <span>
+                              {customer.role === 'admin' ? 'إلغاء الإدارة' : 'ترقية لمسؤول'}
+                            </span>
                           </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
