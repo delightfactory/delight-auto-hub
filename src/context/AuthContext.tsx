@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -71,36 +70,31 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         .from('customers')
         .select('*')
         .eq('email', userEmail)
-        .single();
-        
+        .maybeSingle();
+      
       if (data) {
-        // Parse preferences if it exists and is a string
-        let preferences = data.preferences || {};
+        // Treat data row as any to access extended fields
+        const row = data as any;
+        // Parse preferences if needed
+        let preferences = row.preferences || {};
         if (typeof preferences === 'string') {
-          try {
-            preferences = JSON.parse(preferences);
-          } catch (e) {
-            preferences = {};
-          }
+          try { preferences = JSON.parse(preferences); } catch { preferences = {}; }
         }
 
         setUser({
           id: userId,
           email: userEmail,
-          name: data.name,
-          phone: data.phone,
-          address: data.address,
-          city: data.city,
-          avatar_url: data.avatar_url,
-          preferences
+          name: row.name,
+          phone: row.phone,
+          address: row.address,
+          city: row.city,
+          avatar_url: row.avatar_url,
+          preferences: preferences as User['preferences'],
         });
-      } else if (error) {
-        console.error("Error fetching user profile:", error);
-        // If we don't find a profile, at least set the basic user data
-        setUser({
-          id: userId,
-          email: userEmail
-        });
+      } else {
+        // No record or error: log if error and set basic user
+        if (error) console.error("Error fetching user profile:", error);
+        setUser({ id: userId, email: userEmail });
       }
     } catch (err) {
       console.error("Error in fetchUserProfile:", err);
@@ -199,6 +193,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           title: "تم تسجيل الدخول بنجاح", 
           description: "مرحباً بك في ديلايت" 
         });
+        // Immediately fetch and set the user profile
+        await fetchUserProfile(data.user.id, data.user.email || '');
       }
       
       return { error: null };
