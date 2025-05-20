@@ -36,11 +36,18 @@ const articleSchema = z.object({
   published: z.boolean().default(false)
 });
 
+// Extended schema with additional fields for database operations
+const extendedArticleSchema = articleSchema.extend({
+  author_id: z.string().uuid().optional(),
+  published_at: z.string().optional().nullable()
+});
+
 type ArticleFormValues = z.infer<typeof articleSchema>;
+type ExtendedArticleFormValues = z.infer<typeof extendedArticleSchema>;
 
 interface ArticleFormProps {
   initialData?: any;
-  onSubmit: (data: ArticleFormValues) => Promise<void>;
+  onSubmit: (data: ExtendedArticleFormValues) => Promise<void>;
   onCancel: () => void;
 }
 
@@ -136,21 +143,26 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ initialData, onSubmit, onCanc
   
   // التحضير للإرسال
   const handleFormSubmit = (data: ArticleFormValues) => {
+    // Prepare the extended data with additional fields
+    const extendedData: ExtendedArticleFormValues = {
+      ...data
+    };
+
     // إضافة معرف المؤلف إذا كان المقالة جديدة
     if (!initialData && user) {
-      onSubmit({
-        ...data,
-        author_id: user.id,
-        published_at: data.published ? new Date().toISOString() : null
-      });
-    } else {
-      onSubmit({
-        ...data,
-        published_at: data.published ? 
-          (initialData && initialData.published ? initialData.published_at : new Date().toISOString()) : 
-          null
-      });
+      extendedData.author_id = user.id;
     }
+    
+    // Handle published_at date
+    if (data.published) {
+      extendedData.published_at = initialData && initialData.published 
+        ? initialData.published_at 
+        : new Date().toISOString();
+    } else {
+      extendedData.published_at = null;
+    }
+
+    onSubmit(extendedData);
   };
 
   return (

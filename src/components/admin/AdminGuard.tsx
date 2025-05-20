@@ -4,6 +4,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { checkIfAdmin } from '@/services/adminService';
 import { Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface AdminGuardProps {
   children: React.ReactNode;
@@ -12,6 +13,7 @@ interface AdminGuardProps {
 const AdminGuard: React.FC<AdminGuardProps> = ({ children }) => {
   const { user } = useAuth();
   const location = useLocation();
+  const { toast } = useToast();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -28,6 +30,11 @@ const AdminGuard: React.FC<AdminGuardProps> = ({ children }) => {
         setIsAdmin(adminStatus);
       } catch (error) {
         console.error("خطأ في التحقق من صلاحيات المسؤول:", error);
+        toast({
+          title: "خطأ في التحقق من الصلاحيات",
+          description: "لم نتمكن من التحقق من صلاحياتك الإدارية",
+          variant: "destructive"
+        });
         setIsAdmin(false);
       } finally {
         setIsLoading(false);
@@ -35,7 +42,7 @@ const AdminGuard: React.FC<AdminGuardProps> = ({ children }) => {
     };
 
     verifyAdmin();
-  }, [user]);
+  }, [user, toast]);
 
   if (isLoading) {
     return (
@@ -51,6 +58,11 @@ const AdminGuard: React.FC<AdminGuardProps> = ({ children }) => {
   }
 
   if (!isAdmin) {
+    toast({
+      title: "وصول مرفوض",
+      description: "ليس لديك صلاحيات كافية للوصول إلى لوحة التحكم",
+      variant: "destructive"
+    });
     return <Navigate to="/" replace />;
   }
 

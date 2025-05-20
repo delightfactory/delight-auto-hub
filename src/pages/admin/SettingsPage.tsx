@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -25,7 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { Settings, Mail, MessageSquare, Lock, Shield, BuildingStore } from 'lucide-react';
+import { Settings, Mail, MessageSquare, Lock, Shield, Building } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 // مخطط إعدادات الموقع
@@ -190,7 +189,7 @@ const SettingsPage = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
-                <BuildingStore className="mr-2 h-5 w-5" />
+                <Building className="mr-2 h-5 w-5" />
                 إعدادات المتجر والتفاعل
               </CardTitle>
               <CardDescription>
