@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -92,6 +93,13 @@ const ProfilePage = () => {
       fetchOrders();
     }
   }, [user]);
+
+  // Reset location picker when changing tabs
+  useEffect(() => {
+    if (activeTab !== "profile" && showLocationPicker) {
+      setShowLocationPicker(false);
+    }
+  }, [activeTab]);
   
   const fetchOrders = async () => {
     if (!user) return;

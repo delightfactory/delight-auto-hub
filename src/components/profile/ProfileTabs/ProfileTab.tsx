@@ -153,9 +153,10 @@ const ProfileTab: React.FC<ProfileTabProps> = ({
                   </div>
                 )}
                 
-                {/* Only render LocationPicker when visible and use a unique key for proper unmounting */}
+                {/* Only render LocationPicker when visible */}
                 {showLocationPicker && (
-                  <div key={`location-picker-container-${Date.now()}`}>
+                  <div className="location-picker-container">
+                    {/* Mounting a new instance with a unique key */}
                     <LocationPicker 
                       initialLocation={formData.location_coordinates}
                       onLocationSelected={handleLocationSelected}
