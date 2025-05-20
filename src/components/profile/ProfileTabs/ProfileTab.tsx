@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { User, MapPin, Phone, Mail } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -49,6 +50,7 @@ const ProfileTab: React.FC<ProfileTabProps> = ({
         <CardContent>
           <form onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {/* Personal Information Fields */}
               <div className="space-y-2">
                 <Label htmlFor="name">الاسم</Label>
                 <div className="relative">
@@ -121,7 +123,7 @@ const ProfileTab: React.FC<ProfileTabProps> = ({
                 />
               </div>
 
-              {/* Location picker section - modified for better cleanup */}
+              {/* Location picker section - improved for reliable cleanup */}
               <div className="space-y-2 md:col-span-2">
                 <div className="flex justify-between items-center">
                   <Label htmlFor="location">الموقع على الخريطة</Label>
@@ -151,13 +153,15 @@ const ProfileTab: React.FC<ProfileTabProps> = ({
                   </div>
                 )}
                 
-                {/* Only mount LocationPicker when it's visible */}
+                {/* Only render LocationPicker when visible and use a unique key for proper unmounting */}
                 {showLocationPicker && (
-                  <LocationPicker 
-                    initialLocation={formData.location_coordinates}
-                    onLocationSelected={handleLocationSelected}
-                    key={`location-picker-${showLocationPicker}`} // Force remount when visibility changes
-                  />
+                  <div key={`location-picker-container-${Date.now()}`}>
+                    <LocationPicker 
+                      initialLocation={formData.location_coordinates}
+                      onLocationSelected={handleLocationSelected}
+                      key={`location-picker-${Date.now()}`}
+                    />
+                  </div>
                 )}
               </div>
             </div>
