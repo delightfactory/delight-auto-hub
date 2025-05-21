@@ -203,8 +203,8 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onStatusUpdate }) 
       <div>
         <h3 className="text-lg font-medium mb-3">منتجات الطلب</h3>
         <div className="space-y-4">
-          {order.items && order.items.length > 0 ? (
-            order.items.map((item: any) => (
+          {order.order_items && order.order_items.length > 0 ? (
+            order.order_items.map((item: any) => (
               <div key={item.id} className="flex items-center justify-between border-b pb-3">
                 <div className="flex items-center">
                   <Package className="h-5 w-5 text-gray-500 ml-2" />

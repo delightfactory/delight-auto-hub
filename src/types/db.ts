@@ -63,6 +63,14 @@ export interface AppearanceSettings {
     heading: string;
     body: string;
   };
+  logo?: string;
+  favicon?: string;
+  homeSettings?: {
+    showBanner: boolean;
+    showFeaturedProducts: boolean;
+    showNewProducts: boolean;
+    showTestimonials: boolean;
+  };
   created_at?: string;
   updated_at?: string;
 }

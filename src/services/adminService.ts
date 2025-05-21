@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Product } from "@/types/db";
 
@@ -429,161 +428,65 @@ export const categoryService = {
   }
 };
 
-// خدمات إدارة إعدادات الموقع
+// Add this to the adminService object for type safety with site settings and appearance services
 export const siteSettingsService = {
-  // جلب إعدادات الموقع
-  getSiteSettings: async () => {
+  getSiteSettings: async (): Promise<SiteSettings> => {
     const { data, error } = await supabase
       .from('site_settings')
       .select('*')
       .single();
     
     if (error) {
-      console.error("خطأ في جلب إعدادات الموقع:", error);
-      // إرجاع إعدادات افتراضية في حالة عدم وجود إعدادات محفوظة
-      return {
-        siteName: "ديلايت للعناية بالسيارات",
-        siteDescription: "منتجات العناية بالسيارات عالية الجودة",
-        contactEmail: "info@delight.com",
-        phoneNumber: "+123456789",
-        address: "المملكة العربية السعودية، الرياض",
-        enableRegistration: true,
-        enableComments: true,
-        theme: {
-          primaryColor: "#FF0000",
-          secondaryColor: "#0000FF",
-          textColor: "#333333",
-          backgroundColor: "#FFFFFF"
-        }
-      };
-    }
-    return data;
-  },
-  
-  // تحديث إعدادات الموقع
-  updateSiteSettings: async (settingsData: any) => {
-    // التحقق من وجود إعدادات سابقة
-    const { data: existingSettings, error: fetchError } = await supabase
-      .from('site_settings')
-      .select('id')
-      .maybeSingle();
-    
-    let data;
-    let error;
-    
-    if (fetchError && fetchError.code !== 'PGRST116') {
-      console.error("خطأ في التحقق من وجود إعدادات:", fetchError);
-      throw fetchError;
-    }
-    
-    if (existingSettings) {
-      // تحديث الإعدادات الموجودة
-      const result = await supabase
-        .from('site_settings')
-        .update(settingsData)
-        .eq('id', existingSettings.id)
-        .select();
-      
-      data = result.data;
-      error = result.error;
-    } else {
-      // إنشاء إعدادات جديدة
-      const result = await supabase
-        .from('site_settings')
-        .insert([settingsData])
-        .select();
-      
-      data = result.data;
-      error = result.error;
-    }
-    
-    if (error) {
-      console.error("خطأ في حفظ إعدادات الموقع:", error);
+      console.error('Error fetching site settings:', error);
       throw error;
     }
     
-    return data?.[0];
+    return data as SiteSettings;
+  },
+  
+  updateSiteSettings: async (settings: SiteSettings): Promise<SiteSettings> => {
+    const { data, error } = await supabase
+      .from('site_settings')
+      .upsert([settings])
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error updating site settings:', error);
+      throw error;
+    }
+    
+    return data as SiteSettings;
   }
 };
 
-// خدمات إدارة المظهر
 export const appearanceService = {
-  // جلب إعدادات المظهر
-  getAppearanceSettings: async () => {
+  getAppearanceSettings: async (): Promise<AppearanceSettings> => {
     const { data, error } = await supabase
       .from('appearance_settings')
       .select('*')
       .single();
     
     if (error) {
-      console.error("خطأ في جلب إعدادات المظهر:", error);
-      // إرجاع إعدادات افتراضية في حالة عدم وجود إعدادات محفوظة
-      return {
-        theme: {
-          primaryColor: "#FF0000",
-          secondaryColor: "#0000FF",
-          textColor: "#333333",
-          backgroundColor: "#FFFFFF"
-        },
-        layout: "fluid",
-        contentWidth: "large",
-        darkMode: true,
-        responsive: {
-          mobile: { enabled: true, collapsibleMenu: true },
-          tablet: { enabled: true, sidebarMenu: true },
-          desktop: { enabled: true, topMenu: true }
-        },
-        fonts: {
-          heading: "Cairo",
-          body: "Tajawal"
-        }
-      };
-    }
-    return data;
-  },
-  
-  // تحديث إعدادات المظهر
-  updateAppearanceSettings: async (settingsData: any) => {
-    // التحقق من وجود إعدادات سابقة
-    const { data: existingSettings, error: fetchError } = await supabase
-      .from('appearance_settings')
-      .select('id')
-      .maybeSingle();
-    
-    let data;
-    let error;
-    
-    if (fetchError && fetchError.code !== 'PGRST116') {
-      console.error("خطأ في التحقق من وجود إعدادات المظهر:", fetchError);
-      throw fetchError;
-    }
-    
-    if (existingSettings) {
-      // تحديث الإعدادات الموجودة
-      const result = await supabase
-        .from('appearance_settings')
-        .update(settingsData)
-        .eq('id', existingSettings.id)
-        .select();
-      
-      data = result.data;
-      error = result.error;
-    } else {
-      // إنشاء إعدادات جديدة
-      const result = await supabase
-        .from('appearance_settings')
-        .insert([settingsData])
-        .select();
-      
-      data = result.data;
-      error = result.error;
-    }
-    
-    if (error) {
-      console.error("خطأ في حفظ إعدادات المظهر:", error);
+      console.error('Error fetching appearance settings:', error);
       throw error;
     }
     
-    return data?.[0];
+    return data as AppearanceSettings;
+  },
+  
+  updateAppearanceSettings: async (settings: AppearanceSettings): Promise<AppearanceSettings> => {
+    const { data, error } = await supabase
+      .from('appearance_settings')
+      .upsert([settings])
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error updating appearance settings:', error);
+      throw error;
+    }
+    
+    return data as AppearanceSettings;
   }
 };

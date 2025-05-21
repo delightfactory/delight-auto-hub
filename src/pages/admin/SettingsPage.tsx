@@ -96,20 +96,26 @@ const SettingsPage = () => {
   useEffect(() => {
     if (settings) {
       form.reset({
-        siteName: settings.siteName,
-        siteDescription: settings.siteDescription || "",
-        contactEmail: settings.contactEmail,
-        phoneNumber: settings.phoneNumber || "",
-        address: settings.address || "",
-        enableRegistration: settings.enableRegistration,
-        enableComments: settings.enableComments,
+        siteName: (settings as SiteSettings).siteName,
+        siteDescription: (settings as SiteSettings).siteDescription || "",
+        contactEmail: (settings as SiteSettings).contactEmail,
+        phoneNumber: (settings as SiteSettings).phoneNumber || "",
+        address: (settings as SiteSettings).address || "",
+        enableRegistration: (settings as SiteSettings).enableRegistration,
+        enableComments: (settings as SiteSettings).enableComments,
       });
     }
   }, [settings, form]);
   
   // معالج حفظ الإعدادات
   const onSubmit = (data: SiteSettingsFormValues) => {
-    saveMutation.mutate(data);
+    saveMutation.mutate({
+      ...data,
+      siteName: data.siteName,
+      contactEmail: data.contactEmail,
+      enableRegistration: data.enableRegistration,
+      enableComments: data.enableComments
+    } as SiteSettings);
   };
 
   if (isLoading) {

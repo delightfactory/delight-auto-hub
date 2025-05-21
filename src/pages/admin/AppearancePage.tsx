@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { 
   Palette, 
@@ -47,6 +46,12 @@ const AppearancePage = () => {
     fonts: {
       heading: "Cairo",
       body: "Tajawal"
+    },
+    homeSettings: {
+      showBanner: false,
+      showFeaturedProducts: true,
+      showNewProducts: true,
+      showTestimonials: false
     }
   });
   
@@ -83,7 +88,7 @@ const AppearancePage = () => {
   // تحديث نموذج البيانات عند تحميل الإعدادات
   useEffect(() => {
     if (settings) {
-      setFormState(settings);
+      setFormState(settings as AppearanceSettings);
     }
   }, [settings]);
   
