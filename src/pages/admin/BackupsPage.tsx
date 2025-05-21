@@ -92,7 +92,7 @@ const BackupsPage = () => {
           toast({
             title: "تم إنشاء النسخة الاحتياطية بنجاح",
             description: "تم حفظ النسخة الاحتياطية بنجاح في قاعدة البيانات.",
-            icon: <CheckCircle className="h-4 w-4 text-green-600" />
+            variant: "success",
           });
           
           return 100;
@@ -106,6 +106,7 @@ const BackupsPage = () => {
     toast({
       title: "جاري تحميل النسخة الاحتياطية",
       description: "سيبدأ تحميل الملف خلال لحظات.",
+      variant: "info",
     });
     // In a real app, this would trigger an actual download
   };
@@ -115,6 +116,7 @@ const BackupsPage = () => {
     toast({
       title: "تم حذف النسخة الاحتياطية",
       description: "تم حذف النسخة الاحتياطية المحددة بنجاح.",
+      variant: "success",
     });
   };
 
