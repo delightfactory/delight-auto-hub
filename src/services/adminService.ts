@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { Product } from "@/types/db";
+import { Product, SiteSettings, AppearanceSettings } from "@/types/db";
 
 // التحقق إذا كان المستخدم مسؤول
 export const checkIfAdmin = async () => {
@@ -428,7 +428,7 @@ export const categoryService = {
   }
 };
 
-// Add this to the adminService object for type safety with site settings and appearance services
+// خدمات إدارة إعدادات الموقع
 export const siteSettingsService = {
   getSiteSettings: async (): Promise<SiteSettings> => {
     const { data, error } = await supabase
@@ -444,10 +444,10 @@ export const siteSettingsService = {
     return data as SiteSettings;
   },
   
-  updateSiteSettings: async (settings: SiteSettings): Promise<SiteSettings> => {
+  updateSiteSettings: async (settings: Partial<SiteSettings>): Promise<SiteSettings> => {
     const { data, error } = await supabase
       .from('site_settings')
-      .upsert([settings])
+      .upsert([settings as any])
       .select()
       .single();
     
@@ -460,6 +460,7 @@ export const siteSettingsService = {
   }
 };
 
+// خدمات إدارة إعدادات المظهر
 export const appearanceService = {
   getAppearanceSettings: async (): Promise<AppearanceSettings> => {
     const { data, error } = await supabase
@@ -475,10 +476,10 @@ export const appearanceService = {
     return data as AppearanceSettings;
   },
   
-  updateAppearanceSettings: async (settings: AppearanceSettings): Promise<AppearanceSettings> => {
+  updateAppearanceSettings: async (settings: Partial<AppearanceSettings>): Promise<AppearanceSettings> => {
     const { data, error } = await supabase
       .from('appearance_settings')
-      .upsert([settings])
+      .upsert([settings as any])
       .select()
       .single();
     

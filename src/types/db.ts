@@ -65,7 +65,7 @@ export interface AppearanceSettings {
   };
   logo?: string;
   favicon?: string;
-  homeSettings?: {
+  homeSettings: {
     showBanner: boolean;
     showFeaturedProducts: boolean;
     showNewProducts: boolean;

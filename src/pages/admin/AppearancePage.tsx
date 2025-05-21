@@ -52,7 +52,9 @@ const AppearancePage = () => {
       showFeaturedProducts: true,
       showNewProducts: true,
       showTestimonials: false
-    }
+    },
+    logo: "",
+    favicon: ""
   });
   
   // استعلام لجلب إعدادات المظهر
@@ -453,8 +455,10 @@ const AppearancePage = () => {
                     onCheckedChange={(value) => setFormState(prev => ({
                       ...prev,
                       homeSettings: {
-                        ...prev.homeSettings || {},
-                        showBanner: value
+                        showBanner: value,
+                        showFeaturedProducts: prev.homeSettings?.showFeaturedProducts || true,
+                        showNewProducts: prev.homeSettings?.showNewProducts || true,
+                        showTestimonials: prev.homeSettings?.showTestimonials || false
                       }
                     }))}
                   />
@@ -467,8 +471,10 @@ const AppearancePage = () => {
                     onCheckedChange={(value) => setFormState(prev => ({
                       ...prev,
                       homeSettings: {
-                        ...prev.homeSettings || {},
-                        showFeaturedProducts: value
+                        showBanner: prev.homeSettings?.showBanner || false,
+                        showFeaturedProducts: value,
+                        showNewProducts: prev.homeSettings?.showNewProducts || true,
+                        showTestimonials: prev.homeSettings?.showTestimonials || false
                       }
                     }))}
                   />
@@ -481,8 +487,10 @@ const AppearancePage = () => {
                     onCheckedChange={(value) => setFormState(prev => ({
                       ...prev,
                       homeSettings: {
-                        ...prev.homeSettings || {},
-                        showNewProducts: value
+                        showBanner: prev.homeSettings?.showBanner || false,
+                        showFeaturedProducts: prev.homeSettings?.showFeaturedProducts || true,
+                        showNewProducts: value,
+                        showTestimonials: prev.homeSettings?.showTestimonials || false
                       }
                     }))}
                   />
@@ -495,7 +503,9 @@ const AppearancePage = () => {
                     onCheckedChange={(value) => setFormState(prev => ({
                       ...prev,
                       homeSettings: {
-                        ...prev.homeSettings || {},
+                        showBanner: prev.homeSettings?.showBanner || false,
+                        showFeaturedProducts: prev.homeSettings?.showFeaturedProducts || true,
+                        showNewProducts: prev.homeSettings?.showNewProducts || true,
                         showTestimonials: value
                       }
                     }))}
