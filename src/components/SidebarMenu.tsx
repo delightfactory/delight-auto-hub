@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -8,6 +7,7 @@ import { Home, ShoppingBag, Info, Factory, Phone, ShoppingCart, User, LogIn, Sun
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
+import AdminSidebarLink from '@/components/AdminSidebarLink';
 
 export const SidebarMenu: React.FC = () => {
   const location = useLocation();
@@ -114,6 +114,10 @@ export const SidebarMenu: React.FC = () => {
             </Button>
           </Link>
         )}
+        {/* Admin Dashboard Link */}
+        <AdminSidebarLink>
+          <span>لوحة التحكم</span>
+        </AdminSidebarLink>
       </div>
       
       {/* Footer */}

@@ -6,6 +6,7 @@ import { Json } from '@/integrations/supabase/types';
 type User = {
   id: string;
   email: string;
+  role?: 'admin' | 'customer';
   name?: string;
   phone?: string;
   address?: string;
@@ -119,6 +120,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setUser({
           id: userId,
           email: data.email,
+          role: data.role,
           name: data.name,
           phone: data.phone,
           address: data.address,
@@ -277,7 +279,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // Insert profile row
       const { data: profile, error: profileError } = await supabase
         .from('customers')
-        .insert({ id: session.user.id, user_id: session.user.id, email, name, preferences: { notifications: true, marketing: false, theme: 'system', language: 'ar' } })
+        .insert({ id: session.user.id, user_id: session.user.id, email, name, role: 'customer', preferences: { notifications: true, marketing: false, theme: 'system', language: 'ar' } })
         .select()
         .single();
       if (profileError) {

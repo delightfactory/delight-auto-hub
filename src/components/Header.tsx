@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -119,23 +118,36 @@ const Header: React.FC = () => {
             
             {/* Auth Buttons */}
             {user ? (
-              <Link to="/profile">
-                <Button 
-                  variant="ghost" 
-                  className="hidden sm:flex items-center gap-2 text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800 transition-colors"
-                >
-                  <User className="h-4 w-4" />
-                  <span>حسابي</span>
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  className="sm:hidden text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
-                  aria-label="حسابي"
-                >
-                  <User className="h-5 w-5" />
-                </Button>
-              </Link>
+              <>
+                {/* Admin Dashboard Button */}
+                {user.role === 'admin' && (
+                  <Link to="/admin" className="mr-4">
+                    <Button
+                      variant="outline"
+                      className="hidden sm:inline-flex items-center gap-2 border-red-600 text-red-600 hover:bg-red-50 dark:border-red-400 dark:text-red-400 dark:hover:bg-red-900/20"
+                    >
+                      لوحة التحكم
+                    </Button>
+                  </Link>
+                )}
+                <Link to="/profile">
+                  <Button 
+                    variant="ghost" 
+                    className="hidden sm:flex items-center gap-2 text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800 transition-colors"
+                  >
+                    <User className="h-4 w-4" />
+                    <span>حسابي</span>
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    className="sm:hidden text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+                    aria-label="حسابي"
+                  >
+                    <User className="h-5 w-5" />
+                  </Button>
+                </Link>
+              </>
             ) : (
               <Link to="/auth">
                 <Button 
