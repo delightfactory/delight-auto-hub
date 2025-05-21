@@ -165,7 +165,7 @@ const OrdersPage: React.FC = () => {
                       <div>
                         <h3 className="text-sm font-medium text-gray-500 mb-2">المنتجات</h3>
                         <ul className="space-y-2">
-                          {order.items.map((item) => (
+                          {order.order_items?.map((item) => (
                             <li key={item.id} className="flex justify-between">
                               <div className="flex items-center">
                                 <Package className="h-4 w-4 mr-2 text-gray-400" />
