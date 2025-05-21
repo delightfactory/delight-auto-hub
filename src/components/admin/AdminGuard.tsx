@@ -27,32 +27,29 @@ const AdminGuard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         return;
       }
       
-      // Check if the user is an admin by querying the customers table
+      // Check if the user is an admin using our RPC function
       try {
         const { data, error } = await supabase
-          .from('customers')
-          .select('role')
-          .eq('id', user.id)
-          .single();
+          .rpc('is_admin');
           
-        const userIsAdmin = data?.role === 'admin';
-        setIsAdmin(userIsAdmin);
-        
-        if (!userIsAdmin) {
-          toast({
-            title: "غير مصرح",
-            description: "ليس لديك صلاحية الوصول إلى لوحة التحكم",
-            variant: "destructive"
-          });
-          navigate('/');
-        }
-        
         if (error) {
           console.error("Error checking admin status:", error);
           setIsAdmin(false);
           toast({
             title: "خطأ في التحقق",
             description: "حدث خطأ أثناء التحقق من الصلاحيات",
+            variant: "destructive"
+          });
+          navigate('/');
+          return;
+        }
+        
+        setIsAdmin(data);
+        
+        if (!data) {
+          toast({
+            title: "غير مصرح",
+            description: "ليس لديك صلاحية الوصول إلى لوحة التحكم",
             variant: "destructive"
           });
           navigate('/');

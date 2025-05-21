@@ -1,3 +1,4 @@
+
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -16,5 +17,16 @@ export function formatDate(dateString: string) {
   } catch (err) {
     console.error("Error formatting date:", err);
     return dateString;
+  }
+}
+
+export function translateRole(role: string): string {
+  switch (role) {
+    case 'admin':
+      return 'مسؤول';
+    case 'customer':
+      return 'عميل';
+    default:
+      return role;
   }
 }

@@ -18,14 +18,21 @@ const AdminSidebarLink: React.FC<AdminSidebarLinkProps> = ({ children }) => {
     queryFn: async () => {
       if (!user) return false;
       
-      const { data, error } = await supabase
-        .from('customers')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-      
-      if (error || !data) return false;
-      return data.role === 'admin';
+      try {
+        // Use the is_admin function we created in the database
+        const { data, error } = await supabase
+          .rpc('is_admin');
+        
+        if (error) {
+          console.error("Error checking admin status:", error);
+          return false;
+        }
+        
+        return data || false;
+      } catch (error) {
+        console.error("Error in admin check:", error);
+        return false;
+      }
     },
     enabled: !!user,
   });
