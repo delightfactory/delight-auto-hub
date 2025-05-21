@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 interface CustomerData {
@@ -16,19 +15,27 @@ interface OrderData {
 
 export const placeOrder = async (customerData: CustomerData, orderData: OrderData) => {
   try {
+    // Get current authenticated user
+    const { data: { user }, error: getUserError } = await supabase.auth.getUser();
+    if (getUserError || !user) {
+      throw new Error("يجب تسجيل الدخول لإنشاء الطلب");
+    }
+
     // 1. إضافة أو تحديث بيانات العميل
     const { data: customerRecord, error: customerError } = await supabase
       .from('customers')
       .upsert(
         { 
+          id: user.id,
+          user_id: user.id,
           email: customerData.email,
           name: customerData.name,
           phone: customerData.phone,
           address: customerData.address,
           city: customerData.city,
-          role: 'customer' // إضافة الدور الافتراضي
+          role: 'customer'
         },
-        { onConflict: 'email' }
+        { onConflict: 'id' }
       )
       .select()
       .single();
@@ -82,6 +89,9 @@ export const placeOrder = async (customerData: CustomerData, orderData: OrderDat
       throw new Error("فشل في إضافة عناصر الطلب");
     }
 
+    // Clear cart on successful order
+    localStorage.removeItem('cart');
+      
     return {
       success: true,
       orderId: order.id,
@@ -115,15 +125,15 @@ export const getOrderById = async (orderId: string) => {
   return order;
 };
 
-export const getCustomerOrders = async (email: string) => {
+export const getCustomerOrders = async (userId: string) => {
   const { data: orders, error } = await supabase
     .from('orders')
     .select(`
       *,
-      items:order_items(*),
-      customer:customers(email)
+      order_items(*),
+      customer:customers(*)
     `)
-    .eq('customer.email', email)
+    .eq('customer.user_id', userId)
     .order('created_at', { ascending: false });
 
   if (error) {

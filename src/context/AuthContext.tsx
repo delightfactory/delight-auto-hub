@@ -103,7 +103,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const { data, error } = await supabase
         .from('customers')
         .select('*')
-        .eq('email', userEmail)
+        .eq('id', userId)
         .maybeSingle();
       
       if (data) {
@@ -118,7 +118,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
         setUser({
           id: userId,
-          email: userEmail,
+          email: data.email,
           name: data.name,
           phone: data.phone,
           address: data.address,
@@ -249,63 +249,50 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   
   const signUp = async (email: string, password: string, name: string) => {
     try {
-      // Clean up existing auth state first
       cleanupAuthState();
-      
-      // Register with Supabase Auth
-      const { error: authError, data } = await supabase.auth.signUp({
+      // Sign up and set user metadata
+      const { data: signUpData, error: authError } = await supabase.auth.signUp({
         email,
         password,
+        options: { data: { app_role: 'customer' } }
       });
-      
       if (authError) {
-        toast({ 
-          title: "خطأ في إنشاء الحساب", 
-          description: authError.message, 
-          variant: "destructive" 
-        });
+        toast({ title: "خطأ في إنشاء الحساب", description: authError.message, variant: "destructive" });
         return { error: authError };
       }
-      
-      // Create customer profile with default preferences
-      if (data.user) {
-        const { error: profileError } = await supabase
-          .from('customers')
-          .insert({
-            id: data.user.id,
-            email: email,
-            name: name,
-            preferences: {
-              notifications: true,
-              marketing: false,
-              theme: 'system',
-              language: 'ar'
-            }
-          });
-          
-        if (profileError) {
-          toast({ 
-            title: "خطأ في إنشاء الملف الشخصي", 
-            description: profileError.message, 
-            variant: "destructive" 
-          });
-          return { error: profileError };
+      // Ensure session is active
+      let session = signUpData.session;
+      if (!session) {
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+        if (signInError) {
+          toast({ title: "خطأ في تسجيل الدخول بعد إنشاء الحساب", description: signInError.message, variant: "destructive" });
+          return { error: signInError };
         }
+        session = signInData.session;
       }
-      
-      toast({ 
-        title: "تم إنشاء الحساب بنجاح", 
-        description: "مرحباً بك في ديلايت" 
-      });
-      
+      if (!session) {
+        toast({ title: "خطأ في الجلسة", description: "تعذّر إنشاء جلسة للمستخدم", variant: "destructive" });
+        return { error: new Error("No session available") };
+      }
+      // Insert profile row
+      const { data: profile, error: profileError } = await supabase
+        .from('customers')
+        .insert({ id: session.user.id, user_id: session.user.id, email, name, preferences: { notifications: true, marketing: false, theme: 'system', language: 'ar' } })
+        .select()
+        .single();
+      if (profileError) {
+        toast({ title: "خطأ في إنشاء الملف الشخصي", description: profileError.message, variant: "destructive" });
+        return { error: profileError };
+      }
+      // Fetch and set user state after profile creation
+      await fetchUserProfile(session.user.id, email);
+      toast({ title: "تم إنشاء الحساب بنجاح", description: "مرحباً بك في ديلايت" });
       return { error: null };
     } catch (error) {
-      toast({ 
-        title: "خطأ في إنشاء الحساب", 
-        description: "حدث خطأ غير متوقع", 
-        variant: "destructive" 
-      });
+      toast({ title: "خطأ في إنشاء الحساب", description: "حدث خطأ غير متوقع", variant: "destructive" });
       return { error };
+    } finally {
+      setLoading(false);
     }
   };
   
@@ -366,7 +353,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const { error } = await supabase
         .from('customers')
         .update(updateData)
-        .eq('email', user.email);
+        .eq('id', user.id);
         
       if (error) {
         toast({ 
@@ -377,8 +364,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return { error };
       }
       
-      // Update local state
-      setUser({ ...user, ...data });
+      // Refresh local user from DB
+      await fetchUserProfile(user.id, user.email);
       
       toast({ title: "تم تحديث الملف الشخصي بنجاح" });
       

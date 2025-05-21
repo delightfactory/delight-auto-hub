@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -106,7 +105,7 @@ const ProfilePage = () => {
     
     setLoadingOrders(true);
     try {
-      const { orders } = await getCustomerOrders(user.email);
+      const { orders } = await getCustomerOrders(user.id);
       setOrders(orders);
     } catch (error) {
       console.error('Error fetching orders:', error);

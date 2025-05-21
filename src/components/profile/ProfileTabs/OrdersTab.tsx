@@ -13,6 +13,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
@@ -130,6 +131,7 @@ const OrdersTab: React.FC<OrdersTabProps> = ({ orders, loadingOrders, refreshOrd
                       <DialogContent>
                         <DialogHeader>
                           <DialogTitle>تفاصيل الطلب {order.id.substring(0, 8)}</DialogTitle>
+                          <DialogDescription>عرض تفاصيل المنتجات في الطلب ورقم الطلب</DialogDescription>
                         </DialogHeader>
                         <Separator className="my-2" />
                         <div className="space-y-2 text-sm">
