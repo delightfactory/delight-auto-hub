@@ -1,9 +1,16 @@
 
 import React, { useState } from 'react';
-import { Link, Outlet, useNavigate } from 'react-router-dom';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { 
+  BarChart3, 
+  Package, 
+  ShoppingCart, 
+  Users, 
+  FileText, 
+  Tag, 
+  Settings, 
   LogOut,
   Menu,
   X,
@@ -15,15 +22,24 @@ import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import AdminGuard from '@/components/admin/AdminGuard';
 import { useToast } from '@/hooks/use-toast';
-import AdminNavLinks from '@/components/admin/AdminNavLinks';
-import AdminHeader from '@/components/admin/AdminHeader';
 
 const AdminLayout = () => {
+  const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { toast } = useToast();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
+  const navItems = [
+    { path: '/admin', label: 'لوحة القيادة', icon: BarChart3 },
+    { path: '/admin/products', label: 'المنتجات', icon: Package },
+    { path: '/admin/orders', label: 'الطلبات', icon: ShoppingCart },
+    { path: '/admin/customers', label: 'العملاء', icon: Users },
+    { path: '/admin/articles', label: 'المقالات', icon: FileText },
+    { path: '/admin/categories', label: 'الفئات', icon: Tag },
+    { path: '/admin/settings', label: 'الإعدادات', icon: Settings },
+  ];
 
   const handleLogout = async () => {
     try {
@@ -67,7 +83,15 @@ const AdminLayout = () => {
                   <span className="font-bold text-xl ml-2 text-gray-800 dark:text-white">لوحة التحكم</span>
                 </div>
               )}
-              <Button variant="ghost" size="sm" onClick={toggleSidebar}>
+              <Button variant="ghost" size="sm" onClick={toggleSidebar} className="lg:hidden">
+                {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={toggleSidebar} 
+                className="hidden lg:flex"
+              >
                 {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
               </Button>
             </div>
@@ -76,7 +100,28 @@ const AdminLayout = () => {
             
             {/* Navigation Links */}
             <nav className="flex-1 overflow-y-auto py-4">
-              <AdminNavLinks isSidebarOpen={isSidebarOpen} />
+              <ul className="space-y-1">
+                {navItems.map((item) => {
+                  const isActive = location.pathname === item.path;
+                  const ItemIcon = item.icon;
+                  
+                  return (
+                    <li key={item.path} className="px-3">
+                      <Link
+                        to={item.path}
+                        className={`flex items-center gap-3 p-2 rounded-lg transition-colors ${
+                          isActive
+                            ? 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400 font-medium'
+                            : 'text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800'
+                        }`}
+                      >
+                        <ItemIcon className={`w-5 h-5 ${isActive ? 'text-red-600 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'}`} />
+                        {isSidebarOpen && <span>{item.label}</span>}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
             </nav>
             
             {/* Sidebar Footer */}
@@ -171,7 +216,19 @@ const AdminLayout = () => {
         {/* Main Content */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Top Header */}
-          <AdminHeader toggleSidebar={toggleSidebar} />
+          <header className="bg-white dark:bg-gray-800 shadow-sm py-4 px-6 flex justify-between items-center">
+            <Button variant="ghost" size="sm" onClick={toggleSidebar} className="lg:hidden">
+              <Menu size={20} />
+            </Button>
+            <h1 className="text-xl font-bold text-gray-800 dark:text-white hidden sm:block">
+              لوحة تحكم ديلايت
+            </h1>
+            <div className="flex items-center space-x-2 rtl:space-x-reverse">
+              <Link to="/" className="text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
+                العودة إلى الموقع
+              </Link>
+            </div>
+          </header>
 
           {/* Content Area */}
           <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900 p-4 md:p-6">
