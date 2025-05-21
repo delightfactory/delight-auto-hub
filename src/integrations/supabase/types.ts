@@ -147,28 +147,31 @@ export type Database = {
           created_at: string
           id: string
           order_id: string
-          product_id: string
+          product_id: string | null
           product_name: string
           product_price: number
           quantity: number
+          temp_product_code: string | null
         }
         Insert: {
           created_at?: string
           id?: string
           order_id: string
-          product_id: string
+          product_id?: string | null
           product_name: string
           product_price: number
           quantity: number
+          temp_product_code?: string | null
         }
         Update: {
           created_at?: string
           id?: string
           order_id?: string
-          product_id?: string
+          product_id?: string | null
           product_name?: string
           product_price?: number
           quantity?: number
+          temp_product_code?: string | null
         }
         Relationships: [
           {
@@ -177,6 +180,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "orders"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_product_code_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["product_code"]
           },
         ]
       }
@@ -240,6 +250,7 @@ export type Database = {
           is_new: boolean | null
           name: string
           price: number
+          product_code: string
           stock: number | null
           updated_at: string
         }
@@ -255,6 +266,7 @@ export type Database = {
           is_new?: boolean | null
           name: string
           price: number
+          product_code: string
           stock?: number | null
           updated_at?: string
         }
@@ -270,10 +282,19 @@ export type Database = {
           is_new?: boolean | null
           name?: string
           price?: number
+          product_code?: string
           stock?: number | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "products_category_fkey"
+            columns: ["category"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

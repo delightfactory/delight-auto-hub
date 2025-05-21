@@ -298,7 +298,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit, onCanc
                                 <option disabled>جارِ تحميل الفئات...</option>
                               ) : (
                                 categories.map((category) => (
-                                  <option key={category.id} value={category.name}>
+                                  <option key={category.id} value={category.id}>
                                     {category.name}
                                   </option>
                                 ))
@@ -550,7 +550,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit, onCanc
                         )}
                         {form.watch('category') && (
                           <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-                            {form.watch('category')}
+                            {categories.find(c => c.id === form.watch('category'))?.name || 'فئة'}
                           </span>
                         )}
                       </div>

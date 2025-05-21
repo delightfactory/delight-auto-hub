@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useEffect } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -24,8 +25,11 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { Settings, Mail, MessageSquare, Lock, Shield, Building } from 'lucide-react';
+import { Settings, Mail, MessageSquare, Lock, Shield, Building, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { siteSettingsService } from '@/services/adminService';
+import { SiteSettings } from '@/types/db';
 
 // مخطط إعدادات الموقع
 const siteSettingsSchema = z.object({
@@ -42,32 +46,95 @@ type SiteSettingsFormValues = z.infer<typeof siteSettingsSchema>;
 
 const SettingsPage = () => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   
-  // إعدادات افتراضية (يمكن استبدالها بقراءة من قاعدة البيانات)
-  const defaultSettings: SiteSettingsFormValues = {
-    siteName: "ديلايت للعناية بالسيارات",
-    siteDescription: "منتجات العناية بالسيارات عالية الجودة",
-    contactEmail: "info@delight.com",
-    phoneNumber: "+123456789",
-    address: "المملكة العربية السعودية، الرياض",
-    enableRegistration: true,
-    enableComments: true,
-  };
-  
-  const form = useForm<SiteSettingsFormValues>({
-    resolver: zodResolver(siteSettingsSchema),
-    defaultValues: defaultSettings,
+  // استعلام لجلب إعدادات الموقع
+  const { 
+    data: settings, 
+    isLoading, 
+    error 
+  } = useQuery({
+    queryKey: ['site-settings'],
+    queryFn: siteSettingsService.getSiteSettings
   });
   
-  const onSubmit = async (data: SiteSettingsFormValues) => {
-    // هنا يمكن تنفيذ تحديث الإعدادات في قاعدة البيانات
-    console.log("تم تحديث الإعدادات:", data);
-    
-    toast({
-      title: "تم حفظ الإعدادات",
-      description: "تم تحديث إعدادات الموقع بنجاح",
-    });
+  // إعداد المعالج لحفظ الإعدادات
+  const saveMutation = useMutation({
+    mutationFn: (data: SiteSettings) => siteSettingsService.updateSiteSettings(data),
+    onSuccess: () => {
+      toast({
+        title: "تم حفظ الإعدادات",
+        description: "تم تحديث إعدادات الموقع بنجاح"
+      });
+      queryClient.invalidateQueries({ queryKey: ['site-settings'] });
+    },
+    onError: (error) => {
+      console.error("خطأ في حفظ الإعدادات:", error);
+      toast({
+        title: "خطأ في الحفظ",
+        description: "حدث خطأ أثناء محاولة حفظ الإعدادات",
+        variant: "destructive"
+      });
+    }
+  });
+  
+  // نموذج الإعدادات
+  const form = useForm<SiteSettingsFormValues>({
+    resolver: zodResolver(siteSettingsSchema),
+    defaultValues: {
+      siteName: "",
+      siteDescription: "",
+      contactEmail: "",
+      phoneNumber: "",
+      address: "",
+      enableRegistration: true,
+      enableComments: true,
+    },
+  });
+  
+  // تحديث قيم النموذج عند تحميل البيانات
+  useEffect(() => {
+    if (settings) {
+      form.reset({
+        siteName: settings.siteName,
+        siteDescription: settings.siteDescription || "",
+        contactEmail: settings.contactEmail,
+        phoneNumber: settings.phoneNumber || "",
+        address: settings.address || "",
+        enableRegistration: settings.enableRegistration,
+        enableComments: settings.enableComments,
+      });
+    }
+  }, [settings, form]);
+  
+  // معالج حفظ الإعدادات
+  const onSubmit = (data: SiteSettingsFormValues) => {
+    saveMutation.mutate(data);
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <Loader2 className="h-12 w-12 animate-spin text-red-600 mb-4" />
+        <p className="text-lg font-medium">جارِ تحميل الإعدادات...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <p className="text-lg font-medium text-red-500">حدث خطأ أثناء تحميل الإعدادات</p>
+        <Button 
+          variant="outline" 
+          className="mt-4" 
+          onClick={() => queryClient.invalidateQueries({ queryKey: ['site-settings'] })}
+        >
+          إعادة المحاولة
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -246,8 +313,19 @@ const SettingsPage = () => {
           </Card>
           
           <div className="flex justify-end">
-            <Button type="submit" className="px-8">
-              حفظ الإعدادات
+            <Button 
+              type="submit" 
+              className="px-8"
+              disabled={saveMutation.isPending}
+            >
+              {saveMutation.isPending ? (
+                <>
+                  <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                  جارِ الحفظ...
+                </>
+              ) : (
+                'حفظ الإعدادات'
+              )}
             </Button>
           </div>
         </form>
