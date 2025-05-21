@@ -18,7 +18,9 @@ const CustomersPage = () => {
     refetch
   } = useQuery({
     queryKey: ['admin-customers'],
-    queryFn: customerService.getCustomers
+    queryFn: customerService.getCustomers,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    refetchOnWindowFocus: true
   });
   
   const handleRoleUpdate = async (id: string, role: 'admin' | 'customer') => {

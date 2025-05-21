@@ -13,7 +13,7 @@ interface AdminSidebarLinkProps {
 const AdminSidebarLink: React.FC<AdminSidebarLinkProps> = ({ children }) => {
   const { user } = useAuth();
   
-  const { data: isAdmin = false } = useQuery({
+  const { data: isAdmin = false, isLoading } = useQuery({
     queryKey: ['isUserAdmin', user?.id],
     queryFn: async () => {
       if (!user) return false;
@@ -37,7 +37,7 @@ const AdminSidebarLink: React.FC<AdminSidebarLinkProps> = ({ children }) => {
     enabled: !!user,
   });
   
-  if (!user || !isAdmin) {
+  if (!user || isLoading || !isAdmin) {
     return null;
   }
 

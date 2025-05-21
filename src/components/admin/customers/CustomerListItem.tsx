@@ -3,9 +3,9 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Shield, ShoppingBag, Crown, User, Mail, Phone } from 'lucide-react';
 import { TableRow, TableCell } from "@/components/ui/table";
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,7 +17,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { formatDate } from '@/lib/utils';
+import { formatDate, translateRole } from '@/lib/utils';
 
 interface CustomerListItemProps {
   customer: any;

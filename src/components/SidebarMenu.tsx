@@ -3,17 +3,41 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import { useTheme } from '@/context/ThemeContext';
-import { Home, ShoppingBag, Info, Factory, Phone, ShoppingCart, User, LogIn, Sun, Moon } from 'lucide-react';
+import { Home, ShoppingBag, Info, Factory, Phone, ShoppingCart, User, LogIn, Sun, Moon, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import AdminSidebarLink from '@/components/AdminSidebarLink';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 export const SidebarMenu: React.FC = () => {
   const location = useLocation();
   const { user } = useAuth();
   const { itemCount } = useCart();
   const { theme, toggleTheme } = useTheme();
+  
+  const { data: isAdmin } = useQuery({
+    queryKey: ['isUserAdmin', user?.id],
+    queryFn: async () => {
+      if (!user) return false;
+      
+      try {
+        const { data, error } = await supabase.rpc('is_admin');
+        
+        if (error) {
+          console.error("Error checking admin status:", error);
+          return false;
+        }
+        
+        return data || false;
+      } catch (error) {
+        console.error("Error in admin check:", error);
+        return false;
+      }
+    },
+    enabled: !!user,
+  });
   
   const navItems = [
     { path: '/', label: 'الرئيسية', icon: Home },
@@ -100,12 +124,24 @@ export const SidebarMenu: React.FC = () => {
       {/* User Section */}
       <div className="p-4 border-t border-gray-200 dark:border-gray-700">
         {user ? (
-          <Link to="/profile" className="w-full">
-            <Button variant="outline" className="w-full flex items-center justify-center gap-2 border-red-600 text-red-600 hover:bg-red-50 dark:border-red-400 dark:text-red-400 dark:hover:bg-red-900/20">
-              <User className="w-5 h-5" />
-              <span>الملف الشخصي</span>
-            </Button>
-          </Link>
+          <div className="space-y-3">
+            <Link to="/profile" className="w-full">
+              <Button variant="outline" className="w-full flex items-center justify-center gap-2 border-red-600 text-red-600 hover:bg-red-50 dark:border-red-400 dark:text-red-400 dark:hover:bg-red-900/20">
+                <User className="w-5 h-5" />
+                <span>الملف الشخصي</span>
+              </Button>
+            </Link>
+            
+            {/* Admin Dashboard Link - Direct link visible to admins */}
+            {isAdmin && (
+              <Link to="/admin" className="w-full">
+                <Button className="w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white">
+                  <Settings className="w-5 h-5" />
+                  <span>لوحة التحكم</span>
+                </Button>
+              </Link>
+            )}
+          </div>
         ) : (
           <Link to="/auth" className="w-full">
             <Button className="w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white">
@@ -114,7 +150,8 @@ export const SidebarMenu: React.FC = () => {
             </Button>
           </Link>
         )}
-        {/* Admin Dashboard Link */}
+        
+        {/* Keep AdminSidebarLink as a fallback */}
         <AdminSidebarLink>
           <span>لوحة التحكم</span>
         </AdminSidebarLink>
