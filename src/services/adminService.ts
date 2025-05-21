@@ -1,5 +1,6 @@
+
 import { supabase } from "@/integrations/supabase/client";
-import { Product, SiteSettings, AppearanceSettings } from "@/types/db";
+import { Product } from "@/types/db";
 
 // التحقق إذا كان المستخدم مسؤول
 export const checkIfAdmin = async () => {
@@ -71,7 +72,7 @@ export const fetchDashboardStats = async () => {
 // خدمات إدارة المنتجات
 export const productService = {
   // جلب جميع المنتجات
-  getProducts: async () => {
+  getProducts: async (): Promise<Product[]> => {
     const { data, error } = await supabase
       .from('products')
       .select('*')
@@ -85,7 +86,7 @@ export const productService = {
   },
   
   // جلب منتج بواسطة المعرف
-  getProductById: async (id: string) => {
+  getProductById: async (id: string): Promise<Product> => {
     const { data, error } = await supabase
       .from('products')
       .select('*')
@@ -96,11 +97,11 @@ export const productService = {
       console.error(`خطأ في جلب المنتج رقم ${id}:`, error);
       throw error;
     }
-    return data;
+    return data as Product;
   },
   
   // إنشاء منتج جديد
-  createProduct: async (productData: Partial<Product>) => {
+  createProduct: async (productData: Partial<Product>): Promise<Product> => {
     const { data, error } = await supabase
       .from('products')
       .insert([productData])
@@ -110,11 +111,11 @@ export const productService = {
       console.error("خطأ في إنشاء المنتج:", error);
       throw error;
     }
-    return data?.[0];
+    return data?.[0] as Product;
   },
   
   // تحديث منتج موجود
-  updateProduct: async (id: string, productData: Partial<Product>) => {
+  updateProduct: async (id: string, productData: Partial<Product>): Promise<Product> => {
     // تأكد من أن الفئة عبارة عن معرف UUID
     if (productData.category && typeof productData.category === 'string') {
       // تأكد من أن الفئة هي معرف UUID صالح، وإلا اجعلها null
@@ -135,11 +136,11 @@ export const productService = {
       console.error(`خطأ في تحديث المنتج رقم ${id}:`, error);
       throw error;
     }
-    return data?.[0];
+    return data?.[0] as Product;
   },
   
   // حذف منتج
-  deleteProduct: async (id: string) => {
+  deleteProduct: async (id: string): Promise<boolean> => {
     const { error } = await supabase
       .from('products')
       .delete()
@@ -428,66 +429,5 @@ export const categoryService = {
   }
 };
 
-// خدمات إدارة إعدادات الموقع
-export const siteSettingsService = {
-  getSiteSettings: async (): Promise<SiteSettings> => {
-    const { data, error } = await supabase
-      .from('site_settings')
-      .select('*')
-      .single();
-    
-    if (error) {
-      console.error('Error fetching site settings:', error);
-      throw error;
-    }
-    
-    return data as SiteSettings;
-  },
-  
-  updateSiteSettings: async (settings: Partial<SiteSettings>): Promise<SiteSettings> => {
-    const { data, error } = await supabase
-      .from('site_settings')
-      .upsert([settings as any])
-      .select()
-      .single();
-    
-    if (error) {
-      console.error('Error updating site settings:', error);
-      throw error;
-    }
-    
-    return data as SiteSettings;
-  }
-};
-
-// خدمات إدارة إعدادات المظهر
-export const appearanceService = {
-  getAppearanceSettings: async (): Promise<AppearanceSettings> => {
-    const { data, error } = await supabase
-      .from('appearance_settings')
-      .select('*')
-      .single();
-    
-    if (error) {
-      console.error('Error fetching appearance settings:', error);
-      throw error;
-    }
-    
-    return data as AppearanceSettings;
-  },
-  
-  updateAppearanceSettings: async (settings: Partial<AppearanceSettings>): Promise<AppearanceSettings> => {
-    const { data, error } = await supabase
-      .from('appearance_settings')
-      .upsert([settings as any])
-      .select()
-      .single();
-    
-    if (error) {
-      console.error('Error updating appearance settings:', error);
-      throw error;
-    }
-    
-    return data as AppearanceSettings;
-  }
-};
+// تصدير خدمات الإعدادات من الملف الجديد
+export { siteSettingsService, appearanceService } from './settingsService';
