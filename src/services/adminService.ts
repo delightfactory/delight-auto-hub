@@ -1,6 +1,10 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { Product } from '@/types/db';
+import { Product, Comment, OrderStatus } from '@/types/db';
+
+// IMPORTANT: Note that the other services have been moved to separate files:
+// - settingsService.ts contains siteSettingsService and appearanceService
+// - We should consider further refactoring this file into smaller, focused service files
 
 export const adminService = {
   // Products
@@ -269,7 +273,7 @@ export const adminService = {
     }
   },
 
-  updateOrderStatus: async (id: string, status: string) => {
+  updateOrderStatus: async (id: string, status: OrderStatus) => {
     try {
       const { data, error } = await supabase
         .from('orders')
@@ -514,4 +518,57 @@ export const adminService = {
       throw error;
     }
   },
+  
+  // Dashboard stats
+  fetchDashboardStats: async () => {
+    try {
+      // Get orders count
+      const { data: ordersData, error: ordersError } = await supabase
+        .from('orders')
+        .select('id', { count: 'exact' });
+        
+      if (ordersError) throw ordersError;
+      
+      // Get products count
+      const { data: productsData, error: productsError } = await supabase
+        .from('products')
+        .select('id', { count: 'exact' });
+        
+      if (productsError) throw productsError;
+      
+      // Get customers count
+      const { data: customersData, error: customersError } = await supabase
+        .from('customers')
+        .select('id', { count: 'exact' });
+        
+      if (customersError) throw customersError;
+      
+      // Get recent orders
+      const { data: recentOrdersData, error: recentOrdersError } = await supabase
+        .from('orders')
+        .select('*, customer:customers(name)')
+        .order('created_at', { ascending: false })
+        .limit(5);
+        
+      if (recentOrdersError) throw recentOrdersError;
+      
+      return {
+        ordersCount: ordersData.length,
+        productsCount: productsData.length,
+        customersCount: customersData.length,
+        recentOrders: recentOrdersData
+      };
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error);
+      throw error;
+    }
+  }
 };
+
+// Export service modules for legacy compatibility - these will be refactored later
+export const productService = adminService;
+export const categoryService = adminService;
+export const orderService = adminService;
+export const customerService = adminService;
+export const articleService = adminService;
+export const commentService = adminService;

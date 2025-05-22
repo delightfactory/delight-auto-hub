@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { orderService } from '@/services/adminService';
@@ -14,6 +13,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { OrderStatus } from '@/types/db';
+import { toast } from 'sonner';
+import { Check, Loader2, Package, Truck, X, ShoppingBag } from 'lucide-react';
 
 interface OrderDetailsProps {
   orderId: string;
