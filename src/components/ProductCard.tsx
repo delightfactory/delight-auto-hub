@@ -47,6 +47,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
       name,
       price: price || '0 ريال',
       image,
+      quantity: 1
     });
     
     setIsAddedToCart(true);
@@ -182,7 +183,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         </h3>
         
         <p className="text-gray-600 mb-4 text-sm line-clamp-2">
-          {description}
+          {description || "لا يوجد وصف متوفر لهذا المنتج"}
         </p>
         
         {price && (
