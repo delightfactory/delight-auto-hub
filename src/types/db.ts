@@ -1,4 +1,3 @@
-
 // Auto-generated shared types for database entities
 
 export interface Product {
@@ -16,7 +15,7 @@ export interface Product {
   product_code: string;
 }
 
-export type OrderStatus = 'pending' | 'paid' | 'shipped' | 'cancelled';
+export type OrderStatus = 'pending' | 'processing' | 'completed' | 'cancelled' | 'paid' | 'shipped';
 
 export interface OrderItem {
   id: string;

@@ -1,7 +1,8 @@
+
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { orderService } from '@/services/adminService';
-import { Loader2, Package, MapPin, User, Phone, Mail } from 'lucide-react';
+import { Loader2, Package, MapPin, User, Phone, Mail, Check, Truck, X, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
@@ -15,7 +16,6 @@ import {
 } from "@/components/ui/select";
 import { OrderStatus } from '@/types/db';
 import { toast } from 'sonner';
-import { Check, Loader2, Package, Truck, X, ShoppingBag } from 'lucide-react';
 
 interface OrderDetailsProps {
   orderId: string;
@@ -76,7 +76,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onStatusUpdate }) 
     }
   };
   
-  const handleStatusChange = async (newStatus: string) => {
+  const handleStatusChange = async (newStatus: OrderStatus) => {
     setUpdatingStatus(true);
     try {
       await orderService.updateOrderStatus(orderId, newStatus);

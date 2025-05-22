@@ -18,7 +18,7 @@ const CustomersPage = () => {
     refetch
   } = useQuery({
     queryKey: ['admin-customers'],
-    queryFn: customerService.getCustomers,
+    queryFn: customerService.getAllCustomers,
     staleTime: 1000 * 60 * 5, // 5 minutes
     refetchOnWindowFocus: true
   });
@@ -42,7 +42,7 @@ const CustomersPage = () => {
   };
   
   // تصفية العملاء بناءً على مصطلح البحث
-  const filteredCustomers = searchTerm
+  const filteredCustomers = searchTerm && customers
     ? customers.filter((customer: any) =>
         customer.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         customer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||

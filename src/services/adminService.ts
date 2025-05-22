@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Product, Comment, OrderStatus } from '@/types/db';
 
@@ -334,6 +333,27 @@ export const adminService = {
     }
   },
 
+  updateCustomerRole: async (id: string, role: 'admin' | 'customer') => {
+    try {
+      const { data, error } = await supabase
+        .from('customers')
+        .update({ role })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error(`Error updating customer role for id ${id}:`, error);
+        throw error;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error in updateCustomerRole:', error);
+      throw error;
+    }
+  },
+
   // Articles
   getAllArticles: async () => {
     try {
@@ -430,6 +450,28 @@ export const adminService = {
       return true;
     } catch (error) {
       console.error('Error in deleteArticle:', error);
+      throw error;
+    }
+  },
+
+  // For ArticlesPage.tsx
+  toggleArticlePublished: async (id: string, publishState: boolean) => {
+    try {
+      const { data, error } = await supabase
+        .from('articles')
+        .update({ published: publishState, published_at: publishState ? new Date().toISOString() : null })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error(`Error toggling article publish state for id ${id}:`, error);
+        throw error;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error in toggleArticlePublished:', error);
       throw error;
     }
   },
@@ -572,3 +614,6 @@ export const orderService = adminService;
 export const customerService = adminService;
 export const articleService = adminService;
 export const commentService = adminService;
+
+// Make sure fetchDashboardStats is exported
+export const fetchDashboardStats = adminService.fetchDashboardStats;

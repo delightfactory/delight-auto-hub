@@ -96,9 +96,14 @@ const formatDate = (dateString: string) => {
 const CommentsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState<'all' | 'approved' | 'pending' | 'spam'>('all');
-  const { data: comments = [], isLoading, refetch } = useQuery<Comment[], Error>({
+  const {
+    data: comments = [],
+    isLoading,
+    refetch
+  } = useQuery({
     queryKey: ['admin-comments'],
-    queryFn: commentService.getComments,
+    queryFn: commentService.getAllComments,  // Use getAllComments instead of getComments
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
   const updateCommentStatus = async (id: string, status: 'approved' | 'pending' | 'spam') => {

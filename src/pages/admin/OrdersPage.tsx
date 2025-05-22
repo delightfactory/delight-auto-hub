@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { 
@@ -53,7 +52,8 @@ const OrdersPage = () => {
     refetch
   } = useQuery({
     queryKey: ['admin-orders'],
-    queryFn: orderService.getOrders
+    queryFn: orderService.getAllOrders,  // Use getAllOrders instead of getOrders
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
   
   const formatDate = (dateString: string) => {
@@ -113,16 +113,13 @@ const OrdersPage = () => {
   };
   
   // تصفية الطلبات بناءً على مصطلح البحث وحالة الطلب
-  const filteredOrders = orders.filter((order: any) => {
-    const matchesSearch = 
-      order.id.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      order.customer?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customer?.email?.toLowerCase().includes(searchTerm.toLowerCase());
-      
-    const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
-    
-    return matchesSearch && matchesStatus;
-  });
+  const filteredOrders = searchTerm && orders
+    ? orders.filter((order: any) =>
+        order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.customer?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.customer?.email?.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : orders;
 
   return (
     <div className="space-y-6">

@@ -42,7 +42,7 @@ const formSchema = z.object({
 
 interface ProductFormProps {
   product?: Product;
-  onSubmit: (values: z.infer<typeof formSchema>) => void;
+  onSubmit: (values: z.infer<typeof formSchema>) => Promise<void>;
   onCancel: () => void;
 }
 
@@ -74,7 +74,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
     mode: "onChange",
   });
 
-  const { isLoading, mutate } = useMutation({
+  const mutation = useMutation({
     mutationFn: (values: z.infer<typeof formSchema>) => onSubmit(values),
     onSuccess: () => {
       toast({
@@ -146,7 +146,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
   };
 
   const onSubmitHandler = (values: z.infer<typeof formSchema>) => {
-    mutate(values);
+    mutation.mutate(values);
   };
 
   return (
@@ -342,8 +342,8 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
 
         <div className="flex justify-end gap-2">
           <Button variant="ghost" onClick={onCancel}>إلغاء</Button>
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? (
+          <Button type="submit" disabled={mutation.isLoading}>
+            {mutation.isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 جاري الحفظ ...
