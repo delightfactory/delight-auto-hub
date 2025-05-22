@@ -1,25 +1,47 @@
 
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Plus, Search, FileDown, FileUp } from 'lucide-react';
+import { 
+  PlusCircle, 
+  Search, 
+  Loader2, 
+  Edit, 
+  Trash2, 
+  FileX,
+  PackageCheck,
+  PackageX
+} from 'lucide-react';
 import { productService } from '@/services/adminService';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import ProductForm from '@/components/admin/ProductForm';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
+import ProductForm from '@/components/admin/ProductForm';
 
 const ProductsPage = () => {
   const { toast } = useToast();
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showForm, setShowForm] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<any>(null);
   
   const {
     data: products = [],
@@ -27,127 +49,240 @@ const ProductsPage = () => {
     refetch
   } = useQuery({
     queryKey: ['admin-products'],
-    queryFn: productService.getAllProducts,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    queryFn: productService.getProducts
   });
   
-  const handleCreateProduct = async (productData: any) => {
+  const handleEditProduct = (product: any) => {
+    setEditingProduct(product);
+    setShowForm(true);
+  };
+  
+  const handleDeleteProduct = async (id: string) => {
     try {
-      await productService.createProduct(productData);
+      await productService.deleteProduct(id);
       toast({
-        title: "تم إنشاء المنتج",
-        description: "تم إنشاء المنتج بنجاح"
+        title: "تم حذف المنتج",
+        description: "تم حذف المنتج بنجاح"
       });
-      setIsFormOpen(false);
       refetch();
-      return Promise.resolve();
     } catch (error) {
-      console.error("خطأ في إنشاء المنتج:", error);
+      console.error("خطأ في حذف المنتج:", error);
       toast({
-        title: "خطأ في إنشاء المنتج",
-        description: "حدث خطأ أثناء محاولة إنشاء المنتج",
+        title: "خطأ في الحذف",
+        description: "حدث خطأ أثناء محاولة حذف المنتج",
         variant: "destructive"
       });
-      return Promise.reject(error);
     }
   };
   
-  const handleUpdateProduct = async (productData: any) => {
+  const handleFormSubmit = async (productData: any) => {
     try {
-      await productService.updateProduct(editingProduct.id, productData);
-      toast({
-        title: "تم تحديث المنتج",
-        description: "تم تحديث المنتج بنجاح"
-      });
-      setIsFormOpen(false);
+      if (editingProduct) {
+        await productService.updateProduct(editingProduct.id, productData);
+        toast({
+          title: "تم تحديث المنتج",
+          description: "تم تحديث بيانات المنتج بنجاح"
+        });
+      } else {
+        await productService.createProduct(productData);
+        toast({
+          title: "تم إضافة المنتج",
+          description: "تم إضافة المنتج الجديد بنجاح"
+        });
+      }
+      setShowForm(false);
       setEditingProduct(null);
       refetch();
-      return Promise.resolve();
     } catch (error) {
-      console.error("خطأ في تحديث المنتج:", error);
+      console.error("خطأ في حفظ المنتج:", error);
       toast({
-        title: "خطأ في تحديث المنتج",
-        description: "حدث خطأ أثناء محاولة تحديث المنتج",
+        title: "خطأ في الحفظ",
+        description: "حدث خطأ أثناء محاولة حفظ المنتج",
         variant: "destructive"
       });
-      return Promise.reject(error);
     }
   };
   
   // تصفية المنتجات بناءً على مصطلح البحث
-  const filteredProducts = searchTerm && products
+  const filteredProducts = searchTerm
     ? products.filter((product: any) =>
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.product_code.toLowerCase().includes(searchTerm.toLowerCase())
+        product.description?.toLowerCase().includes(searchTerm.toLowerCase())
       )
     : products;
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-        <h1 className="text-2xl font-bold">المنتجات</h1>
-        <div className="flex gap-4">
-          <Button onClick={() => { setEditingProduct(null); setIsFormOpen(true); }}>
-            <Plus className="mr-2 h-4 w-4" /> إضافة منتج
-          </Button>
-          <div className="relative">
-            <Search className="absolute right-3 top-2.5 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="ابحث عن منتج..."
-              className="pr-10 w-[250px]"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+      {showForm ? (
+        <div>
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-2xl font-bold">
+              {editingProduct ? 'تعديل منتج' : 'إضافة منتج جديد'}
+            </h1>
+            <Button variant="ghost" onClick={() => {
+              setShowForm(false);
+              setEditingProduct(null);
+            }}>
+              العودة إلى قائمة المنتجات
+            </Button>
           </div>
-        </div>
-      </div>
-      
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-        {isLoading ? (
-          <div className="col-span-full py-12 flex justify-center">
-            <p>Loading products...</p>
-          </div>
-        ) : filteredProducts.length > 0 ? (
-          filteredProducts.map((product: any) => (
-            <div key={product.id} className="border rounded-md p-4">
-              <h3 className="font-semibold">{product.name}</h3>
-              <p className="text-sm text-gray-500">Code: {product.product_code}</p>
-              <div className="mt-2 flex justify-between items-center">
-                <span>{product.price} ر.س</span>
-                <Button variant="outline" size="sm" onClick={() => { setEditingProduct(product); setIsFormOpen(true); }}>
-                  تعديل
-                </Button>
-              </div>
-            </div>
-          ))
-        ) : (
-          <div className="col-span-full py-12 flex justify-center">
-            <p>No products found.</p>
-          </div>
-        )}
-      </div>
-      
-      {/* New/Edit Product Form Dialog */}
-      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="sm:max-w-[800px]">
-          <DialogHeader>
-            <DialogTitle>{editingProduct ? 'تعديل المنتج' : 'إضافة منتج جديد'}</DialogTitle>
-            <DialogDescription>
-              {editingProduct 
-                ? 'قم بتحرير معلومات المنتج في النموذج أدناه.'
-                : 'أدخل معلومات المنتج الجديد في النموذج أدناه.'}
-            </DialogDescription>
-          </DialogHeader>
-          <ProductForm
-            product={editingProduct}
-            onSubmit={editingProduct ? handleUpdateProduct : handleCreateProduct}
+          <ProductForm 
+            initialData={editingProduct} 
+            onSubmit={handleFormSubmit}
             onCancel={() => {
-              setIsFormOpen(false);
+              setShowForm(false);
               setEditingProduct(null);
             }}
           />
-        </DialogContent>
-      </Dialog>
+        </div>
+      ) : (
+        <>
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <h1 className="text-2xl font-bold">المنتجات</h1>
+            <div className="flex gap-4">
+              <div className="relative">
+                <Search className="absolute right-3 top-2.5 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="ابحث عن منتج..."
+                  className="pr-10 w-[250px]"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              <Button onClick={() => setShowForm(true)}>
+                <PlusCircle className="ml-2 h-4 w-4" />
+                <span>إضافة منتج</span>
+              </Button>
+            </div>
+          </div>
+          
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center min-h-[60vh]">
+              <Loader2 className="h-12 w-12 animate-spin text-red-600 mb-4" />
+              <p className="text-lg font-medium">جارِ تحميل المنتجات...</p>
+            </div>
+          ) : filteredProducts.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[50px]">الصورة</TableHead>
+                  <TableHead>الاسم</TableHead>
+                  <TableHead>الوصف</TableHead>
+                  <TableHead>السعر</TableHead>
+                  <TableHead>المخزون</TableHead>
+                  <TableHead>الحالة</TableHead>
+                  <TableHead className="text-left">الإجراءات</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredProducts.map((product: any) => (
+                  <TableRow key={product.id}>
+                    <TableCell>
+                      {product.images && product.images.length > 0 ? (
+                        <img
+                          src={product.images[0]}
+                          alt={product.name}
+                          className="w-10 h-10 object-cover rounded"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 bg-gray-200 rounded flex items-center justify-center">
+                          <PackageX size={16} className="text-gray-400" />
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell className="font-medium">{product.name}</TableCell>
+                    <TableCell className="max-w-[300px] truncate">
+                      {product.description || "لا يوجد وصف"}
+                    </TableCell>
+                    <TableCell>
+                      {product.discount_price ? (
+                        <div>
+                          <span className="text-red-600 font-medium">{product.discount_price} ر.س</span>
+                          <span className="text-gray-400 line-through text-xs mr-2">
+                            {product.price} ر.س
+                          </span>
+                        </div>
+                      ) : (
+                        <span>{product.price} ر.س</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {product.stock > 0 ? product.stock : (
+                        <span className="text-red-600">نفذت الكمية</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        {product.is_featured && (
+                          <Badge variant="outline" className="bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-50">
+                            مميز
+                          </Badge>
+                        )}
+                        {product.is_new && (
+                          <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200 hover:bg-green-50">
+                            جديد
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEditProduct(product)}
+                        >
+                          <Edit className="h-4 w-4 text-blue-600" />
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <Trash2 className="h-4 w-4 text-red-600" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>هل أنت متأكد من حذف المنتج؟</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                هذا الإجراء لا يمكن التراجع عنه. سيتم حذف المنتج نهائياً من قاعدة البيانات.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                              <AlertDialogAction
+                                className="bg-red-600 hover:bg-red-700"
+                                onClick={() => handleDeleteProduct(product.id)}
+                              >
+                                حذف
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <div className="py-24 text-center">
+              <FileX className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-1">
+                {searchTerm ? "لا يوجد منتجات مطابقة" : "لا يوجد منتجات"}
+              </h3>
+              <p className="text-gray-500 dark:text-gray-400 mb-6">
+                {searchTerm
+                  ? "لم نتمكن من العثور على منتجات تطابق عملية البحث"
+                  : "لم يتم إضافة أي منتجات بعد"}
+              </p>
+              <Button onClick={() => setShowForm(true)}>
+                <PlusCircle className="ml-2 h-4 w-4" />
+                <span>إضافة منتج جديد</span>
+              </Button>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 };

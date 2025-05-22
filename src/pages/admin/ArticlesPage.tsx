@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { 
@@ -49,8 +50,7 @@ const ArticlesPage = () => {
     refetch
   } = useQuery({
     queryKey: ['admin-articles'],
-    queryFn: articleService.getAllArticles,  // Use getAllArticles instead of getArticles
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    queryFn: articleService.getArticles
   });
   
   const handleEditArticle = (article: any) => {
@@ -76,12 +76,12 @@ const ArticlesPage = () => {
     }
   };
   
-  const togglePublished = async (articleId: string, currentPublishedState: boolean) => {
+  const handleTogglePublished = async (id: string, currentStatus: boolean) => {
     try {
-      await articleService.toggleArticlePublished(articleId, !currentPublishedState);
+      await articleService.toggleArticlePublished(id, !currentStatus);
       toast({
-        title: currentPublishedState ? "تم إلغاء نشر المقالة" : "تم نشر المقالة",
-        description: currentPublishedState ? "تم إلغاء نشر المقالة بنجاح" : "تم نشر المقالة بنجاح"
+        title: currentStatus ? "تم إلغاء نشر المقالة" : "تم نشر المقالة",
+        description: currentStatus ? "تم إلغاء نشر المقالة بنجاح" : "تم نشر المقالة بنجاح"
       });
       refetch();
     } catch (error) {
@@ -134,7 +134,7 @@ const ArticlesPage = () => {
   };
   
   // تصفية المقالات بناءً على مصطلح البحث
-  const filteredArticles = searchTerm && articles
+  const filteredArticles = searchTerm
     ? articles.filter((article: any) =>
         article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         article.excerpt?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -231,7 +231,7 @@ const ArticlesPage = () => {
                     <TableCell>
                       <Switch
                         checked={article.published}
-                        onCheckedChange={() => togglePublished(article.id, article.published)}
+                        onCheckedChange={() => handleTogglePublished(article.id, article.published)}
                       />
                     </TableCell>
                     <TableCell>

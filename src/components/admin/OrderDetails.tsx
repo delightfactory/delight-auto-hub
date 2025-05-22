@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { orderService } from '@/services/adminService';
-import { Loader2, Package, MapPin, User, Phone, Mail, Check, Truck, X, ShoppingBag } from 'lucide-react';
+import { Loader2, Package, MapPin, User, Phone, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
@@ -14,8 +14,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { OrderStatus } from '@/types/db';
-import { toast } from 'sonner';
 
 interface OrderDetailsProps {
   orderId: string;
@@ -76,7 +74,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onStatusUpdate }) 
     }
   };
   
-  const handleStatusChange = async (newStatus: OrderStatus) => {
+  const handleStatusChange = async (newStatus: string) => {
     setUpdatingStatus(true);
     try {
       await orderService.updateOrderStatus(orderId, newStatus);

@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { 
   CircleCheck, 
@@ -7,6 +8,8 @@ import {
   Package, 
   Users, 
   TrendingUp,
+  ArrowUpRight,
+  ArrowDownRight,
   Loader2,
   FileText,
   Tag
@@ -96,7 +99,7 @@ const DashboardPage = () => {
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400">إجمالي الطلبات</p>
-                <h3 className="text-3xl font-bold mt-2">{stats?.ordersCount || 0}</h3>
+                <h3 className="text-3xl font-bold mt-2">{stats?.ordersCount}</h3>
               </div>
               <div className="bg-blue-100 p-3 rounded-full">
                 <ShoppingCart className="h-6 w-6 text-blue-600" />
@@ -110,7 +113,7 @@ const DashboardPage = () => {
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400">إجمالي المنتجات</p>
-                <h3 className="text-3xl font-bold mt-2">{stats?.productsCount || 0}</h3>
+                <h3 className="text-3xl font-bold mt-2">{stats?.productsCount}</h3>
               </div>
               <div className="bg-green-100 p-3 rounded-full">
                 <Package className="h-6 w-6 text-green-600" />
@@ -124,7 +127,7 @@ const DashboardPage = () => {
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400">إجمالي العملاء</p>
-                <h3 className="text-3xl font-bold mt-2">{stats?.customersCount || 0}</h3>
+                <h3 className="text-3xl font-bold mt-2">{stats?.customersCount}</h3>
               </div>
               <div className="bg-purple-100 p-3 rounded-full">
                 <Users className="h-6 w-6 text-purple-600" />
@@ -139,7 +142,7 @@ const DashboardPage = () => {
               <div>
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400">متوسط الطلب</p>
                 <h3 className="text-3xl font-bold mt-2">
-                  {stats && stats.ordersCount > 0 ? (
+                  {stats?.ordersCount && stats.ordersCount > 0 ? (
                     `${200} ر.س`
                   ) : (
                     '0 ر.س'
@@ -172,7 +175,7 @@ const DashboardPage = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {stats.recentOrders.map((order: any) => (
+                {stats.recentOrders.map((order) => (
                   <TableRow key={order.id}>
                     <TableCell className="font-medium">{order.id.substring(0, 8)}</TableCell>
                     <TableCell>{order.customer?.name || 'غير متاح'}</TableCell>

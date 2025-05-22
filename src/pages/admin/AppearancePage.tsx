@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { 
   Palette, 
@@ -21,7 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { appearanceService } from '@/services/settingsService';
+import { appearanceService } from '@/services/adminService';
 import { AppearanceSettings } from '@/types/db';
 
 const AppearancePage = () => {

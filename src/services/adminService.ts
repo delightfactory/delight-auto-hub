@@ -1,619 +1,515 @@
-import { supabase } from '@/integrations/supabase/client';
-import { Product, Comment, OrderStatus } from '@/types/db';
+import { supabase } from "@/integrations/supabase/client";
+import { Product, Comment } from "@/types/db";
 
-// IMPORTANT: Note that the other services have been moved to separate files:
-// - settingsService.ts contains siteSettingsService and appearanceService
-// - We should consider further refactoring this file into smaller, focused service files
+// التحقق إذا كان المستخدم مسؤول
+export const checkIfAdmin = async () => {
+  try {
+    const { data: isAdmin, error } = await supabase
+      .rpc('is_admin');
 
-export const adminService = {
-  // Products
-  getAllProducts: async () => {
-    try {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching products:', error);
-        throw error;
-      }
-
-      return data || [];
-    } catch (error) {
-      console.error('Error in getAllProducts:', error);
-      throw error;
+    if (error) {
+      console.error("خطأ في التحقق من صلاحيات المسؤول:", error);
+      return false;
     }
-  },
-
-  getProductById: async (id: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (error) {
-        console.error(`Error fetching product with id ${id}:`, error);
-        throw error;
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Error in getProductById:', error);
-      throw error;
-    }
-  },
-
-  createProduct: async (product: Omit<Product, 'id' | 'created_at' | 'updated_at'>) => {
-    try {
-      const { data, error } = await supabase
-        .from('products')
-        .insert([product])
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error creating product:', error);
-        throw error;
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Error in createProduct:', error);
-      throw error;
-    }
-  },
-
-  updateProduct: async (id: string, product: Partial<Product>) => {
-    try {
-      const { data, error } = await supabase
-        .from('products')
-        .update(product)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) {
-        console.error(`Error updating product with id ${id}:`, error);
-        throw error;
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Error in updateProduct:', error);
-      throw error;
-    }
-  },
-
-  deleteProduct: async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('products')
-        .delete()
-        .eq('id', id);
-
-      if (error) {
-        console.error(`Error deleting product with id ${id}:`, error);
-        throw error;
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Error in deleteProduct:', error);
-      throw error;
-    }
-  },
-
-  bulkUpdateProducts: async (products: Array<Partial<Product> & { id: string }>) => {
-    try {
-      for (const product of products) {
-        const { error } = await supabase
-          .from('products')
-          .update(product)
-          .eq('id', product.id);
-
-        if (error) {
-          console.error(`Error updating product with id ${product.id}:`, error);
-          throw error;
-        }
-      }
-      return true;
-    } catch (error) {
-      console.error('Error in bulkUpdateProducts:', error);
-      throw error;
-    }
-  },
-
-  // Categories
-  getAllCategories: async () => {
-    try {
-      const { data, error } = await supabase
-        .from('categories')
-        .select('*');
-
-      if (error) {
-        console.error('Error fetching categories:', error);
-        throw error;
-      }
-
-      return data || [];
-    } catch (error) {
-      console.error('Error in getAllCategories:', error);
-      throw error;
-    }
-  },
-
-  getCategoryById: async (id: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('categories')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (error) {
-        console.error(`Error fetching category with id ${id}:`, error);
-        throw error;
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Error in getCategoryById:', error);
-      throw error;
-    }
-  },
-
-  createCategory: async (category: any) => {
-    try {
-      const { data, error } = await supabase
-        .from('categories')
-        .insert([category])
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error creating category:', error);
-        throw error;
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Error in createCategory:', error);
-      throw error;
-    }
-  },
-
-  updateCategory: async (id: string, category: any) => {
-    try {
-      const { data, error } = await supabase
-        .from('categories')
-        .update(category)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) {
-        console.error(`Error updating category with id ${id}:`, error);
-        throw error;
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Error in updateCategory:', error);
-      throw error;
-    }
-  },
-
-  deleteCategory: async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('categories')
-        .delete()
-        .eq('id', id);
-
-      if (error) {
-        console.error(`Error deleting category with id ${id}:`, error);
-        throw error;
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Error in deleteCategory:', error);
-      throw error;
-    }
-  },
-
-  // Orders
-  getAllOrders: async () => {
-    try {
-      const { data, error } = await supabase
-        .from('orders')
-        .select(`
-          *,
-          customer:customers(name, email)
-        `)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching orders:', error);
-        throw error;
-      }
-
-      return data || [];
-    } catch (error) {
-      console.error('Error in getAllOrders:', error);
-      throw error;
-    }
-  },
-
-  getOrderById: async (id: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('orders')
-        .select(`
-          *,
-          customer:customers(name, email, phone, address),
-          items:order_items(*)
-        `)
-        .eq('id', id)
-        .single();
-
-      if (error) {
-        console.error(`Error fetching order with id ${id}:`, error);
-        throw error;
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Error in getOrderById:', error);
-      throw error;
-    }
-  },
-
-  updateOrderStatus: async (id: string, status: OrderStatus) => {
-    try {
-      const { data, error } = await supabase
-        .from('orders')
-        .update({ status })
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) {
-        console.error(`Error updating order status for id ${id}:`, error);
-        throw error;
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Error in updateOrderStatus:', error);
-      throw error;
-    }
-  },
-
-  // Customers
-  getAllCustomers: async () => {
-    try {
-      const { data, error } = await supabase
-        .from('customers')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching customers:', error);
-        throw error;
-      }
-
-      return data || [];
-    } catch (error) {
-      console.error('Error in getAllCustomers:', error);
-      throw error;
-    }
-  },
-
-  getCustomerById: async (id: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('customers')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (error) {
-        console.error(`Error fetching customer with id ${id}:`, error);
-        throw error;
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Error in getCustomerById:', error);
-      throw error;
-    }
-  },
-
-  updateCustomerRole: async (id: string, role: 'admin' | 'customer') => {
-    try {
-      const { data, error } = await supabase
-        .from('customers')
-        .update({ role })
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) {
-        console.error(`Error updating customer role for id ${id}:`, error);
-        throw error;
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Error in updateCustomerRole:', error);
-      throw error;
-    }
-  },
-
-  // Articles
-  getAllArticles: async () => {
-    try {
-      const { data, error } = await supabase
-        .from('articles')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching articles:', error);
-        throw error;
-      }
-
-      return data || [];
-    } catch (error) {
-      console.error('Error in getAllArticles:', error);
-      throw error;
-    }
-  },
-
-  getArticleById: async (id: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('articles')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (error) {
-        console.error(`Error fetching article with id ${id}:`, error);
-        throw error;
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Error in getArticleById:', error);
-      throw error;
-    }
-  },
-
-  createArticle: async (article: any) => {
-    try {
-      const { data, error } = await supabase
-        .from('articles')
-        .insert([article])
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error creating article:', error);
-        throw error;
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Error in createArticle:', error);
-      throw error;
-    }
-  },
-
-  updateArticle: async (id: string, article: any) => {
-    try {
-      const { data, error } = await supabase
-        .from('articles')
-        .update(article)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) {
-        console.error(`Error updating article with id ${id}:`, error);
-        throw error;
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Error in updateArticle:', error);
-      throw error;
-    }
-  },
-
-  deleteArticle: async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('articles')
-        .delete()
-        .eq('id', id);
-
-      if (error) {
-        console.error(`Error deleting article with id ${id}:`, error);
-        throw error;
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Error in deleteArticle:', error);
-      throw error;
-    }
-  },
-
-  // For ArticlesPage.tsx
-  toggleArticlePublished: async (id: string, publishState: boolean) => {
-    try {
-      const { data, error } = await supabase
-        .from('articles')
-        .update({ published: publishState, published_at: publishState ? new Date().toISOString() : null })
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) {
-        console.error(`Error toggling article publish state for id ${id}:`, error);
-        throw error;
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Error in toggleArticlePublished:', error);
-      throw error;
-    }
-  },
-
-  // Comments
-  getAllComments: async () => {
-    try {
-      const { data, error } = await supabase
-        .from('comments')
-        .select(`
-          *,
-          author:customers(name, email, avatar_url),
-          product:products(name),
-          article:articles(title, slug)
-        `)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching comments:', error);
-        throw error;
-      }
-
-      // Transform data to match Comment type
-      const formattedComments = data?.map(comment => ({
-        id: comment.id,
-        content: comment.content,
-        author: {
-          name: comment.author?.name || 'Anonymous',
-          email: comment.author?.email || '',
-          avatar_url: comment.author?.avatar_url || null,
-        },
-        product: comment.product ? {
-          name: comment.product.name,
-        } : undefined,
-        article: comment.article ? {
-          title: comment.article.title,
-          slug: comment.article.slug,
-        } : undefined,
-        status: comment.status,
-        created_at: comment.created_at,
-      })) || [];
-
-      return formattedComments;
-    } catch (error) {
-      console.error('Error in getAllComments:', error);
-      throw error;
-    }
-  },
-
-  updateCommentStatus: async (id: string, status: 'approved' | 'pending' | 'spam') => {
-    try {
-      const { data, error } = await supabase
-        .from('comments')
-        .update({ status })
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) {
-        console.error(`Error updating comment status for id ${id}:`, error);
-        throw error;
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Error in updateCommentStatus:', error);
-      throw error;
-    }
-  },
-
-  deleteComment: async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('comments')
-        .delete()
-        .eq('id', id);
-
-      if (error) {
-        console.error(`Error deleting comment with id ${id}:`, error);
-        throw error;
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Error in deleteComment:', error);
-      throw error;
-    }
-  },
-  
-  // Dashboard stats
-  fetchDashboardStats: async () => {
-    try {
-      // Get orders count
-      const { data: ordersData, error: ordersError } = await supabase
-        .from('orders')
-        .select('id', { count: 'exact' });
-        
-      if (ordersError) throw ordersError;
-      
-      // Get products count
-      const { data: productsData, error: productsError } = await supabase
-        .from('products')
-        .select('id', { count: 'exact' });
-        
-      if (productsError) throw productsError;
-      
-      // Get customers count
-      const { data: customersData, error: customersError } = await supabase
-        .from('customers')
-        .select('id', { count: 'exact' });
-        
-      if (customersError) throw customersError;
-      
-      // Get recent orders
-      const { data: recentOrdersData, error: recentOrdersError } = await supabase
-        .from('orders')
-        .select('*, customer:customers(name)')
-        .order('created_at', { ascending: false })
-        .limit(5);
-        
-      if (recentOrdersError) throw recentOrdersError;
-      
-      return {
-        ordersCount: ordersData.length,
-        productsCount: productsData.length,
-        customersCount: customersData.length,
-        recentOrders: recentOrdersData
-      };
-    } catch (error) {
-      console.error('Error fetching dashboard stats:', error);
-      throw error;
-    }
+    
+    return isAdmin;
+  } catch (error) {
+    console.error("خطأ غير متوقع:", error);
+    return false;
   }
 };
 
-// Export service modules for legacy compatibility - these will be refactored later
-export const productService = adminService;
-export const categoryService = adminService;
-export const orderService = adminService;
-export const customerService = adminService;
-export const articleService = adminService;
-export const commentService = adminService;
+// جلب إحصائيات لوحة التحكم
+export const fetchDashboardStats = async () => {
+  try {
+    // إجمالي المنتجات
+    const { count: productsCount, error: productsError } = await supabase
+      .from('products')
+      .select('*', { count: 'exact', head: true });
 
-// Make sure fetchDashboardStats is exported
-export const fetchDashboardStats = adminService.fetchDashboardStats;
+    // إجمالي الطلبات
+    const { count: ordersCount, error: ordersError } = await supabase
+      .from('orders')
+      .select('*', { count: 'exact', head: true });
+
+    // إجمالي العملاء
+    const { count: customersCount, error: customersError } = await supabase
+      .from('customers')
+      .select('*', { count: 'exact', head: true });
+
+    // آخر الطلبات
+    const { data: recentOrders, error: recentOrdersError } = await supabase
+      .from('orders')
+      .select(`
+        *,
+        customer:customers(name, email)
+      `)
+      .order('created_at', { ascending: false })
+      .limit(5);
+
+    if (productsError || ordersError || customersError || recentOrdersError) {
+      console.error("خطأ في جلب الإحصائيات:", { productsError, ordersError, customersError, recentOrdersError });
+    }
+
+    return {
+      productsCount: productsCount || 0,
+      ordersCount: ordersCount || 0,
+      customersCount: customersCount || 0,
+      recentOrders: recentOrders || []
+    };
+  } catch (error) {
+    console.error("خطأ غير متوقع في جلب الإحصائيات:", error);
+    return {
+      productsCount: 0,
+      ordersCount: 0,
+      customersCount: 0,
+      recentOrders: []
+    };
+  }
+};
+
+// خدمات إدارة المنتجات
+export const productService = {
+  // جلب جميع المنتجات
+  getProducts: async (): Promise<Product[]> => {
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error("خطأ في جلب المنتجات:", error);
+      throw error;
+    }
+    return data || [];
+  },
+  
+  // جلب منتج بواسطة المعرف
+  getProductById: async (id: string): Promise<Product> => {
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error) {
+      console.error(`خطأ في جلب المنتج رقم ${id}:`, error);
+      throw error;
+    }
+    return data as Product;
+  },
+  
+  // إنشاء منتج جديد
+  createProduct: async (productData: Partial<Product>): Promise<Product> => {
+    const { data, error } = await supabase
+      .from('products')
+      .insert([productData])
+      .select();
+    
+    if (error) {
+      console.error("خطأ في إنشاء المنتج:", error);
+      throw error;
+    }
+    return data?.[0] as Product;
+  },
+  
+  // تحديث منتج موجود
+  updateProduct: async (id: string, productData: Partial<Product>): Promise<Product> => {
+    // تأكد من أن الفئة عبارة عن معرف UUID
+    if (productData.category && typeof productData.category === 'string') {
+      // تأكد من أن الفئة هي معرف UUID صالح، وإلا اجعلها null
+      const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidPattern.test(productData.category)) {
+        console.warn("تم توفير فئة غير صالحة، سيتم تعيينها إلى null");
+        productData.category = null;
+      }
+    }
+    
+    const { data, error } = await supabase
+      .from('products')
+      .update(productData)
+      .eq('id', id)
+      .select();
+    
+    if (error) {
+      console.error(`خطأ في تحديث المنتج رقم ${id}:`, error);
+      throw error;
+    }
+    return data?.[0] as Product;
+  },
+  
+  // حذف منتج
+  deleteProduct: async (id: string): Promise<boolean> => {
+    const { error } = await supabase
+      .from('products')
+      .delete()
+      .eq('id', id);
+    
+    if (error) {
+      console.error(`خطأ في حذف المنتج رقم ${id}:`, error);
+      throw error;
+    }
+    return true;
+  },
+};
+
+// خدمات إدارة الطلبات
+export const orderService = {
+  // جلب جميع الطلبات
+  getOrders: async () => {
+    const { data, error } = await supabase
+      .from('orders')
+      .select(`
+        *,
+        customer:customers(name, email)
+      `)
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error("خطأ في جلب الطلبات:", error);
+      throw error;
+    }
+    return data || [];
+  },
+  
+  // جلب طلب بواسطة المعرف
+  getOrderById: async (id: string) => {
+    const { data, error } = await supabase
+      .from('orders')
+      .select(`
+        *,
+        customer:customers(*),
+        order_items(*)
+      `)
+      .eq('id', id)
+      .single();
+    
+    if (error) {
+      console.error(`خطأ في جلب الطلب رقم ${id}:`, error);
+      throw error;
+    }
+    return data;
+  },
+  
+  // تحديث حالة طلب
+  updateOrderStatus: async (id: string, status: string) => {
+    const { data, error } = await supabase
+      .from('orders')
+      .update({ status })
+      .eq('id', id)
+      .select();
+    
+    if (error) {
+      console.error(`خطأ في تحديث حالة الطلب رقم ${id}:`, error);
+      throw error;
+    }
+    return data?.[0];
+  }
+};
+
+// خدمات إدارة العملاء
+export const customerService = {
+  // جلب جميع العملاء
+  getCustomers: async () => {
+    const { data, error } = await supabase
+      .from('customers')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error("خطأ في جلب العملاء:", error);
+      throw error;
+    }
+    return data || [];
+  },
+  
+  // جلب عميل بواسطة المعرف
+  getCustomerById: async (id: string) => {
+    const { data, error } = await supabase
+      .from('customers')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error) {
+      console.error(`خطأ في جلب العميل رقم ${id}:`, error);
+      throw error;
+    }
+    return data;
+  },
+  
+  // تحديث دور عميل (ترقية أو تخفيض)
+  updateCustomerRole: async (id: string, role: 'admin' | 'customer') => {
+    const { data, error } = await supabase
+      .from('customers')
+      .update({ role })
+      .eq('id', id)
+      .select();
+    
+    if (error) {
+      console.error(`خطأ في تحديث دور العميل رقم ${id}:`, error);
+      throw error;
+    }
+    return data?.[0];
+  }
+};
+
+// خدمات إدارة المقالات
+export const articleService = {
+  // جلب جميع المقالات
+  getArticles: async () => {
+    const { data, error } = await supabase
+      .from('articles')
+      .select(`
+        *,
+        author:customers(name)
+      `)
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error("خطأ في جلب المقالات:", error);
+      throw error;
+    }
+    return data || [];
+  },
+  
+  // جلب مقال بواسطة المعرف
+  getArticleById: async (id: string) => {
+    const { data, error } = await supabase
+      .from('articles')
+      .select(`
+        *,
+        author:customers(name, email)
+      `)
+      .eq('id', id)
+      .single();
+    
+    if (error) {
+      console.error(`خطأ في جلب المقال رقم ${id}:`, error);
+      throw error;
+    }
+    return data;
+  },
+  
+  // إنشاء مقال جديد
+  createArticle: async (articleData: any) => {
+    const { data, error } = await supabase
+      .from('articles')
+      .insert([articleData])
+      .select();
+    
+    if (error) {
+      console.error("خطأ في إنشاء المقال:", error);
+      throw error;
+    }
+    return data?.[0];
+  },
+  
+  // تحديث مقال موجود
+  updateArticle: async (id: string, articleData: any) => {
+    const { data, error } = await supabase
+      .from('articles')
+      .update(articleData)
+      .eq('id', id)
+      .select();
+    
+    if (error) {
+      console.error(`خطأ في تحديث المقال رقم ${id}:`, error);
+      throw error;
+    }
+    return data?.[0];
+  },
+  
+  // حذف مقال
+  deleteArticle: async (id: string) => {
+    const { error } = await supabase
+      .from('articles')
+      .delete()
+      .eq('id', id);
+    
+    if (error) {
+      console.error(`خطأ في حذف المقال رقم ${id}:`, error);
+      throw error;
+    }
+    return true;
+  },
+  
+  // نشر أو إلغاء نشر مقال
+  toggleArticlePublished: async (id: string, published: boolean) => {
+    const { data, error } = await supabase
+      .from('articles')
+      .update({ 
+        published, 
+        published_at: published ? new Date().toISOString() : null 
+      })
+      .eq('id', id)
+      .select();
+    
+    if (error) {
+      console.error(`خطأ في تغيير حالة نشر المقال رقم ${id}:`, error);
+      throw error;
+    }
+    return data?.[0];
+  }
+};
+
+// خدمات إدارة الفئات
+export const categoryService = {
+  // جلب جميع الفئات
+  getCategories: async () => {
+    const { data, error } = await supabase
+      .from('categories')
+      .select('*')
+      .order('name');
+    
+    if (error) {
+      console.error("خطأ في جلب الفئات:", error);
+      throw error;
+    }
+    return data || [];
+  },
+  
+  // جلب فئة بواسطة المعرف
+  getCategoryById: async (id: string) => {
+    const { data, error } = await supabase
+      .from('categories')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error) {
+      console.error(`خطأ في جلب الفئة رقم ${id}:`, error);
+      throw error;
+    }
+    return data;
+  },
+  
+  // إنشاء فئة جديدة
+  createCategory: async (categoryData: any) => {
+    const { data, error } = await supabase
+      .from('categories')
+      .insert([categoryData])
+      .select();
+    
+    if (error) {
+      console.error("خطأ في إنشاء الفئة:", error);
+      throw error;
+    }
+    return data?.[0];
+  },
+  
+  // تحديث فئة موجودة
+  updateCategory: async (id: string, categoryData: any) => {
+    const { data, error } = await supabase
+      .from('categories')
+      .update(categoryData)
+      .eq('id', id)
+      .select();
+    
+    if (error) {
+      console.error(`خطأ في تحديث الفئة رقم ${id}:`, error);
+      throw error;
+    }
+    return data?.[0];
+  },
+  
+  // حذف فئة
+  deleteCategory: async (id: string) => {
+    const { error } = await supabase
+      .from('categories')
+      .delete()
+      .eq('id', id);
+    
+    if (error) {
+      console.error(`خطأ في حذف الفئة رقم ${id}:`, error);
+      throw error;
+    }
+    return true;
+  }
+};
+
+// خدمات إدارة التعليقات
+export const commentService = {
+  getComments: async (): Promise<Comment[]> => {
+    const { data, error } = await supabase
+      .from('comments')
+      .select(
+        `id, content, status, created_at,
+         author:customers(name, email, avatar_url),
+         product:products(name),
+         article:articles(title, slug)`
+      )
+      .order('created_at', { ascending: false });
+    if (error) {
+      console.error("خطأ في جلب التعليقات:", error);
+      throw error;
+    }
+    const rows = data ?? [];
+    return rows.map(r => {
+      const authorInfo = Array.isArray(r.author) ? r.author[0] : r.author;
+      const productInfo = Array.isArray(r.product) ? r.product[0] : r.product;
+      const articleInfo = r.article ? (Array.isArray(r.article) ? r.article[0] : r.article) : undefined;
+      return {
+        id: r.id,
+        content: r.content,
+        author: {
+          name: authorInfo.name,
+          email: authorInfo.email,
+          avatar_url: authorInfo.avatar_url,
+        },
+        product: productInfo ? { name: productInfo.name } : undefined,
+        article: articleInfo ? { title: articleInfo.title, slug: articleInfo.slug } : undefined,
+        status: r.status,
+        created_at: r.created_at,
+      };
+    });
+  },
+  updateCommentStatus: async (id: string, status: 'approved' | 'pending' | 'spam'): Promise<Comment> => {
+    const { data, error } = await supabase
+      .from('comments')
+      .update({ status })
+      .eq('id', id)
+      .select(
+        `id, content, status, created_at,
+         author:customers(name, email, avatar_url),
+         product:products(name),
+         article:articles(title, slug)`
+      )
+      .maybeSingle();
+    if (error) {
+      console.error(`خطأ في تحديث حالة التعليق رقم ${id}:`, error);
+      throw error;
+    }
+    if (!data) throw new Error(`Comment ${id} not found`);
+    const authorInfo = Array.isArray(data.author) ? data.author[0] : data.author;
+    const productInfo = Array.isArray(data.product) ? data.product[0] : data.product;
+    const articleInfo = data.article ? (Array.isArray(data.article) ? data.article[0] : data.article) : undefined;
+    return {
+      id: data.id,
+      content: data.content,
+      author: {
+        name: authorInfo.name,
+        email: authorInfo.email,
+        avatar_url: authorInfo.avatar_url,
+      },
+      product: productInfo ? { name: productInfo.name } : undefined,
+      article: articleInfo ? { title: articleInfo.title, slug: articleInfo.slug } : undefined,
+      status: data.status,
+      created_at: data.created_at,
+    };
+  },
+  deleteComment: async (id: string): Promise<boolean> => {
+    const { error } = await supabase
+      .from('comments')
+      .delete()
+      .eq('id', id);
+    if (error) {
+      console.error(`خطأ في حذف التعليق رقم ${id}:`, error);
+      throw error;
+    }
+    return true;
+  }
+};
+
+// تصدير خدمات الإعدادات من الملف الجديد
+export { siteSettingsService, appearanceService } from './settingsService';
