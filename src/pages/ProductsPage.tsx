@@ -62,7 +62,7 @@ const ProductsPage: React.FC = () => {
   const priceRange = useMemo(() => {
     if (products.length === 0) {
       // Default values when no products are loaded
-      return [0, 500];
+      return [0, 500] as [number, number];
     }
     
     const prices = products.map(product => product.price || 0);
@@ -71,7 +71,7 @@ const ProductsPage: React.FC = () => {
     const min = Math.max(0, Math.floor(Math.min(...prices) * 0.9));
     const max = Math.ceil(Math.max(...prices) * 1.1);
     
-    return [min, max];
+    return [min, max] as [number, number];
   }, [products]);
 
   // Load products with retry mechanism

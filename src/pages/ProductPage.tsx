@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -74,7 +73,6 @@ const ProductPage: React.FC = () => {
       image: product.images && product.images.length > 0 ? 
         product.images[0] : 
         'https://placehold.co/600x400/e2e8f0/1e293b?text=Delight+Car+Products',
-      quantity
     });
     
     toast({
@@ -199,7 +197,7 @@ const ProductPage: React.FC = () => {
                 ))}
               </div>
               <span className="mx-2 text-sm text-gray-500">4.0</span>
-              <span className="text-sm text-amazon-link">({product.reviews || 0} تقييم)</span>
+              <span className="text-sm text-amazon-link">(0 تقييم)</span>
             </div>
             
             {/* Price */}

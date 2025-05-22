@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -47,7 +46,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
       name,
       price: price || '0 ريال',
       image,
-      quantity: 1
     });
     
     setIsAddedToCart(true);
