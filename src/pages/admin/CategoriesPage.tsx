@@ -53,6 +53,8 @@ const formSchema = z.object({
   is_active: z.boolean().default(true),
 });
 
+type FormValues = z.infer<typeof formSchema>;
+
 const CategoriesPage = () => {
   const { toast } = useToast();
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -66,83 +68,74 @@ const CategoriesPage = () => {
     refetch
   } = useQuery({
     queryKey: ['admin-categories'],
-    queryFn: categoryService.getAllCategories,  // Use getAllCategories instead of getCategories
+    queryFn: categoryService.getAllCategories,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
-  const { mutate: createCategory, isLoading: isCreateLoading } = useMutation(
-    async (values: z.infer<typeof formSchema>) => {
-      await categoryService.createCategory(values);
+  // Fix the mutation hooks to use the correct types and implementation
+  const { mutate: createCategory, isPending: isCreatePending } = useMutation({
+    mutationFn: (values: FormValues) => categoryService.createCategory(values),
+    onSuccess: () => {
+      toast({
+        title: "تم إنشاء الفئة",
+        description: "تم إنشاء الفئة بنجاح"
+      });
+      queryClient.invalidateQueries({ queryKey: ['admin-categories'] });
+      setIsFormOpen(false);
+      form.reset();
     },
-    {
-      onSuccess: () => {
-        toast({
-          title: "تم إنشاء الفئة",
-          description: "تم إنشاء الفئة بنجاح"
-        });
-        queryClient.invalidateQueries({ queryKey: ['admin-categories'] });
-        setIsFormOpen(false);
-        form.reset();
-      },
-      onError: (error) => {
-        toast({
-          title: "خطأ في إنشاء الفئة",
-          description: "حدث خطأ أثناء محاولة إنشاء الفئة",
-          variant: "destructive"
-        });
-      },
-    }
-  );
-
-  const { mutate: updateCategory, isLoading: isUpdateLoading } = useMutation(
-    async (values: z.infer<typeof formSchema>) => {
-      if (!editingCategory) return;
-      await categoryService.updateCategory(editingCategory.id, values);
+    onError: (error) => {
+      toast({
+        title: "خطأ في إنشاء الفئة",
+        description: "حدث خطأ أثناء محاولة إنشاء الفئة",
+        variant: "destructive"
+      });
     },
-    {
-      onSuccess: () => {
-        toast({
-          title: "تم تحديث الفئة",
-          description: "تم تحديث الفئة بنجاح"
-        });
-        queryClient.invalidateQueries({ queryKey: ['admin-categories'] });
-        setIsFormOpen(false);
-        setEditingCategory(null);
-        form.reset();
-      },
-      onError: (error) => {
-        toast({
-          title: "خطأ في تحديث الفئة",
-          description: "حدث خطأ أثناء محاولة تحديث الفئة",
-          variant: "destructive"
-        });
-      },
-    }
-  );
+  });
 
-  const { mutate: deleteCategory, isLoading: isDeleteLoading } = useMutation(
-    async (id: string) => {
-      await categoryService.deleteCategory(id);
+  const { mutate: updateCategory, isPending: isUpdatePending } = useMutation({
+    mutationFn: (values: FormValues) => {
+      if (!editingCategory) throw new Error("No category selected for editing");
+      return categoryService.updateCategory(editingCategory.id, values);
     },
-    {
-      onSuccess: () => {
-        toast({
-          title: "تم حذف الفئة",
-          description: "تم حذف الفئة بنجاح"
-        });
-        queryClient.invalidateQueries({ queryKey: ['admin-categories'] });
-      },
-      onError: (error) => {
-        toast({
-          title: "خطأ في حذف الفئة",
-          description: "حدث خطأ أثناء محاولة حذف الفئة",
-          variant: "destructive"
-        });
-      },
-    }
-  );
+    onSuccess: () => {
+      toast({
+        title: "تم تحديث الفئة",
+        description: "تم تحديث الفئة بنجاح"
+      });
+      queryClient.invalidateQueries({ queryKey: ['admin-categories'] });
+      setIsFormOpen(false);
+      setEditingCategory(null);
+      form.reset();
+    },
+    onError: (error) => {
+      toast({
+        title: "خطأ في تحديث الفئة",
+        description: "حدث خطأ أثناء محاولة تحديث الفئة",
+        variant: "destructive"
+      });
+    },
+  });
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const { mutate: deleteCategory, isPending: isDeletePending } = useMutation({
+    mutationFn: (id: string) => categoryService.deleteCategory(id),
+    onSuccess: () => {
+      toast({
+        title: "تم حذف الفئة",
+        description: "تم حذف الفئة بنجاح"
+      });
+      queryClient.invalidateQueries({ queryKey: ['admin-categories'] });
+    },
+    onError: (error) => {
+      toast({
+        title: "خطأ في حذف الفئة",
+        description: "حدث خطأ أثناء محاولة حذف الفئة",
+        variant: "destructive"
+      });
+    },
+  });
+
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
@@ -152,7 +145,7 @@ const CategoriesPage = () => {
     },
   });
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
+  const onSubmit = (values: FormValues) => {
     if (editingCategory) {
       updateCategory(values);
     } else {
@@ -215,9 +208,9 @@ const CategoriesPage = () => {
             variant="ghost"
             size="sm"
             onClick={() => deleteCategory(category.id)}
-            disabled={isDeleteLoading}
+            disabled={isDeletePending}
           >
-            {isDeleteLoading ? (
+            {isDeletePending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 جاري الحذف
@@ -342,7 +335,7 @@ const CategoriesPage = () => {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value={null}>لا يوجد</SelectItem>
+                        <SelectItem value="">لا يوجد</SelectItem>
                         {categories?.map((category) => (
                           <SelectItem key={category.id} value={category.id}>{category.name}</SelectItem>
                         ))}
@@ -375,8 +368,8 @@ const CategoriesPage = () => {
                 <Button type="button" variant="ghost" onClick={() => setIsFormOpen(false)}>
                   إلغاء
                 </Button>
-                <Button type="submit" disabled={isCreateLoading || isUpdateLoading}>
-                  {isCreateLoading || isUpdateLoading ? (
+                <Button type="submit" disabled={isCreatePending || isUpdatePending}>
+                  {isCreatePending || isUpdatePending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       جاري الحفظ ...

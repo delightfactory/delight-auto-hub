@@ -74,7 +74,8 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
     mode: "onChange",
   });
 
-  const mutation = useMutation({
+  // Fixed the mutation to properly handle the loading state
+  const { mutate, isPending } = useMutation({
     mutationFn: (values: z.infer<typeof formSchema>) => onSubmit(values),
     onSuccess: () => {
       toast({
@@ -146,7 +147,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
   };
 
   const onSubmitHandler = (values: z.infer<typeof formSchema>) => {
-    mutation.mutate(values);
+    mutate(values);
   };
 
   return (
@@ -342,8 +343,8 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
 
         <div className="flex justify-end gap-2">
           <Button variant="ghost" onClick={onCancel}>إلغاء</Button>
-          <Button type="submit" disabled={mutation.isLoading}>
-            {mutation.isLoading ? (
+          <Button type="submit" disabled={isPending}>
+            {isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 جاري الحفظ ...
