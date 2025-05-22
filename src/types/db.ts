@@ -1,3 +1,4 @@
+
 // Auto-generated shared types for database entities
 
 export interface Product {
@@ -91,4 +92,69 @@ export interface Comment {
   };
   status: 'approved' | 'pending' | 'spam';
   created_at: string;
+}
+
+// New interface definitions for the homepage dynamic content
+
+export interface NavLink {
+  id: string;
+  title: string;
+  url: string;
+  order_position: number;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface HeroSettings {
+  id: string;
+  title: string;
+  subtitle?: string;
+  background_image_url?: string;
+  button_text?: string;
+  button_link?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface Testimonial {
+  id: string;
+  author_name: string;
+  author_role?: string;
+  company?: string;
+  content: string;
+  avatar_url?: string;
+  order_position: number;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface CTASettings {
+  id: string;
+  title: string;
+  subtitle?: string;
+  button_text?: string;
+  button_link?: string;
+  background_color?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface FooterSettings {
+  id: string;
+  copyright_text: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface SocialLink {
+  id: string;
+  platform: string;
+  icon_name: string;
+  profile_url: string;
+  order_position: number;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
 }

@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
@@ -10,6 +11,27 @@ import { Separator } from '@/components/ui/separator';
 import AdminSidebarLink from '@/components/AdminSidebarLink';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { navLinksService } from '@/services/homepageService';
+import { NavLink as NavLinkType } from '@/types/db';
+import { Loader2 } from 'lucide-react';
+
+// Helper to map icon names to components
+const getIconByName = (iconName: string) => {
+  const iconMap: Record<string, React.ElementType> = {
+    Home: Home,
+    ShoppingBag: ShoppingBag,
+    Tag: Tag,
+    Info: Info,
+    Factory: Factory,
+    Phone: Phone,
+    ShoppingCart: ShoppingCart,
+    User: User,
+    LogIn: LogIn,
+    Settings: Settings
+  };
+  
+  return iconMap[iconName] || Home;
+};
 
 export const SidebarMenu: React.FC = () => {
   const location = useLocation();
@@ -39,13 +61,20 @@ export const SidebarMenu: React.FC = () => {
     enabled: !!user,
   });
   
-  const navItems = [
-    { path: '/', label: 'الرئيسية', icon: Home },
-    { path: '/products', label: 'المنتجات', icon: ShoppingBag },
-    { path: '/articles', label: 'المقالات', icon: Tag },
-    { path: '/about', label: 'عن الشركة', icon: Info },
-    { path: '/factory', label: 'المصنع', icon: Factory },
-    { path: '/contact', label: 'اتصل بنا', icon: Phone },
+  // Fetch navigation links from the database
+  const { data: navLinks, isLoading: isLoadingNavLinks } = useQuery({
+    queryKey: ['navLinks'],
+    queryFn: navLinksService.getNavLinks,
+  });
+  
+  // Fallback navigation links if loading or error
+  const fallbackNavLinks = [
+    { path: '/', label: 'الرئيسية', icon: 'Home' },
+    { path: '/products', label: 'المنتجات', icon: 'ShoppingBag' },
+    { path: '/articles', label: 'المقالات', icon: 'Tag' },
+    { path: '/about', label: 'عن الشركة', icon: 'Info' },
+    { path: '/factory', label: 'المصنع', icon: 'Factory' },
+    { path: '/contact', label: 'اتصل بنا', icon: 'Phone' },
   ];
 
   return (
@@ -85,26 +114,37 @@ export const SidebarMenu: React.FC = () => {
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto p-4">
         <ul className="space-y-2">
-          {navItems.map((item) => {
-            const isActive = location.pathname === item.path;
-            const ItemIcon = item.icon;
-            
-            return (
-              <li key={item.path}>
-                <Link
-                  to={item.path}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                    isActive
-                      ? 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400 font-medium'
-                      : 'text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800'
-                  }`}
-                >
-                  <ItemIcon className={`w-5 h-5 ${isActive ? 'text-red-600 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'}`} />
-                  <span>{item.label}</span>
-                </Link>
-              </li>
-            );
-          })}
+          {isLoadingNavLinks ? (
+            <div className="flex justify-center py-4">
+              <Loader2 className="h-6 w-6 animate-spin text-red-500" />
+            </div>
+          ) : (
+            (navLinks && navLinks.length > 0 ? navLinks : fallbackNavLinks).map((item: NavLinkType | { path: string, label: string, icon: string }) => {
+              const isActive = location.pathname === ('path' in item ? item.path : item.url);
+              const path = 'path' in item ? item.path : item.url;
+              const label = 'label' in item ? item.label : item.title;
+              const iconName = 'icon' in item ? item.icon : 'Home';
+              
+              // Get the appropriate icon component
+              const ItemIcon = 'icon' in item ? getIconByName(item.icon) : Home;
+              
+              return (
+                <li key={path}>
+                  <Link
+                    to={path}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                      isActive
+                        ? 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400 font-medium'
+                        : 'text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800'
+                    }`}
+                  >
+                    <ItemIcon className={`w-5 h-5 ${isActive ? 'text-red-600 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'}`} />
+                    <span>{label}</span>
+                  </Link>
+                </li>
+              );
+            })
+          )}
         </ul>
 
         <div className="mt-6">

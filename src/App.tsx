@@ -40,6 +40,7 @@ const AdminSettingsPage = lazy(() => import("./pages/admin/SettingsPage"));
 const AppearancePage = lazy(() => import("./pages/admin/AppearancePage"));
 const CommentsPage = lazy(() => import("./pages/admin/CommentsPage"));
 const BackupsPage = lazy(() => import("./pages/admin/BackupsPage"));
+const HomepageSettingsPage = lazy(() => import("./pages/admin/HomepageSettingsPage"));
 
 // Create custom QueryClient with optimized settings
 const queryClient = new QueryClient({
@@ -105,6 +106,7 @@ const AnimatedRoutes = () => {
               <Route path="appearance" element={<AppearancePage />} />
               <Route path="comments" element={<CommentsPage />} />
               <Route path="backups" element={<BackupsPage />} />
+              <Route path="homepage" element={<HomepageSettingsPage />} />
               <Route path="notifications" element={<CommentsPage />} />
               <Route path="help" element={<BackupsPage />} />
             </Route>
