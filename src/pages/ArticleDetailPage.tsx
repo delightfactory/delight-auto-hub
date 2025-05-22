@@ -1,20 +1,72 @@
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Calendar, Clock, Tag, Share2, Bookmark, ThumbsUp } from 'lucide-react';
+import { ArrowRight, Calendar, Clock, Tag, Share2, Bookmark, ThumbsUp, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useTheme } from '@/context/ThemeContext';
+import { articleService } from '@/services/articleService';
+import { Comment } from '@/types/db';
 
 const ArticleDetailPage: React.FC = () => {
-  const { articleId } = useParams<{ articleId: string }>();
+  const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { theme } = useTheme();
-  
+  const [likes, setLikes] = useState(0);
+  const [showCommentBox, setShowCommentBox] = useState(false);
+  const [commentContent, setCommentContent] = useState('');
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [articleData, setArticleData] = useState<any | null>(null);
+
+  // جلب بيانات المقال والتعليقات عند التحميل
+  useEffect(() => {
+    if (!slug) return;
+    (async () => {
+      try {
+        const art = await articleService.getArticle(slug!);
+        setArticleData(art);
+        setLikes(art.likes || 0);
+        const cmts = await articleService.getComments(art.id);
+        setComments(cmts);
+      } catch (err) {
+        console.error(err);
+      }
+    })();
+  }, [slug]);
+
+  // التعامل مع الإعجاب
+  const handleLike = async () => {
+    if (!slug) return;
+    try {
+      const newLikes = await articleService.likeArticle(slug!);
+      setLikes(newLikes);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleCommentClick = () => setShowCommentBox(prev => !prev);
+  const handleShare = () => { navigator.clipboard.writeText(window.location.href); alert('تم نسخ رابط المقال'); };
+
+  // إرسال التعليق
+  const handleSendComment = async () => {
+    if (!articleData || !commentContent.trim()) return;
+    try {
+      await articleService.postComment(articleData.id, commentContent);
+      setCommentContent('');
+      setShowCommentBox(false);
+      const cmts = await articleService.getComments(articleData.id);
+      setComments(cmts);
+      alert('تم إرسال تعليقك!');
+    } catch (err) {
+      console.error(err);
+      alert('خطأ في إرسال التعليق');
+    }
+  };
+
   // In a real app, you would fetch this data from an API using the articleId
   const article = {
-    id: articleId,
+    id: slug,
     title: 'كيفية تنظيف محرك السيارة بشكل آمن',
     category: 'العناية بالمحرك',
     date: '10 مايو 2023',
@@ -182,6 +234,69 @@ const ArticleDetailPage: React.FC = () => {
                   {tag}
                 </div>
               ))}
+            </div>
+            
+            {/* تفاعلات المقال */}
+            <div className="flex items-center space-x-6 rtl:space-x-reverse mt-8">
+              <div className="flex items-center cursor-pointer" onClick={handleLike}>
+                <ThumbsUp size={20} className="ml-1" />
+                <span className="text-sm">{likes}</span>
+              </div>
+              <div className="flex items-center cursor-pointer" onClick={handleCommentClick}>
+                <MessageCircle size={20} className="ml-1" />
+                <span className="text-sm">تعليق</span>
+              </div>
+              <div className="flex items-center cursor-pointer" onClick={handleShare}>
+                <Share2 size={20} className="ml-1" />
+                <span className="text-sm">مشاركة</span>
+              </div>
+            </div>
+            
+            {showCommentBox && (
+              <div className="mt-4">
+                <textarea
+                  value={commentContent}
+                  onChange={e => setCommentContent(e.target.value)}
+                  placeholder="اكتب تعليقك هنا..."
+                  className="w-full border border-gray-300 dark:border-gray-700 rounded p-2 text-gray-900 dark:text-white"
+                  rows={4}
+                />
+                <Button
+                  onClick={handleSendComment}
+                  className="mt-2"
+                >
+                  أرسل التعليق
+                </Button>
+              </div>
+            )}
+            
+            {/* قائمة التعليقات */}
+            <div className="mt-6">
+              <h4 className="text-lg font-semibold mb-3">التعليقات</h4>
+              {comments.length === 0 ? (
+                <p className="text-gray-500">لا توجد تعليقات بعد.</p>
+              ) : (
+                comments.map(c => (
+                  <div key={c.id} className="mb-4 p-4 rounded-lg bg-gray-100 dark:bg-gray-800">
+                    <div className="flex items-center mb-2">
+                      {c.author.avatar_url ? (
+                        <img
+                          src={c.author.avatar_url}
+                          alt={c.author.name}
+                          className="h-8 w-8 rounded-full ml-2"
+                        />
+                      ) : (
+                        <div className="h-8 w-8 rounded-full bg-gray-400 ml-2" />
+                      )}
+                      <span className="font-medium">{c.author.name}</span>
+                      <span className="text-xs text-gray-500 mr-2">
+                        {new Date(c.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <p className="text-gray-900 dark:text-gray-100">{c.content}</p>
+                  </div>
+                ))
+              )}
             </div>
             
             {/* Actions */}

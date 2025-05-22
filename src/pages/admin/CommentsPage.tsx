@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   Search, 
@@ -7,7 +6,8 @@ import {
   Check, 
   X, 
   AlertTriangle,
-  ChevronDown
+  ChevronDown,
+  Loader2
 } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -39,70 +39,10 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-
-// Mock data for demonstration
-const mockComments = [
-  {
-    id: '1',
-    content: 'منتج رائع جداً واستخدمته لأكثر من شهر وكانت النتائج ممتازة.',
-    author: {
-      name: 'أحمد محمد',
-      avatar: '',
-      email: 'ahmed@example.com'
-    },
-    product: 'ملمع تابلوه الذهبي',
-    status: 'approved',
-    date: '2023-05-15T12:30:00Z'
-  },
-  {
-    id: '2',
-    content: 'هل هذا المنتج مناسب للسيارات ذات الفرش الجلدي؟',
-    author: {
-      name: 'سارة علي',
-      avatar: '',
-      email: 'sara@example.com'
-    },
-    product: 'منظف المقاعد السائل',
-    status: 'pending',
-    date: '2023-05-16T09:45:00Z'
-  },
-  {
-    id: '3',
-    content: 'المنتج سيء للغاية ولا أنصح باستخدامه.',
-    author: {
-      name: 'خالد عمر',
-      avatar: '',
-      email: 'khaled@example.com'
-    },
-    product: 'شامبو السيارات الفاخر',
-    status: 'spam',
-    date: '2023-05-14T15:20:00Z'
-  },
-  {
-    id: '4',
-    content: 'سعر المنتج مرتفع مقارنة بالمنتجات المماثلة في السوق.',
-    author: {
-      name: 'محمد علي',
-      avatar: '',
-      email: 'mohamed@example.com'
-    },
-    product: 'ملمع الإطارات',
-    status: 'approved',
-    date: '2023-05-13T11:15:00Z'
-  },
-  {
-    id: '5',
-    content: 'هل يتوفر هذا المنتج بأحجام أخرى؟',
-    author: {
-      name: 'نورا أحمد',
-      avatar: '',
-      email: 'nora@example.com'
-    },
-    product: 'عطر السيارة الفواح',
-    status: 'pending',
-    date: '2023-05-17T14:10:00Z'
-  }
-];
+import { useQuery } from '@tanstack/react-query';
+import { commentService } from '@/services/adminService';
+import type { Comment } from '@/types/db';
+import { Link } from 'react-router-dom';
 
 // Status helpers
 const getStatusColor = (status: string) => {
@@ -154,32 +94,51 @@ const formatDate = (dateString: string) => {
 };
 
 const CommentsPage = () => {
-  const [comments, setComments] = useState(mockComments);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filter, setFilter] = useState('all');
-  
+  const [filter, setFilter] = useState<'all' | 'approved' | 'pending' | 'spam'>('all');
+  const { data: comments = [], isLoading, refetch } = useQuery<Comment[], Error>({
+    queryKey: ['admin-comments'],
+    queryFn: commentService.getComments,
+  });
+
+  const updateCommentStatus = async (id: string, status: 'approved' | 'pending' | 'spam') => {
+    try {
+      await commentService.updateCommentStatus(id, status);
+      refetch();
+    } catch (error) {
+      console.error(`خطأ في تحديث حالة التعليق رقم ${id}:`, error);
+    }
+  };
+
+  const deleteComment = async (id: string) => {
+    try {
+      await commentService.deleteComment(id);
+      refetch();
+    } catch (error) {
+      console.error(`خطأ في حذف التعليق رقم ${id}:`, error);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="h-10 w-10 animate-spin text-gray-500" />
+      </div>
+    );
+  }
+
   const filteredComments = comments.filter(comment => {
     // Apply text search
     const matchesSearch = 
       comment.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
       comment.author.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      comment.product.toLowerCase().includes(searchTerm.toLowerCase());
+      comment.product.name.toLowerCase().includes(searchTerm.toLowerCase());
     
     // Apply status filter
     const matchesFilter = filter === 'all' || comment.status === filter;
     
     return matchesSearch && matchesFilter;
   });
-  
-  const updateCommentStatus = (id: string, status: string) => {
-    setComments(comments.map(comment => 
-      comment.id === id ? { ...comment, status } : comment
-    ));
-  };
-  
-  const deleteComment = (id: string) => {
-    setComments(comments.filter(comment => comment.id !== id));
-  };
   
   return (
     <div className="space-y-6">
@@ -240,7 +199,7 @@ const CommentsPage = () => {
             <TableRow>
               <TableHead className="w-[250px]">التعليق</TableHead>
               <TableHead>المؤلف</TableHead>
-              <TableHead>المنتج</TableHead>
+              <TableHead>المرجع</TableHead>
               <TableHead>التاريخ</TableHead>
               <TableHead>الحالة</TableHead>
               <TableHead className="text-left">الإجراءات</TableHead>
@@ -255,7 +214,7 @@ const CommentsPage = () => {
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <Avatar className="h-6 w-6">
-                      <AvatarImage src={comment.author.avatar} />
+                      <AvatarImage src={comment.author.avatar_url || undefined} />
                       <AvatarFallback className="text-xs bg-gray-100">
                         {comment.author.name[0]}
                       </AvatarFallback>
@@ -266,8 +225,14 @@ const CommentsPage = () => {
                     </div>
                   </div>
                 </TableCell>
-                <TableCell>{comment.product}</TableCell>
-                <TableCell>{formatDate(comment.date)}</TableCell>
+                <TableCell>
+                  {comment.product
+                    ? comment.product.name
+                    : comment.article
+                      ? <Link to={`/articles/${comment.article.slug}`}>{comment.article.title}</Link>
+                      : ''}
+                </TableCell>
+                <TableCell>{formatDate(comment.created_at)}</TableCell>
                 <TableCell>
                   <Badge className={`${getStatusColor(comment.status)} border-none`}>
                     {getStatusIcon(comment.status)}

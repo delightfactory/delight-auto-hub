@@ -63,6 +63,7 @@ const Header: React.FC = () => {
             {[
               { path: "/", label: "الرئيسية" },
               { path: "/products", label: "المنتجات" },
+              { path: "/articles", label: "المقالات" },
               { path: "/about", label: "عن الشركة" },
               { path: "/factory", label: "المصنع" },
               { path: "/contact", label: "اتصل بنا" },

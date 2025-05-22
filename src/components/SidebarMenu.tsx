@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import { useTheme } from '@/context/ThemeContext';
-import { Home, ShoppingBag, Info, Factory, Phone, ShoppingCart, User, LogIn, Sun, Moon, Settings } from 'lucide-react';
+import { Home, ShoppingBag, Info, Factory, Phone, ShoppingCart, User, LogIn, Sun, Moon, Settings, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
@@ -42,6 +42,7 @@ export const SidebarMenu: React.FC = () => {
   const navItems = [
     { path: '/', label: 'الرئيسية', icon: Home },
     { path: '/products', label: 'المنتجات', icon: ShoppingBag },
+    { path: '/articles', label: 'المقالات', icon: Tag },
     { path: '/about', label: 'عن الشركة', icon: Info },
     { path: '/factory', label: 'المصنع', icon: Factory },
     { path: '/contact', label: 'اتصل بنا', icon: Phone },

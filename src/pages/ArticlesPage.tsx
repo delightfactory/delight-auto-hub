@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Book, Tag, Calendar, Clock, ChevronRight, Search } from 'lucide-react';
@@ -7,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import PageHeader from '@/components/PageHeader';
 import { Switch } from '@/components/ui/switch';
 import { useTheme } from '@/context/ThemeContext';
+import { Link } from 'react-router-dom';
 
 type Article = {
   id: string;
@@ -200,13 +200,15 @@ const ArticlesPage: React.FC = () => {
                           <span className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>{featuredArticle.readTime}</span>
                         </div>
                       </div>
-                      <Button 
-                        variant="link" 
-                        className={`font-medium transition-colors ${theme === 'dark' ? 'text-delight-400 hover:text-delight-300' : 'text-delight-600 hover:text-delight-700'}`}
-                      >
-                        قراءة المقال
-                        <ChevronRight size={16} className="mr-1 inline" />
-                      </Button>
+                      <Link to={`/articles/${featuredArticle.id}`}>
+                        <Button 
+                          variant="link" 
+                          className={`font-medium transition-colors ${theme === 'dark' ? 'text-delight-400 hover:text-delight-300' : 'text-delight-600 hover:text-delight-700'}`}
+                        >
+                          قراءة المقال
+                          <ChevronRight size={16} className="mr-1 inline" />
+                        </Button>
+                      </Link>
                     </div>
                   </div>
                 </div>
@@ -253,12 +255,14 @@ const ArticlesPage: React.FC = () => {
                           <span className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>{article.readTime}</span>
                         </div>
                       </div>
-                      <Button
-                        variant="link"
-                        className={`text-sm font-medium p-0 transition-colors ${theme === 'dark' ? 'text-delight-400 hover:text-delight-300' : 'text-delight-600 hover:text-delight-700'}`}
-                      >
-                        قراءة المزيد
-                      </Button>
+                      <Link to={`/articles/${article.id}`}>
+                        <Button
+                          variant="link"
+                          className={`text-sm font-medium p-0 transition-colors ${theme === 'dark' ? 'text-delight-400 hover:text-delight-300' : 'text-delight-600 hover:text-delight-700'}`}
+                        >
+                          قراءة المزيد
+                        </Button>
+                      </Link>
                     </div>
                   </div>
                 </motion.div>

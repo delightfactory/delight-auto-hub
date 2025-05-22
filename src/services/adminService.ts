@@ -1,6 +1,5 @@
-
 import { supabase } from "@/integrations/supabase/client";
-import { Product } from "@/types/db";
+import { Product, Comment } from "@/types/db";
 
 // التحقق إذا كان المستخدم مسؤول
 export const checkIfAdmin = async () => {
@@ -423,6 +422,89 @@ export const categoryService = {
     
     if (error) {
       console.error(`خطأ في حذف الفئة رقم ${id}:`, error);
+      throw error;
+    }
+    return true;
+  }
+};
+
+// خدمات إدارة التعليقات
+export const commentService = {
+  getComments: async (): Promise<Comment[]> => {
+    const { data, error } = await supabase
+      .from('comments')
+      .select(
+        `id, content, status, created_at,
+         author:customers(name, email, avatar_url),
+         product:products(name),
+         article:articles(title, slug)`
+      )
+      .order('created_at', { ascending: false });
+    if (error) {
+      console.error("خطأ في جلب التعليقات:", error);
+      throw error;
+    }
+    const rows = data ?? [];
+    return rows.map(r => {
+      const authorInfo = Array.isArray(r.author) ? r.author[0] : r.author;
+      const productInfo = Array.isArray(r.product) ? r.product[0] : r.product;
+      const articleInfo = r.article ? (Array.isArray(r.article) ? r.article[0] : r.article) : undefined;
+      return {
+        id: r.id,
+        content: r.content,
+        author: {
+          name: authorInfo.name,
+          email: authorInfo.email,
+          avatar_url: authorInfo.avatar_url,
+        },
+        product: productInfo ? { name: productInfo.name } : undefined,
+        article: articleInfo ? { title: articleInfo.title, slug: articleInfo.slug } : undefined,
+        status: r.status,
+        created_at: r.created_at,
+      };
+    });
+  },
+  updateCommentStatus: async (id: string, status: 'approved' | 'pending' | 'spam'): Promise<Comment> => {
+    const { data, error } = await supabase
+      .from('comments')
+      .update({ status })
+      .eq('id', id)
+      .select(
+        `id, content, status, created_at,
+         author:customers(name, email, avatar_url),
+         product:products(name),
+         article:articles(title, slug)`
+      )
+      .maybeSingle();
+    if (error) {
+      console.error(`خطأ في تحديث حالة التعليق رقم ${id}:`, error);
+      throw error;
+    }
+    if (!data) throw new Error(`Comment ${id} not found`);
+    const authorInfo = Array.isArray(data.author) ? data.author[0] : data.author;
+    const productInfo = Array.isArray(data.product) ? data.product[0] : data.product;
+    const articleInfo = data.article ? (Array.isArray(data.article) ? data.article[0] : data.article) : undefined;
+    return {
+      id: data.id,
+      content: data.content,
+      author: {
+        name: authorInfo.name,
+        email: authorInfo.email,
+        avatar_url: authorInfo.avatar_url,
+      },
+      product: productInfo ? { name: productInfo.name } : undefined,
+      article: articleInfo ? { title: articleInfo.title, slug: articleInfo.slug } : undefined,
+      status: data.status,
+      created_at: data.created_at,
+    };
+  },
+  deleteComment: async (id: string): Promise<boolean> => {
+    const { error } = await supabase
+      .from('comments')
+      .delete()
+      .eq('id', id);
+    if (error) {
+      console.error(`خطأ في حذف التعليق رقم ${id}:`, error);
       throw error;
     }
     return true;

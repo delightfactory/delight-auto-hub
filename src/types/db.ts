@@ -1,4 +1,3 @@
-
 // Auto-generated shared types for database entities
 
 export interface Product {
@@ -73,4 +72,23 @@ export interface AppearanceSettings {
   };
   created_at?: string;
   updated_at?: string;
+}
+
+export interface Comment {
+  id: string;
+  content: string;
+  author: {
+    name: string;
+    email: string;
+    avatar_url?: string | null;
+  };
+  product?: {
+    name: string;
+  };
+  article?: {
+    title: string;
+    slug: string;
+  };
+  status: 'approved' | 'pending' | 'spam';
+  created_at: string;
 }
