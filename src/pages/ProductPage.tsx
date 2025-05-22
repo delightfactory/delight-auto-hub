@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -69,7 +70,7 @@ const ProductPage: React.FC = () => {
     addItem({
       id: product.id,
       name: product.name,
-      price: `${product.price} ر.س`,
+      price: `${product.price} جنيه`,
       image: product.images && product.images.length > 0 ? 
         product.images[0] : 
         'https://placehold.co/600x400/e2e8f0/1e293b?text=Delight+Car+Products',
@@ -205,10 +206,10 @@ const ProductPage: React.FC = () => {
               {product.discount_price ? (
                 <div className="flex items-center">
                   <span className="text-2xl font-bold text-amazon-price">
-                    {product.discount_price} ر.س
+                    {product.discount_price} جنيه
                   </span>
                   <span className="mr-3 text-lg text-gray-400 line-through">
-                    {product.price} ر.س
+                    {product.price} جنيه
                   </span>
                   <span className="mr-3 px-2 py-1 text-xs font-medium bg-red-100 text-red-700 rounded">
                     خصم {Math.round((1 - (product.discount_price / product.price)) * 100)}%
@@ -216,7 +217,7 @@ const ProductPage: React.FC = () => {
                 </div>
               ) : (
                 <span className="text-2xl font-bold text-amazon-price">
-                  {product.price} ر.س
+                  {product.price} جنيه
                 </span>
               )}
               <p className="text-sm text-gray-500 mt-1">
@@ -297,11 +298,11 @@ const ProductPage: React.FC = () => {
               </Button>
             </div>
             
-            {/* Shipping info */}
+            {/* Shipping info - Updated for Egypt */}
             <div className="mt-6 grid grid-cols-2 gap-4">
               <div className="flex items-center">
                 <Truck className="h-5 w-5 text-amazon-orange ml-2" />
-                <span className="text-sm">شحن سريع متوفر</span>
+                <span className="text-sm">شحن سريع متوفر داخل مصر</span>
               </div>
               <div className="flex items-center">
                 <Shield className="h-5 w-5 text-amazon-orange ml-2" />
