@@ -22,7 +22,6 @@ const Hero: React.FC = () => {
               نوفر منتجات عالية الجودة للعناية بسيارتك، مصنوعة بأفضل المعايير العالمية
             </p>
             <div className="flex flex-wrap gap-4 justify-center lg:justify-end">
-              {/* Fix: Wrap Link in Button, not multiple elements in asChild Button */}
               <Button asChild size="lg" className="amazon-btn-primary">
                 <Link to="/products">تسوق الآن</Link>
               </Button>
