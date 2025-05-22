@@ -17,7 +17,7 @@ export const ProductService = {
       is_featured: false,
       is_new: false,
       images: ['https://placehold.co/40'],
-      category: null // Add the missing category property
+      category: null // Required property in Product type
     };
   }
 };

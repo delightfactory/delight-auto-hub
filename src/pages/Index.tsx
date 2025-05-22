@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { ProductsAPI } from '@/services/productsAPI';
 import { Product } from '@/types/db';
@@ -7,6 +8,7 @@ import FeaturedProducts from '@/components/FeaturedProducts';
 import Testimonials from '@/components/Testimonials';
 import ContactForm from '@/components/ContactForm';
 import { Skeleton } from '@/components/ui/skeleton';
+import ProductCard from '@/components/ProductCard';
 
 const HomePage: React.FC = () => {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
@@ -58,11 +60,15 @@ const HomePage: React.FC = () => {
             ) : featuredProducts?.length > 0 ? (
               // Show actual products if available
               featuredProducts.map((product) => (
-                <div key={product.id} className="bg-white p-4 rounded-lg shadow-md">
-                  {/* Product rendering logic */}
-                  <h3>{product.name}</h3>
-                  {/* ... other product details */}
-                </div>
+                <ProductCard
+                  key={product.id}
+                  id={product.id}
+                  name={product.name}
+                  description={product.description || ''}
+                  image={(product.images && product.images[0]) || 'https://placehold.co/600x400/e2e8f0/1e293b?text=Delight+Car+Products'}
+                  price={`${product.price} ر.س`}
+                  rating={4.5}
+                />
               ))
             ) : (
               // No products found state
