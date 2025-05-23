@@ -27,9 +27,11 @@ const ProductCta: React.FC = () => {
             whileTap={{ scale: 0.95 }}
             className="mt-8"
           >
-            <Button asChild className="amazon-btn-primary px-8 py-6 rounded-lg shadow-md hover:shadow-lg transition-all text-lg">
-              <Link to="/contact">تواصل معنا</Link>
-            </Button>
+            <Link to="/contact">
+              <Button className="amazon-btn-primary px-8 py-6 rounded-lg shadow-md hover:shadow-lg transition-all text-lg">
+                تواصل معنا
+              </Button>
+            </Link>
           </motion.div>
         </motion.div>
       </div>
