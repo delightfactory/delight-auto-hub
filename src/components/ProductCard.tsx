@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -181,7 +182,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         </h3>
         
         <p className="text-gray-600 mb-4 text-sm line-clamp-2">
-          {description || "لا يوجد وصف متوفر لهذا المنتج"}
+          {description}
         </p>
         
         {price && (
