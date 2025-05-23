@@ -90,7 +90,12 @@ const ProductsPage: React.FC = () => {
                 {filteredProducts.map((product) => (
                   <ProductCard 
                     key={product.id} 
-                    product={product}
+                    id={product.id}
+                    name={product.name}
+                    description={product.description}
+                    image={product.image}
+                    price={product.price}
+                    rating={product.rating}
                   />
                 ))}
               </div>

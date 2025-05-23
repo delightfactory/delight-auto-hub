@@ -128,7 +128,14 @@ const Index: React.FC = () => {
             >
               {featuredProducts.map((product) => (
                 <motion.div key={product.id} variants={itemVariants}>
-                  <ProductCard product={product} />
+                  <ProductCard 
+                    id={product.id}
+                    name={product.name}
+                    description={product.description}
+                    image={product.image}
+                    price={product.price}
+                    rating={product.rating}
+                  />
                 </motion.div>
               ))}
             </motion.div>
@@ -180,7 +187,14 @@ const Index: React.FC = () => {
               >
                 {newProducts.map((product) => (
                   <motion.div key={product.id} variants={itemVariants}>
-                    <ProductCard product={product} />
+                    <ProductCard 
+                      id={product.id}
+                      name={product.name}
+                      description={product.description}
+                      image={product.image}
+                      price={product.price}
+                      rating={product.rating}
+                    />
                   </motion.div>
                 ))}
               </motion.div>
