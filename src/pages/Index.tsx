@@ -57,17 +57,17 @@ const Index: React.FC = () => {
                 اكتشف مجموعتنا الواسعة من منتجات التنظيف والعناية بالسيارات المصنوعة بأعلى معايير الجودة العالمية
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button asChild size="lg" className="text-lg">
-                  <Link to="/products">
+                <Link to="/products">
+                  <Button size="lg" className="text-lg w-full sm:w-auto">
                     تسوق الآن
                     <ArrowLeft className="mr-2 h-5 w-5" />
-                  </Link>
-                </Button>
-                <Button asChild variant="outline" size="lg" className="text-lg">
-                  <Link to="/about">
+                  </Button>
+                </Link>
+                <Link to="/about">
+                  <Button variant="outline" size="lg" className="text-lg w-full sm:w-auto">
                     تعرف علينا
-                  </Link>
-                </Button>
+                  </Button>
+                </Link>
               </div>
             </motion.div>
             
@@ -146,12 +146,12 @@ const Index: React.FC = () => {
           )}
           
           <div className="text-center mt-10">
-            <Button asChild variant="outline" size="lg">
-              <Link to="/products">
+            <Link to="/products">
+              <Button variant="outline" size="lg">
                 عرض جميع المنتجات
                 <ArrowLeft className="mr-2 h-4 w-4" />
-              </Link>
-            </Button>
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
@@ -271,18 +271,18 @@ const Index: React.FC = () => {
               انضم إلى آلاف العملاء الراضين واحصل على أفضل عروضنا
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button asChild size="lg" variant="secondary" className="text-lg">
-                <Link to="/products">
+              <Link to="/products">
+                <Button size="lg" variant="secondary" className="text-lg w-full sm:w-auto">
                   تسوق الآن
                   <ShoppingCart className="mr-2 h-5 w-5" />
-                </Link>
-              </Button>
-              <Button asChild size="lg" variant="outline" className="text-lg border-white text-white hover:bg-white hover:text-delight-600">
-                <Link to="/contact">
+                </Button>
+              </Link>
+              <Link to="/contact">
+                <Button size="lg" variant="outline" className="text-lg border-white text-white hover:bg-white hover:text-delight-600 w-full sm:w-auto">
                   تواصل معنا
                   <Phone className="mr-2 h-5 w-5" />
-                </Link>
-              </Button>
+                </Button>
+              </Link>
             </div>
           </motion.div>
         </div>
