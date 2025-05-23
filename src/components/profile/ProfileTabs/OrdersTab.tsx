@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Package } from 'lucide-react';
@@ -171,12 +170,8 @@ const OrdersTab: React.FC<OrdersTabProps> = ({ orders, loadingOrders, refreshOrd
                                 return (
                                   <tr key={item.id} className="border-b">
                                     <td className="py-2 flex items-center gap-2">
-                                      <img 
-                                        src={product.images?.[0] || 'https://placehold.co/40'} 
-                                        alt={product.name} 
-                                        className="w-8 h-8 rounded object-cover" 
-                                      />
-                                      {product.name || item.product_name}
+                                      <img src={product?.image || 'https://placehold.co/40'} alt={product?.name} className="w-8 h-8 rounded object-cover" />
+                                      {product?.name || item.product_name}
                                     </td>
                                     <td className="py-2">{item.product_price} ريال</td>
                                     <td className="py-2">{item.quantity}</td>

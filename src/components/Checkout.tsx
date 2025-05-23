@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Check, CreditCard, MapPin, Truck, ChevronRight, Mail, Phone, User } from 'lucide-react';
@@ -62,10 +61,10 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose }) => {
   }, [user, navigate, onClose]);
   
   useEffect(() => {
-    // Parse the total price from string format (e.g., "120 جنيه") to number
+    // Parse the total price from string format (e.g., "120 ريال") to number
     const numericTotal = parseInt(total.replace(/\D/g, '')) || 0;
-    const shipping = 30; // Shipping cost for Egypt
-    setTotalWithShipping(`${numericTotal + shipping} جنيه`);
+    const shipping = 15; // Shipping cost
+    setTotalWithShipping(`${numericTotal + shipping} ريال`);
   }, [total]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -95,12 +94,12 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose }) => {
       return;
     }
     
-    // التحقق من صحة رقم الهاتف (تنسيق مصري)
-    const phonePattern = /^(01)[0-2,5]{1}[0-9]{8}$/;
+    // التحقق من صحة رقم الهاتف
+    const phonePattern = /^(\+\d{1,3})?[\s.-]?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$/;
     if (!phonePattern.test(formData.phone)) {
       toast({
         title: "خطأ في رقم الهاتف",
-        description: "الرجاء إدخال رقم هاتف مصري صحيح مثل: 01012345678",
+        description: "الرجاء إدخال رقم هاتف صحيح",
         variant: "destructive"
       });
       return;
@@ -255,7 +254,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose }) => {
                     value={formData.phone} 
                     onChange={handleInputChange} 
                     className="pr-10" 
-                    placeholder="01012345678"
+                    placeholder="+966 5X XXX XXXX"
                   />
                 </div>
               </div>
@@ -320,22 +319,6 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose }) => {
                     <span>الدفع عند الاستلام</span>
                   </Label>
                 </div>
-                
-                <div className="flex items-center space-x-2 space-x-reverse border rounded-lg p-3 cursor-pointer hover:bg-gray-50 transition-colors">
-                  <RadioGroupItem value="fawry" id="fawry" />
-                  <Label htmlFor="fawry" className="cursor-pointer flex-1 flex items-center">
-                    <img src="https://placehold.co/30/orange/white?text=F" className="ml-2 h-5 w-5" />
-                    <span>فوري</span>
-                  </Label>
-                </div>
-                
-                <div className="flex items-center space-x-2 space-x-reverse border rounded-lg p-3 cursor-pointer hover:bg-gray-50 transition-colors">
-                  <RadioGroupItem value="vodafone_cash" id="vodafone_cash" />
-                  <Label htmlFor="vodafone_cash" className="cursor-pointer flex-1 flex items-center">
-                    <img src="https://placehold.co/30/e60000/white?text=V" className="ml-2 h-5 w-5" />
-                    <span>فودافون كاش</span>
-                  </Label>
-                </div>
               </RadioGroup>
               
               {formData.paymentMethod === 'card' && (
@@ -367,7 +350,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose }) => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">الشحن:</span>
-                  <span>30 جنيه</span>
+                  <span>15 ريال</span>
                 </div>
                 <Separator className="my-2" />
                 <div className="flex justify-between font-bold">
@@ -431,12 +414,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose }) => {
               </div>
               <div>
                 <span className="text-gray-600">طريقة الدفع: </span>
-                <span>
-                  {formData.paymentMethod === 'card' && 'بطاقة ائتمانية'}
-                  {formData.paymentMethod === 'cod' && 'الدفع عند الاستلام'}
-                  {formData.paymentMethod === 'fawry' && 'فوري'}
-                  {formData.paymentMethod === 'vodafone_cash' && 'فودافون كاش'}
-                </span>
+                <span>{formData.paymentMethod === 'card' ? 'بطاقة ائتمانية' : 'الدفع عند الاستلام'}</span>
               </div>
             </div>
             <Button onClick={handleCompleteCheckout} className="w-full">
