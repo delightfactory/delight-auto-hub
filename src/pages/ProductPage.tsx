@@ -17,16 +17,8 @@ import {
   Check,
   ImageOff,
   ShoppingCart,
-  AlertCircle,
-  Heart,
-  Share2,
-  AlertTriangle
+  AlertCircle
 } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { CURRENCY } from '@/constants/app';
-import SectionHeading from '@/components/SectionHeading';
-import RelatedProducts from '@/components/products/RelatedProducts';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const ProductPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -35,13 +27,10 @@ const ProductPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const [isLiked, setIsLiked] = useState(false);
   const { toast } = useToast();
-  const { addItem, items, updateQuantity } = useCart();
+  const { addItem, items } = useCart();
   
   const isInCart = items.some(item => item.id === id);
-  const cartItem = items.find(item => item.id === id);
-  const cartQuantity = cartItem?.quantity || 0;
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -57,15 +46,10 @@ const ProductPage: React.FC = () => {
           throw new Error('لم يتم العثور على المنتج');
         }
         
-        console.log("تم استرجاع بيانات المنتج: ", data);
+        console.log("Fetched product: ", data);
         setProduct(data);
-        
-        // تعيين الكمية الابتدائية من سلة التسوق إن وجدت
-        if (cartItem) {
-          setQuantity(cartItem.quantity);
-        }
       } catch (err) {
-        console.error('خطأ في استرجاع بيانات المنتج:', err);
+        console.error('Error fetching product:', err);
         setError(err instanceof Error ? err.message : 'حدث خطأ أثناء تحميل المنتج');
         toast({
           title: "خطأ",
@@ -78,32 +62,24 @@ const ProductPage: React.FC = () => {
     };
     
     fetchProduct();
-  }, [id, toast, cartItem]);
+  }, [id, toast]);
   
   const handleAddToCart = () => {
     if (!product) return;
     
-    if (isInCart) {
-      updateQuantity(product.id, quantity);
-      toast({
-        title: "تم تحديث الكمية",
-        description: `تم تحديث كمية ${product.name} في سلة التسوق.`,
-      });
-    } else {
-      addItem({
-        id: product.id,
-        name: product.name,
-        price: `${product.price} ${CURRENCY.SYMBOL}`,
-        image: product.images && product.images.length > 0 ? 
-          product.images[0] : 
-          'https://placehold.co/600x400/e2e8f0/1e293b?text=Delight+Car+Products',
-      });
-      
-      toast({
-        title: "تمت الإضافة إلى السلة",
-        description: `تمت إضافة ${product.name} إلى سلة التسوق بنجاح.`,
-      });
-    }
+    addItem({
+      id: product.id,
+      name: product.name,
+      price: `${product.price} جنيه`,
+      image: product.images && product.images.length > 0 ? 
+        product.images[0] : 
+        'https://placehold.co/600x400/e2e8f0/1e293b?text=Delight+Car+Products',
+    });
+    
+    toast({
+      title: "تمت الإضافة إلى السلة",
+      description: `تمت إضافة ${product.name} إلى سلة التسوق بنجاح.`,
+    });
   };
   
   const incrementQuantity = () => {
@@ -122,33 +98,6 @@ const ProductPage: React.FC = () => {
     if (quantity > 1) {
       setQuantity(q => q - 1);
     }
-  };
-  
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: product?.name || 'منتج ديلايت للعناية بالسيارات',
-        text: product?.description || 'تفضل بزيارة موقعنا لمعرفة المزيد',
-        url: window.location.href,
-      }).catch((error) => console.log('خطأ في المشاركة:', error));
-    } else {
-      // نسخ الرابط للمتصفحات التي لا تدعم خاصية المشاركة
-      navigator.clipboard.writeText(window.location.href);
-      toast({
-        title: "تم نسخ الرابط",
-        description: "تم نسخ رابط المنتج بنجاح، يمكنك مشاركته الآن",
-      });
-    }
-  };
-  
-  const toggleLike = () => {
-    setIsLiked(!isLiked);
-    toast({
-      title: isLiked ? "تم الإزالة من المفضلة" : "تمت الإضافة للمفضلة",
-      description: isLiked 
-        ? "تم إزالة المنتج من قائمة المفضلة"
-        : "تم إضافة المنتج إلى قائمة المفضلة",
-    });
   };
   
   if (isLoading) {
@@ -179,17 +128,6 @@ const ProductPage: React.FC = () => {
             <Link to="/" className="hover:text-amazon-link">الرئيسية</Link>
             <ArrowRight className="h-3 w-3 mx-2 rtl:rotate-180" />
             <Link to="/products" className="hover:text-amazon-link">المنتجات</Link>
-            {product.category && (
-              <>
-                <ArrowRight className="h-3 w-3 mx-2 rtl:rotate-180" />
-                <Link to={`/products?category=${product.category}`} className="hover:text-amazon-link">
-                  {product.category === 'cleaner' ? 'منظفات' : 
-                   product.category === 'polish' ? 'ملمعات' :
-                   product.category === 'protection' ? 'حماية' :
-                   product.category === 'tire' ? 'الإطارات' : product.category}
-                </Link>
-              </>
-            )}
             <ArrowRight className="h-3 w-3 mx-2 rtl:rotate-180" />
             <span className="font-medium text-gray-800">{product.name}</span>
           </div>
@@ -202,35 +140,12 @@ const ProductPage: React.FC = () => {
           {/* Product images */}
           <div className="space-y-4">
             {/* Main image */}
-            <div className="aspect-square overflow-hidden rounded-lg border border-gray-200 bg-gray-50 flex items-center justify-center relative">
-              <motion.button
-                onClick={toggleLike}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                className="absolute top-4 right-4 z-10 bg-white/80 backdrop-blur-sm p-2 rounded-full shadow-sm"
-              >
-                <Heart 
-                  className={`w-5 h-5 ${isLiked ? 'fill-rose-500 text-rose-500' : 'text-gray-500'}`} 
-                />
-              </motion.button>
-              
-              <motion.button
-                onClick={handleShare}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                className="absolute top-4 left-4 z-10 bg-white/80 backdrop-blur-sm p-2 rounded-full shadow-sm"
-              >
-                <Share2 className="w-5 h-5 text-gray-500" />
-              </motion.button>
-              
+            <div className="aspect-square overflow-hidden rounded-lg border border-gray-200 bg-gray-50 flex items-center justify-center">
               {product.images && product.images.length > 0 ? (
-                <motion.img 
+                <img 
                   src={product.images[activeImageIndex]} 
                   alt={product.name} 
                   className="h-full w-full object-contain"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
                   onError={(e) => {
                     e.currentTarget.src = 'https://placehold.co/600x400/e2e8f0/1e293b?text=Delight+Car+Products';
                   }}
@@ -245,12 +160,10 @@ const ProductPage: React.FC = () => {
             
             {/* Thumbnail gallery */}
             {product.images && product.images.length > 1 && (
-              <div className="flex space-x-2 space-x-reverse rtl:space-x-reverse overflow-auto pb-1">
+              <div className="flex space-x-2 space-x-reverse overflow-auto pb-1">
                 {product.images.map((image, index) => (
-                  <motion.button
+                  <button
                     key={index}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
                     className={`h-20 w-20 flex-shrink-0 overflow-hidden rounded border-2 ${
                       activeImageIndex === index ? 'border-amazon-orange' : 'border-gray-200'
                     }`}
@@ -264,7 +177,7 @@ const ProductPage: React.FC = () => {
                         e.currentTarget.src = 'https://placehold.co/600x400/e2e8f0/1e293b?text=Delight+Car+Products';
                       }}
                     />
-                  </motion.button>
+                  </button>
                 ))}
               </div>
             )}
@@ -273,25 +186,6 @@ const ProductPage: React.FC = () => {
           {/* Product info */}
           <div className="flex flex-col h-full">
             <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
-            
-            {/* Product code and availability */}
-            <div className="flex flex-wrap items-center gap-4 mb-4">
-              <span className="text-sm text-gray-500">
-                رمز المنتج: <span className="font-medium text-gray-700">{product.product_code}</span>
-              </span>
-              
-              {product.stock !== undefined && (
-                <span className={`text-sm px-3 py-1 rounded-full ${
-                  product.stock > 5 ? 'bg-green-100 text-green-800' : 
-                  product.stock > 0 ? 'bg-amber-100 text-amber-800' : 
-                  'bg-red-100 text-red-800'
-                }`}>
-                  {product.stock > 5 ? 'متوفر' : 
-                   product.stock > 0 ? `متبقي ${product.stock} فقط` : 
-                   'غير متوفر'}
-                </span>
-              )}
-            </div>
             
             {/* Rating */}
             <div className="flex items-center mb-4">
@@ -312,10 +206,10 @@ const ProductPage: React.FC = () => {
               {product.discount_price ? (
                 <div className="flex items-center">
                   <span className="text-2xl font-bold text-amazon-price">
-                    {product.discount_price} {CURRENCY.SYMBOL}
+                    {product.discount_price} جنيه
                   </span>
                   <span className="mr-3 text-lg text-gray-400 line-through">
-                    {product.price} {CURRENCY.SYMBOL}
+                    {product.price} جنيه
                   </span>
                   <span className="mr-3 px-2 py-1 text-xs font-medium bg-red-100 text-red-700 rounded">
                     خصم {Math.round((1 - (product.discount_price / product.price)) * 100)}%
@@ -323,7 +217,7 @@ const ProductPage: React.FC = () => {
                 </div>
               ) : (
                 <span className="text-2xl font-bold text-amazon-price">
-                  {product.price} {CURRENCY.SYMBOL}
+                  {product.price} جنيه
                 </span>
               )}
               <p className="text-sm text-gray-500 mt-1">
@@ -331,45 +225,26 @@ const ProductPage: React.FC = () => {
               </p>
             </div>
             
-            {/* Tabs for description & features */}
-            <Tabs defaultValue="description" className="mb-6">
-              <TabsList className="mb-2">
-                <TabsTrigger value="description">الوصف</TabsTrigger>
-                {product.features && product.features.length > 0 && (
-                  <TabsTrigger value="features">المميزات</TabsTrigger>
-                )}
-                <TabsTrigger value="usage">طريقة الاستخدام</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="description" className="text-gray-600 leading-relaxed">
+            {/* Description */}
+            <div className="mb-6">
+              <h3 className="text-lg font-medium mb-2">الوصف</h3>
+              <p className="text-gray-600">
                 {product.description || 'لا يوجد وصف متاح لهذا المنتج.'}
-              </TabsContent>
-              
-              <TabsContent value="features">
-                {product.features && product.features.length > 0 && (
-                  <ul className="space-y-1 text-gray-600">
-                    {product.features.map((feature, index) => (
-                      <li key={index} className="flex items-start">
-                        <Check className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </TabsContent>
-              
-              <TabsContent value="usage" className="text-gray-600">
-                <p>يرجى اتباع التعليمات المرفقة مع المنتج لضمان أفضل النتائج. في حال عدم وجود تعليمات، يرجى الاتصال بخدمة العملاء للحصول على المساعدة.</p>
-              </TabsContent>
-            </Tabs>
+              </p>
+            </div>
             
-            {/* Low stock warning */}
-            {product.stock !== undefined && product.stock > 0 && product.stock <= 5 && (
-              <div className="mb-6 flex items-center bg-amber-50 border border-amber-200 p-3 rounded-md">
-                <AlertTriangle className="h-5 w-5 text-amber-500 mr-2" />
-                <span className="text-sm text-amber-700">
-                  كمية محدودة متبقية! فقط {product.stock} قطع في المخزون
-                </span>
+            {/* Features */}
+            {product.features && product.features.length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-lg font-medium mb-2">المميزات</h3>
+                <ul className="list-disc list-inside space-y-1 text-gray-600">
+                  {product.features.map((feature, index) => (
+                    <li key={index} className="flex items-start">
+                      <Check className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
             )}
             
@@ -408,25 +283,19 @@ const ProductPage: React.FC = () => {
             
             {/* Add to cart */}
             <div className="mt-auto">
-              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <Button 
-                  className={`w-full py-6 text-lg ${
-                    isInCart 
-                      ? "bg-green-600 hover:bg-green-700" 
-                      : "amazon-btn-primary"
-                  }`}
-                  onClick={handleAddToCart}
-                  disabled={product.stock !== undefined && product.stock <= 0}
-                >
-                  <ShoppingCart className="ml-2 h-5 w-5" />
-                  {isInCart 
-                    ? 'تحديث الكمية في السلة' 
-                    : product.stock === 0 
-                      ? 'غير متوفر' 
-                      : 'إضافة إلى السلة'
-                  }
-                </Button>
-              </motion.div>
+              <Button 
+                className="w-full py-6 amazon-btn-primary text-lg"
+                onClick={handleAddToCart}
+                disabled={isInCart || (product.stock !== undefined && product.stock <= 0)}
+              >
+                <ShoppingCart className="ml-2 h-5 w-5" />
+                {isInCart 
+                  ? 'تمت الإضافة إلى السلة' 
+                  : product.stock === 0 
+                    ? 'غير متوفر' 
+                    : 'إضافة إلى السلة'
+                }
+              </Button>
             </div>
             
             {/* Shipping info - Updated for Egypt */}
@@ -443,14 +312,6 @@ const ProductPage: React.FC = () => {
           </div>
         </div>
       </div>
-      
-      {/* Related Products Section */}
-      {product.category && (
-        <RelatedProducts 
-          currentProductId={product.id} 
-          category={product.category} 
-        />
-      )}
     </div>
   );
 };
