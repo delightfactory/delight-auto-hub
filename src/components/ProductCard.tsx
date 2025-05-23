@@ -7,6 +7,7 @@ import { ShoppingCart, Eye, Star, Heart, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '@/context/CartContext';
 import { toast } from '@/components/ui/use-toast';
+import { CURRENCY } from '@/constants/app';
 
 interface ProductCardProps {
   id: string;
@@ -16,6 +17,8 @@ interface ProductCardProps {
   className?: string;
   rating?: number;
   price?: string;
+  isNew?: boolean;
+  isFeatured?: boolean;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({
@@ -26,6 +29,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
   className,
   rating = 4.5,
   price = '',
+  isNew = false,
+  isFeatured = false,
 }) => {
   const { addItem, items } = useCart();
   const [isLiked, setIsLiked] = React.useState(false);
@@ -45,7 +50,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
     addItem({
       id,
       name,
-      price: price || '0 ريال',
+      price: price || '0 جنيه',
       image,
     });
     
@@ -78,6 +83,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   const fallbackImage = 'https://placehold.co/600x400/e2e8f0/1e293b?text=Delight+Car+Products';
 
+  // حساب العملة والسعر بشكل صحيح
+  const formattedPrice = price.includes(CURRENCY.SYMBOL) ? price : `${price} ${CURRENCY.SYMBOL}`;
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 30 }}
@@ -90,6 +98,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
       )}
     >
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-gray-50 border-b border-gray-100">
+        {/* Like button */}
         <motion.button
           onClick={toggleLike}
           whileHover={{ scale: 1.1 }}
@@ -101,6 +110,21 @@ const ProductCard: React.FC<ProductCardProps> = ({
           />
         </motion.button>
         
+        {/* Badges */}
+        <div className="absolute top-3 left-3 z-10 flex flex-col gap-2">
+          {isNew && (
+            <span className="bg-green-500 text-white text-xs font-bold px-2 py-1 rounded shadow-sm">
+              جديد
+            </span>
+          )}
+          {isFeatured && (
+            <span className="bg-amber-500 text-white text-xs font-bold px-2 py-1 rounded shadow-sm">
+              مميز
+            </span>
+          )}
+        </div>
+        
+        {/* Product image */}
         <motion.img
           whileHover={{ scale: 1.15, rotate: -2 }}
           transition={{ duration: 0.6 }}
@@ -110,8 +134,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
           onError={handleImageError}
         />
         
+        {/* Overlay on hover */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
         
+        {/* Quick action buttons */}
         <motion.div 
           className="absolute bottom-4 right-4 left-4 flex justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 gap-2"
         >
@@ -151,6 +177,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         </motion.div>
       </div>
       
+      {/* Product info */}
       <div className="p-6">
         <div className="flex items-center justify-between mb-2">
           <div className="flex gap-0.5">
@@ -182,11 +209,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
         </h3>
         
         <p className="text-gray-600 mb-4 text-sm line-clamp-2">
-          {description}
+          {description || "لا يوجد وصف متوفر لهذا المنتج"}
         </p>
         
         {price && (
-          <div className="amazon-price mb-4 text-lg">{price}</div>
+          <div className="amazon-price mb-4 text-lg">{formattedPrice}</div>
         )}
         
         <div className="flex justify-between">
