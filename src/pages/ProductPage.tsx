@@ -1,29 +1,51 @@
 
 import React, { useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { motion, useAnimation } from 'framer-motion';
-import { ArrowLeft, ShoppingCart, Star, Check, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, ShoppingCart, Star, Check, AlertTriangle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import SectionHeading from '@/components/SectionHeading';
 import { toast } from '@/components/ui/use-toast';
 import { useCart } from '@/context/CartContext';
-import { ProductService } from '@/services/productService';
+import { ProductDataService } from '@/services/productDataService';
 
 const ProductPage: React.FC = () => {
   const { productId } = useParams<{ productId: string }>();
   const navigate = useNavigate();
   const controls = useAnimation();
-  
-  const product = productId ? ProductService.getProductById(productId) : null;
-  const relatedProducts = product ? ProductService.getRelatedProducts(product.id) : [];
-  
   const { addItem } = useCart();
+  
+  // جلب بيانات المنتج من Supabase
+  const { data: product, isLoading, error } = useQuery({
+    queryKey: ['product', productId],
+    queryFn: () => productId ? ProductDataService.getProductById(productId) : null,
+    enabled: !!productId
+  });
+
+  // جلب المنتجات ذات الصلة
+  const { data: relatedProducts = [] } = useQuery({
+    queryKey: ['related-products', productId, product?.category],
+    queryFn: () => productId ? ProductDataService.getRelatedProducts(productId, product?.category) : [],
+    enabled: !!productId && !!product
+  });
   
   useEffect(() => {
     controls.start('visible');
   }, [productId, controls]);
   
-  if (!product) {
+  if (isLoading) {
+    return (
+      <div className="container-custom py-20">
+        <div className="flex flex-col items-center justify-center min-h-[60vh]">
+          <Loader2 className="h-12 w-12 animate-spin text-delight-600 mb-4" />
+          <p className="text-lg font-medium">جارِ تحميل المنتج...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !product) {
     return (
       <div className="container-custom py-20">
         <div className="text-center">
@@ -39,6 +61,15 @@ const ProductPage: React.FC = () => {
   }
 
   const handleAddToCart = () => {
+    if (product.stock === 0) {
+      toast({
+        title: "المنتج غير متوفر",
+        description: "عذراً، هذا المنتج غير متوفر في المخزون حالياً.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     addItem({
       id: product.id,
       name: product.name,
@@ -122,36 +153,66 @@ const ProductPage: React.FC = () => {
                 </div>
               </div>
               
-              <div className="text-2xl font-bold text-delight-600 mb-6">
-                {product.price}
+              <div className="flex items-center gap-3 mb-6">
+                <div className="text-2xl font-bold text-delight-600">
+                  {product.price}
+                </div>
+                {product.originalPrice && (
+                  <div className="text-lg text-gray-400 line-through">
+                    {product.originalPrice}
+                  </div>
+                )}
+                {product.isNew && (
+                  <span className="bg-green-100 text-green-600 px-2 py-1 rounded-full text-xs font-medium">
+                    جديد
+                  </span>
+                )}
+              </div>
+
+              {/* Stock Status */}
+              <div className="mb-6">
+                {product.stock && product.stock > 0 ? (
+                  <div className="flex items-center text-green-600">
+                    <Check className="w-4 h-4 ml-1" />
+                    <span>متوفر في المخزون ({product.stock} قطعة)</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center text-red-600">
+                    <AlertTriangle className="w-4 h-4 ml-1" />
+                    <span>غير متوفر في المخزون</span>
+                  </div>
+                )}
               </div>
               
               <p className="text-gray-700 mb-6">
-                {product.fullDescription}
+                {product.fullDescription || product.description}
               </p>
               
-              <div className="mb-8">
-                <h3 className="text-lg font-semibold mb-3">المميزات</h3>
-                <motion.ul 
-                  className="space-y-2"
-                  variants={staggerVariants}
-                  initial="hidden"
-                  animate={controls}
-                >
-                  {product.features?.map((feature, index) => (
-                    <motion.li key={index} variants={fadeInVariants} className="flex items-start">
-                      <Check className="w-5 h-5 text-green-500 mt-0.5 ml-2" />
-                      <span>{feature}</span>
-                    </motion.li>
-                  ))}
-                </motion.ul>
-              </div>
+              {product.features && product.features.length > 0 && (
+                <div className="mb-8">
+                  <h3 className="text-lg font-semibold mb-3">المميزات</h3>
+                  <motion.ul 
+                    className="space-y-2"
+                    variants={staggerVariants}
+                    initial="hidden"
+                    animate={controls}
+                  >
+                    {product.features.map((feature, index) => (
+                      <motion.li key={index} variants={fadeInVariants} className="flex items-start">
+                        <Check className="w-5 h-5 text-green-500 mt-0.5 ml-2" />
+                        <span>{feature}</span>
+                      </motion.li>
+                    ))}
+                  </motion.ul>
+                </div>
+              )}
               
               <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
                 <Button 
                   onClick={handleAddToCart}
                   className="w-full md:w-auto text-lg py-6"
                   size="lg"
+                  disabled={!product.stock || product.stock === 0}
                 >
                   <ShoppingCart className="w-5 h-5 ml-2" />
                   <span>إضافة إلى السلة</span>

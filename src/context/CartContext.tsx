@@ -19,23 +19,24 @@ type CartAction =
   | { type: 'ADD_ITEM'; payload: CartItem }
   | { type: 'REMOVE_ITEM'; payload: string }
   | { type: 'UPDATE_QUANTITY'; payload: { id: string; quantity: number } }
-  | { type: 'CLEAR_CART' };
+  | { type: 'CLEAR_CART' }
+  | { type: 'LOAD_CART'; payload: CartState };
 
 const initialState: CartState = {
   items: [],
-  total: '0 ريال',
+  total: '0 جنيه',
   itemCount: 0,
 };
 
-// Parse price string to number (e.g., "75 ريال" -> 75)
+// Parse price string to number (e.g., "75 جنيه" -> 75)
 const parsePrice = (priceString: string): number => {
   const numericPart = priceString.match(/\d+/);
   return numericPart ? parseInt(numericPart[0]) : 0;
 };
 
-// Format price number to string (e.g., 75 -> "75 ريال")
+// Format price number to string (e.g., 75 -> "75 جنيه")
 const formatPrice = (price: number): string => {
-  return `${price} ريال`;
+  return `${price.toLocaleString('ar-EG')} جنيه`;
 };
 
 const calculateTotal = (items: CartItem[]): string => {
@@ -45,8 +46,15 @@ const calculateTotal = (items: CartItem[]): string => {
   return formatPrice(total);
 };
 
+const calculateItemCount = (items: CartItem[]): number => {
+  return items.reduce((count, item) => count + item.quantity, 0);
+};
+
 const cartReducer = (state: CartState, action: CartAction): CartState => {
   switch (action.type) {
+    case 'LOAD_CART':
+      return action.payload;
+
     case 'ADD_ITEM': {
       const existingItemIndex = state.items.findIndex(
         (item) => item.id === action.payload.id
@@ -64,7 +72,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
           ...state,
           items: updatedItems,
           total: calculateTotal(updatedItems),
-          itemCount: state.itemCount + 1,
+          itemCount: calculateItemCount(updatedItems),
         };
       } else {
         // New item
@@ -73,21 +81,18 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
           ...state,
           items: updatedItems,
           total: calculateTotal(updatedItems),
-          itemCount: state.itemCount + 1,
+          itemCount: calculateItemCount(updatedItems),
         };
       }
     }
 
     case 'REMOVE_ITEM': {
-      const itemToRemove = state.items.find((item) => item.id === action.payload);
-      if (!itemToRemove) return state;
-
       const updatedItems = state.items.filter((item) => item.id !== action.payload);
       return {
         ...state,
         items: updatedItems,
         total: calculateTotal(updatedItems),
-        itemCount: state.itemCount - itemToRemove.quantity,
+        itemCount: calculateItemCount(updatedItems),
       };
     }
 
@@ -98,9 +103,6 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
 
       if (existingItemIndex === -1) return state;
 
-      const item = state.items[existingItemIndex];
-      const quantityDiff = action.payload.quantity - item.quantity;
-
       if (action.payload.quantity <= 0) {
         // Remove item if quantity is 0 or negative
         const updatedItems = state.items.filter((item) => item.id !== action.payload.id);
@@ -108,13 +110,13 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
           ...state,
           items: updatedItems,
           total: calculateTotal(updatedItems),
-          itemCount: state.itemCount + quantityDiff,
+          itemCount: calculateItemCount(updatedItems),
         };
       }
 
       const updatedItems = [...state.items];
       updatedItems[existingItemIndex] = {
-        ...item,
+        ...updatedItems[existingItemIndex],
         quantity: action.payload.quantity,
       };
 
@@ -122,7 +124,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
         ...state,
         items: updatedItems,
         total: calculateTotal(updatedItems),
-        itemCount: state.itemCount + quantityDiff,
+        itemCount: calculateItemCount(updatedItems),
       };
     }
 
@@ -139,6 +141,7 @@ interface CartContextType extends CartState {
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
+  getTotalValue: () => number;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -146,13 +149,32 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Initialize state from localStorage if available
   const [state, dispatch] = useReducer(cartReducer, initialState, () => {
-    const savedCart = localStorage.getItem('cart');
-    return savedCart ? JSON.parse(savedCart) : initialState;
+    try {
+      const savedCart = localStorage.getItem('cart');
+      if (savedCart) {
+        const parsedCart = JSON.parse(savedCart);
+        // التأكد من صحة البيانات المحفوظة
+        if (parsedCart.items && Array.isArray(parsedCart.items)) {
+          return {
+            items: parsedCart.items,
+            total: calculateTotal(parsedCart.items),
+            itemCount: calculateItemCount(parsedCart.items),
+          };
+        }
+      }
+    } catch (error) {
+      console.error('خطأ في تحميل السلة من التخزين المحلي:', error);
+    }
+    return initialState;
   });
 
   // Save cart to localStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(state));
+    try {
+      localStorage.setItem('cart', JSON.stringify(state));
+    } catch (error) {
+      console.error('خطأ في حفظ السلة:', error);
+    }
   }, [state]);
 
   const addItem = (item: Omit<CartItem, 'quantity'>) => {
@@ -174,12 +196,17 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     dispatch({ type: 'CLEAR_CART' });
   };
 
+  const getTotalValue = (): number => {
+    return parsePrice(state.total);
+  };
+
   const value = {
     ...state,
     addItem,
     removeItem,
     updateQuantity,
     clearCart,
+    getTotalValue,
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
