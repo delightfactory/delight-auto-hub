@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Check, CreditCard, MapPin, Truck, ChevronRight, Mail, Phone, User } from 'lucide-react';
@@ -61,10 +62,10 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose }) => {
   }, [user, navigate, onClose]);
   
   useEffect(() => {
-    // Parse the total price from string format (e.g., "120 ريال") to number
+    // Parse the total price from string format (e.g., "120 جنيه") to number
     const numericTotal = parseInt(total.replace(/\D/g, '')) || 0;
     const shipping = 15; // Shipping cost
-    setTotalWithShipping(`${numericTotal + shipping} ريال`);
+    setTotalWithShipping(`${numericTotal + shipping} جنيه`);
   }, [total]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -72,8 +73,23 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose }) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const validatePhone = (phone: string): boolean => {
+    // تحسين التحقق من أرقام الهاتف المصرية والعربية
+    const egyptianPhonePattern = /^(\+20|0020|20|0)?1[0125][0-9]{8}$/;
+    const arabicPhonePattern = /^(\+966|00966|966|0)?5[0-9]{8}$/;
+    const generalPhonePattern = /^[\+]?[1-9][\d]{7,14}$/;
+    
+    const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
+    
+    return egyptianPhonePattern.test(cleanPhone) || 
+           arabicPhonePattern.test(cleanPhone) || 
+           generalPhonePattern.test(cleanPhone);
+  };
+
   const handleSubmitShipping = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // التحقق من الحقول المطلوبة
     if (!formData.name || !formData.email || !formData.phone || !formData.address || !formData.city) {
       toast({
         title: "خطأ في المعلومات",
@@ -94,12 +110,11 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose }) => {
       return;
     }
     
-    // التحقق من صحة رقم الهاتف
-    const phonePattern = /^(\+\d{1,3})?[\s.-]?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$/;
-    if (!phonePattern.test(formData.phone)) {
+    // التحقق من صحة رقم الهاتف باستخدام الدالة المحسنة
+    if (!validatePhone(formData.phone)) {
       toast({
         title: "خطأ في رقم الهاتف",
-        description: "الرجاء إدخال رقم هاتف صحيح",
+        description: "الرجاء إدخال رقم هاتف صحيح (مثال: 01012345678 أو +201012345678)",
         variant: "destructive"
       });
       return;
@@ -113,6 +128,17 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose }) => {
     setLoading(true);
     
     try {
+      // التحقق من وجود منتجات في السلة
+      if (items.length === 0) {
+        toast({
+          title: "سلة فارغة",
+          description: "يرجى إضافة منتجات إلى السلة قبل إتمام الطلب",
+          variant: "destructive"
+        });
+        setLoading(false);
+        return;
+      }
+
       // إرسال الطلب إلى خدمة الطلبات
       const result = await placeOrder(
         {
@@ -131,6 +157,13 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose }) => {
       if (result.success) {
         setOrderId(result.orderId);
         setStep('confirmation');
+        
+        // إظهار رسالة نجاح
+        toast({
+          title: "تم إتمام الطلب بنجاح!",
+          description: "تم إرسال تفاصيل الطلب إلى بريدك الإلكتروني",
+          variant: "default"
+        });
       } else {
         toast({
           title: "خطأ في إتمام الطلب",
@@ -151,16 +184,16 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose }) => {
   };
 
   const handleCompleteCheckout = () => {
-    toast({
-      title: "تم إتمام الطلب بنجاح",
-      description: "سنتواصل معك قريباً للتأكيد والشحن",
-      variant: "default",
-    });
-    
     // Clear the cart properly
     try {
       clearCart();
       console.log("Cart cleared successfully");
+      
+      toast({
+        title: "شكراً لاختيارك ديلايت!",
+        description: "سنتواصل معك خلال 24 ساعة لتأكيد موعد التوصيل",
+        variant: "default",
+      });
     } catch (error) {
       console.error("Error clearing cart:", error);
     }
@@ -168,13 +201,13 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose }) => {
     // Close the checkout modal
     setTimeout(() => {
       onClose();
-    }, 500);
+    }, 1000);
   };
 
   return (
-    <div className="bg-white rounded-lg overflow-hidden">
+    <div className="bg-white rounded-lg overflow-hidden max-h-[90vh] overflow-y-auto">
       {/* Checkout Steps */}
-      <div className="bg-delight-50 p-4">
+      <div className="bg-delight-50 p-4 sticky top-0 z-10">
         <div className="flex items-center justify-between max-w-md mx-auto">
           <div className="flex flex-col items-center">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step === 'shipping' || step === 'payment' || step === 'confirmation' ? 'bg-delight-600 text-white' : 'bg-gray-200'}`}>
@@ -224,6 +257,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose }) => {
                     onChange={handleInputChange} 
                     className="pr-10" 
                     placeholder="أدخل الاسم الكامل"
+                    required
                   />
                 </div>
               </div>
@@ -240,6 +274,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose }) => {
                     onChange={handleInputChange} 
                     className="pr-10" 
                     placeholder="example@example.com"
+                    required
                   />
                 </div>
               </div>
@@ -254,9 +289,13 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose }) => {
                     value={formData.phone} 
                     onChange={handleInputChange} 
                     className="pr-10" 
-                    placeholder="+966 5X XXX XXXX"
+                    placeholder="01012345678 أو +201012345678"
+                    required
                   />
                 </div>
+                <p className="text-xs text-gray-500">
+                  يمكنك إدخال رقم الهاتف بصيغة: 01012345678 أو +201012345678
+                </p>
               </div>
               
               <div className="space-y-2">
@@ -267,6 +306,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose }) => {
                   value={formData.address} 
                   onChange={handleInputChange} 
                   placeholder="أدخل العنوان التفصيلي"
+                  required
                 />
               </div>
               
@@ -278,11 +318,12 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose }) => {
                   value={formData.city} 
                   onChange={handleInputChange} 
                   placeholder="أدخل اسم المدينة"
+                  required
                 />
               </div>
               
               <div className="pt-4">
-                <Button type="submit" className="w-full">
+                <Button type="submit" className="w-full" size="lg">
                   متابعة للدفع
                   <ChevronRight className="mr-2 h-4 w-4 rtl:rotate-180" />
                 </Button>
@@ -298,36 +339,48 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose }) => {
             exit={{ opacity: 0, x: -20 }}
           >
             <h2 className="text-xl font-bold mb-4">طريقة الدفع</h2>
+            
+            {/* Order Summary */}
+            <div className="bg-gray-50 p-4 rounded-lg mb-6">
+              <h3 className="font-semibold mb-3">ملخص الطلب</h3>
+              <div className="space-y-2 max-h-40 overflow-y-auto">
+                {items.map((item) => (
+                  <div key={item.id} className="flex justify-between items-center text-sm">
+                    <span>{item.name} × {item.quantity}</span>
+                    <span>{parseInt(item.price.replace(/\D/g, '')) * item.quantity} جنيه</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
             <form onSubmit={handleSubmitPayment} className="space-y-4">
               <RadioGroup 
                 value={formData.paymentMethod} 
                 onValueChange={(value) => setFormData(prev => ({ ...prev, paymentMethod: value }))}
-                className="space-y-2"
+                className="space-y-3"
               >
-                <div className="flex items-center space-x-2 space-x-reverse border rounded-lg p-3 cursor-pointer hover:bg-gray-50 transition-colors">
-                  <RadioGroupItem value="card" id="card" />
-                  <Label htmlFor="card" className="cursor-pointer flex-1 flex items-center">
-                    <CreditCard className="ml-2 h-5 w-5 text-delight-600" />
-                    <span>بطاقة ائتمانية</span>
+                <div className="flex items-center space-x-2 space-x-reverse border rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-colors">
+                  <RadioGroupItem value="cod" id="cod" />
+                  <Label htmlFor="cod" className="cursor-pointer flex-1 flex items-center">
+                    <Truck className="ml-3 h-5 w-5 text-delight-600" />
+                    <div>
+                      <span className="font-medium">الدفع عند الاستلام</span>
+                      <p className="text-sm text-gray-500">ادفع عند وصول الطلب</p>
+                    </div>
                   </Label>
                 </div>
                 
-                <div className="flex items-center space-x-2 space-x-reverse border rounded-lg p-3 cursor-pointer hover:bg-gray-50 transition-colors">
-                  <RadioGroupItem value="cod" id="cod" />
-                  <Label htmlFor="cod" className="cursor-pointer flex-1 flex items-center">
-                    <Truck className="ml-2 h-5 w-5 text-delight-600" />
-                    <span>الدفع عند الاستلام</span>
+                <div className="flex items-center space-x-2 space-x-reverse border rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-colors">
+                  <RadioGroupItem value="card" id="card" />
+                  <Label htmlFor="card" className="cursor-pointer flex-1 flex items-center">
+                    <CreditCard className="ml-3 h-5 w-5 text-delight-600" />
+                    <div>
+                      <span className="font-medium">بطاقة ائتمانية</span>
+                      <p className="text-sm text-gray-500">دفع آمن عبر الإنترنت</p>
+                    </div>
                   </Label>
                 </div>
               </RadioGroup>
-              
-              {formData.paymentMethod === 'card' && (
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="text-center text-sm text-gray-500">
-                    سيتم توجيهك إلى صفحة الدفع الآمنة لإتمام العملية
-                  </div>
-                </div>
-              )}
               
               <div className="space-y-2">
                 <Label htmlFor="notes">ملاحظات إضافية (اختياري)</Label>
@@ -337,23 +390,23 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose }) => {
                   value={formData.notes} 
                   onChange={handleInputChange} 
                   placeholder="أي ملاحظات أو تعليمات خاصة بالطلب"
-                  className="min-h-[100px]"
+                  className="min-h-[80px]"
                 />
               </div>
               
               <Separator className="my-4" />
               
-              <div className="space-y-2">
+              <div className="space-y-2 bg-gray-50 p-4 rounded-lg">
                 <div className="flex justify-between">
                   <span className="text-gray-600">المجموع الفرعي:</span>
                   <span>{total}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">الشحن:</span>
-                  <span>15 ريال</span>
+                  <span>15 جنيه</span>
                 </div>
                 <Separator className="my-2" />
-                <div className="flex justify-between font-bold">
+                <div className="flex justify-between font-bold text-lg">
                   <span>الإجمالي:</span>
                   <span className="text-delight-700">{totalWithShipping}</span>
                 </div>
@@ -365,6 +418,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose }) => {
                   onClick={() => setStep('shipping')} 
                   className="flex-1"
                   disabled={loading}
+                  type="button"
                 >
                   العودة
                 </Button>
@@ -372,6 +426,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose }) => {
                   type="submit" 
                   className="flex-1"
                   disabled={loading}
+                  size="lg"
                 >
                   {loading ? 'جاري المعالجة...' : 'إتمام الطلب'}
                 </Button>
@@ -390,34 +445,49 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose }) => {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: "spring", stiffness: 500, damping: 30 }}
-              className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4"
+              className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6"
             >
-              <Check className="h-8 w-8 text-green-600" />
+              <Check className="h-10 w-10 text-green-600" />
             </motion.div>
-            <h2 className="text-2xl font-bold mb-2">تم استلام طلبك بنجاح!</h2>
-            <p className="text-gray-600 mb-6">
-              شكراً لك على طلبك. تم إرسال تفاصيل الطلب إلى بريدك الإلكتروني.
-              سيتم التواصل معك قريباً لتأكيد موعد الشحن.
+            <h2 className="text-2xl font-bold mb-3 text-green-600">تم استلام طلبك بنجاح!</h2>
+            <p className="text-gray-600 mb-6 leading-relaxed">
+              شكراً لك على طلبك من ديلايت. تم إرسال تفاصيل الطلب إلى بريدك الإلكتروني.
+              <br />
+              سيتم التواصل معك خلال 24 ساعة لتأكيد موعد التوصيل.
             </p>
-            <div className="bg-gray-50 p-4 rounded-lg mb-6 text-right">
-              <div className="mb-2">
-                <span className="text-gray-600">رقم الطلب: </span>
-                <span className="font-mono">{orderId.substring(0, 8)}</span>
-              </div>
-              <div className="mb-2">
-                <span className="text-gray-600">الاسم: </span>
-                <span>{formData.name}</span>
-              </div>
-              <div className="mb-2">
-                <span className="text-gray-600">العنوان: </span>
-                <span>{formData.address}، {formData.city}</span>
-              </div>
-              <div>
-                <span className="text-gray-600">طريقة الدفع: </span>
-                <span>{formData.paymentMethod === 'card' ? 'بطاقة ائتمانية' : 'الدفع عند الاستلام'}</span>
+            <div className="bg-gray-50 p-6 rounded-lg mb-6 text-right">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-gray-600 block">رقم الطلب:</span>
+                  <span className="font-mono font-bold">{orderId.substring(0, 8)}</span>
+                </div>
+                <div>
+                  <span className="text-gray-600 block">الاسم:</span>
+                  <span className="font-medium">{formData.name}</span>
+                </div>
+                <div>
+                  <span className="text-gray-600 block">الهاتف:</span>
+                  <span className="font-medium">{formData.phone}</span>
+                </div>
+                <div>
+                  <span className="text-gray-600 block">المدينة:</span>
+                  <span className="font-medium">{formData.city}</span>
+                </div>
+                <div className="md:col-span-2">
+                  <span className="text-gray-600 block">العنوان:</span>
+                  <span className="font-medium">{formData.address}</span>
+                </div>
+                <div>
+                  <span className="text-gray-600 block">طريقة الدفع:</span>
+                  <span className="font-medium">{formData.paymentMethod === 'card' ? 'بطاقة ائتمانية' : 'الدفع عند الاستلام'}</span>
+                </div>
+                <div>
+                  <span className="text-gray-600 block">المجموع:</span>
+                  <span className="font-bold text-delight-600">{totalWithShipping}</span>
+                </div>
               </div>
             </div>
-            <Button onClick={handleCompleteCheckout} className="w-full">
+            <Button onClick={handleCompleteCheckout} size="lg" className="w-full">
               العودة للتسوق
             </Button>
           </motion.div>

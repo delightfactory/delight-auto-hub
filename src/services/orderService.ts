@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 interface CustomerData {
@@ -15,10 +16,24 @@ interface OrderData {
 
 export const placeOrder = async (customerData: CustomerData, orderData: OrderData) => {
   try {
+    console.log('Starting order placement process...');
+    
     // Get current authenticated user
     const { data: { user }, error: getUserError } = await supabase.auth.getUser();
     if (getUserError || !user) {
+      console.error('User authentication error:', getUserError);
       throw new Error("يجب تسجيل الدخول لإنشاء الطلب");
+    }
+
+    console.log('User authenticated:', user.id);
+
+    // Validate input data
+    if (!customerData.name || !customerData.email || !customerData.phone || !customerData.address || !customerData.city) {
+      throw new Error("جميع بيانات العميل مطلوبة");
+    }
+
+    if (!orderData.paymentMethod) {
+      throw new Error("طريقة الدفع مطلوبة");
     }
 
     // 1. إضافة أو تحديث بيانات العميل
@@ -45,18 +60,33 @@ export const placeOrder = async (customerData: CustomerData, orderData: OrderDat
       throw new Error("فشل في حفظ بيانات العميل");
     }
     
+    console.log('Customer record saved:', customerRecord.id);
+    
     // استرجاع سلة المشتريات من المتصفح
-    const cartItems = JSON.parse(localStorage.getItem('cart') || '{"items":[],"total":"0 ج.م","itemCount":0}');
+    const cartData = localStorage.getItem('cart');
+    if (!cartData) {
+      throw new Error("سلة التسوق فارغة");
+    }
+    
+    const cartItems = JSON.parse(cartData);
+    
+    if (!cartItems.items || cartItems.items.length === 0) {
+      throw new Error("لا توجد منتجات في سلة التسوق");
+    }
     
     // حساب السعر الإجمالي عددياً
     const numericTotal = parseInt(cartItems.total?.replace(/\D/g, '')) || 0;
+    const shippingCost = 15;
+    const finalTotal = numericTotal + shippingCost;
+    
+    console.log('Order total calculated:', finalTotal);
     
     // 2. إنشاء الطلب
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .insert({
         customer_id: customerRecord.id,
-        total_amount: numericTotal,
+        total_amount: finalTotal,
         status: 'pending',
         payment_method: orderData.paymentMethod,
         shipping_address: customerData.address,
@@ -71,14 +101,19 @@ export const placeOrder = async (customerData: CustomerData, orderData: OrderDat
       throw new Error("فشل في إنشاء الطلب");
     }
 
+    console.log('Order created:', order.id);
+
     // 3. إضافة عناصر الطلب
-    const orderItems = cartItems.items.map((item: any) => ({
-      order_id: order.id,
-      product_id: item.id,
-      product_name: item.name,
-      product_price: parseInt(item.price?.replace(/\D/g, '')) || 0,
-      quantity: item.quantity
-    }));
+    const orderItems = cartItems.items.map((item: any) => {
+      const itemPrice = parseInt(item.price?.replace(/\D/g, '')) || 0;
+      return {
+        order_id: order.id,
+        product_id: item.id,
+        product_name: item.name,
+        product_price: itemPrice,
+        quantity: item.quantity || 1
+      };
+    });
 
     const { error: itemsError } = await supabase
       .from('order_items')
@@ -86,16 +121,25 @@ export const placeOrder = async (customerData: CustomerData, orderData: OrderDat
 
     if (itemsError) {
       console.error("خطأ في إضافة عناصر الطلب:", itemsError);
+      // Try to delete the order if items failed
+      await supabase.from('orders').delete().eq('id', order.id);
       throw new Error("فشل في إضافة عناصر الطلب");
     }
 
+    console.log('Order items added successfully');
+
     // Clear cart on successful order
-    localStorage.removeItem('cart');
+    try {
+      localStorage.removeItem('cart');
+      console.log('Cart cleared successfully');
+    } catch (error) {
+      console.warn('Error clearing cart from localStorage:', error);
+    }
       
     return {
       success: true,
       orderId: order.id,
-      order
+      order: order
     };
   } catch (error) {
     console.error("خطأ في إتمام الطلب:", error);
@@ -107,52 +151,81 @@ export const placeOrder = async (customerData: CustomerData, orderData: OrderDat
 };
 
 export const getOrderById = async (orderId: string) => {
-  const { data: order, error } = await supabase
-    .from('orders')
-    .select(`
-      *,
-      customer:customers(*),
-      items:order_items(*)
-    `)
-    .eq('id', orderId)
-    .single();
+  try {
+    if (!orderId) {
+      throw new Error("معرف الطلب مطلوب");
+    }
 
-  if (error) {
-    console.error("خطأ في استرجاع بيانات الطلب:", error);
+    const { data: order, error } = await supabase
+      .from('orders')
+      .select(`
+        *,
+        customer:customers(*),
+        items:order_items(*)
+      `)
+      .eq('id', orderId)
+      .single();
+
+    if (error) {
+      console.error("خطأ في استرجاع بيانات الطلب:", error);
+      throw error;
+    }
+
+    return order;
+  } catch (error) {
+    console.error("Error in getOrderById:", error);
     throw error;
   }
-
-  return order;
 };
 
 export const getCustomerOrders = async (userId: string) => {
-  const { data: orders, error } = await supabase
-    .from('orders')
-    .select(`
-      *,
-      order_items(*),
-      customer:customers(*)
-    `)
-    .eq('customer.user_id', userId)
-    .order('created_at', { ascending: false });
+  try {
+    if (!userId) {
+      throw new Error("معرف المستخدم مطلوب");
+    }
 
-  if (error) {
-    console.error("خطأ في استرجاع طلبات العميل:", error);
+    const { data: orders, error } = await supabase
+      .from('orders')
+      .select(`
+        *,
+        order_items(*),
+        customer:customers(*)
+      `)
+      .eq('customer_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error("خطأ في استرجاع طلبات العميل:", error);
+      throw error;
+    }
+
+    return { orders: orders || [] };
+  } catch (error) {
+    console.error("Error in getCustomerOrders:", error);
     throw error;
   }
-
-  return { orders: orders || [] };
 };
 
 // Function to cancel an order by its ID
 export const cancelOrder = async (orderId: string) => {
-  const { error } = await supabase
-    .from('orders')
-    .update({ status: 'cancelled' })
-    .eq('id', orderId);
-  if (error) {
-    console.error("خطأ في إلغاء الطلب:", error);
+  try {
+    if (!orderId) {
+      throw new Error("معرف الطلب مطلوب");
+    }
+
+    const { error } = await supabase
+      .from('orders')
+      .update({ status: 'cancelled' })
+      .eq('id', orderId);
+      
+    if (error) {
+      console.error("خطأ في إلغاء الطلب:", error);
+      throw error;
+    }
+    
+    return { success: true };
+  } catch (error) {
+    console.error("Error in cancelOrder:", error);
     throw error;
   }
-  return { success: true };
 };
