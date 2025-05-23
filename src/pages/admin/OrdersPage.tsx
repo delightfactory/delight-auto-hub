@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { 
@@ -32,6 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
 import {
   Sheet,
   SheetContent,
@@ -58,7 +58,7 @@ const OrdersPage = () => {
   
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return new Intl.DateTimeFormat('ar-SA', {
+    return new Intl.DateTimeFormat('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -109,6 +109,18 @@ const OrdersPage = () => {
         return 'ملغي';
       default:
         return status;
+    }
+  };
+  
+  // تغيير حالة الطلب مباشرة من الجدول
+  const handleStatusChangeRow = async (id: string, newStatus: string) => {
+    try {
+      await orderService.updateOrderStatus(id, newStatus);
+      toast({ title: 'تم التحديث', description: 'تم تغيير حالة الطلب بنجاح' });
+      refetch();
+    } catch (error) {
+      console.error(error);
+      toast({ title: 'خطأ', description: 'فشل في تغيير حالة الطلب', variant: 'destructive' });
     }
   };
   
@@ -180,18 +192,18 @@ const OrdersPage = () => {
                   <TableCell>{order.customer?.name || 'غير متاح'}</TableCell>
                   <TableCell>{order.customer?.email || 'غير متاح'}</TableCell>
                   <TableCell>{formatDate(order.created_at)}</TableCell>
-                  <TableCell>{order.total_amount} ر.س</TableCell>
+                  <TableCell>{order.total_amount.toLocaleString('en-US')} ر.س</TableCell>
                   <TableCell>{order.payment_method}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
                       {getStatusIcon(order.status)}
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(order.status)}`}>
+                      <Badge variant="outline" className={getStatusColor(order.status)}>
                         {translateStatus(order.status)}
-                      </span>
+                      </Badge>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 items-center">
                       <Sheet>
                         <SheetTrigger asChild>
                           <Button
@@ -209,6 +221,20 @@ const OrdersPage = () => {
                           <OrderDetails orderId={order.id} onStatusUpdate={refetch} />
                         </SheetContent>
                       </Sheet>
+                      <Select
+                        value={order.status}
+                        onValueChange={(value) => handleStatusChangeRow(order.id, value)}
+                      >
+                        <SelectTrigger className="w-28">
+                          <SelectValue placeholder="الحالة" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="pending">قيد الانتظار</SelectItem>
+                          <SelectItem value="processing">قيد المعالجة</SelectItem>
+                          <SelectItem value="completed">مكتمل</SelectItem>
+                          <SelectItem value="cancelled">ملغي</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </TableCell>
                 </TableRow>

@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 
 export interface CartItem {
@@ -28,15 +27,16 @@ const initialState: CartState = {
   itemCount: 0,
 };
 
-// Parse price string to number (e.g., "75 جنيه" -> 75)
+// Parse price string to number (supports commas and extracts all digits)
 const parsePrice = (priceString: string): number => {
-  const numericPart = priceString.match(/\d+/);
-  return numericPart ? parseInt(numericPart[0]) : 0;
+  const digitsOnly = priceString.replace(/[^\d]/g, '');
+  return parseInt(digitsOnly, 10) || 0;
 };
 
 // Format price number to string (e.g., 75 -> "75 جنيه")
 const formatPrice = (price: number): string => {
-  return `${price.toLocaleString('ar-EG')} جنيه`;
+  // Use English locale for number formatting
+  return `${price.toLocaleString('en-US')} جنيه`;
 };
 
 const calculateTotal = (items: CartItem[]): string => {

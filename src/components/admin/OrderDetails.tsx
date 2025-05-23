@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { orderService } from '@/services/adminService';
@@ -14,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 interface OrderDetailsProps {
   orderId: string;
@@ -35,7 +35,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onStatusUpdate }) 
   
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return new Intl.DateTimeFormat('ar-SA', {
+    return new Intl.DateTimeFormat('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -131,7 +131,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onStatusUpdate }) 
           </div>
           <div className="flex justify-between">
             <span className="text-gray-500">المبلغ الإجمالي:</span>
-            <span className="font-medium">{order.total_amount} ر.س</span>
+            <span className="font-medium">{order.total_amount.toLocaleString('en-US')} ر.س</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-500">طريقة الدفع:</span>
@@ -202,33 +202,30 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onStatusUpdate }) 
       {/* منتجات الطلب */}
       <div>
         <h3 className="text-lg font-medium mb-3">منتجات الطلب</h3>
-        <div className="space-y-4">
-          {order.order_items && order.order_items.length > 0 ? (
-            order.order_items.map((item: any) => (
-              <div key={item.id} className="flex items-center justify-between border-b pb-3">
-                <div className="flex items-center">
-                  <Package className="h-5 w-5 text-gray-500 ml-2" />
-                  <div>
-                    <p className="font-medium">{item.product_name}</p>
-                    <p className="text-sm text-gray-500">
-                      {item.product_price} ر.س × {item.quantity}
-                    </p>
-                  </div>
-                </div>
-                <span className="font-medium">
-                  {item.product_price * item.quantity} ر.س
-                </span>
-              </div>
-            ))
-          ) : (
-            <p className="text-center text-gray-500 py-4">لا توجد منتجات في هذا الطلب</p>
-          )}
-          
-          <div className="border-t pt-3">
-            <div className="flex justify-between font-bold">
-              <span>الإجمالي:</span>
-              <span>{order.total_amount} ر.س</span>
-            </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>المنتج</TableHead>
+              <TableHead>السعر</TableHead>
+              <TableHead>الكمية</TableHead>
+              <TableHead>الإجمالي</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {order.order_items?.map((item: any) => (
+              <TableRow key={item.id}>
+                <TableCell>{item.product_name}</TableCell>
+                <TableCell>{item.product_price.toLocaleString('en-US')} ر.س</TableCell>
+                <TableCell>{item.quantity}</TableCell>
+                <TableCell>{(item.product_price * item.quantity).toLocaleString('en-US')} ر.س</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+        <div className="border-t pt-3 mt-4">
+          <div className="flex justify-between font-bold text-lg">
+            <span>الإجمالي:</span>
+            <span>{order.total_amount.toLocaleString('en-US')} ر.س</span>
           </div>
         </div>
       </div>

@@ -4,6 +4,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { getCustomerOrders } from '@/services/orderService';
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from '@/integrations/supabase/client';
 
 // Import refactored components
 import ProfileSidebar from '@/components/profile/ProfileSidebar';
@@ -36,6 +37,7 @@ interface FormData {
 const ProfilePage = () => {
   const { user, loading, signOut, updateProfile } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("profile");
   const [isUpdating, setIsUpdating] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -43,7 +45,6 @@ const ProfilePage = () => {
   const [orders, setOrders] = useState<any[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [showLocationPicker, setShowLocationPicker] = useState(false);
-  const { toast } = useToast();
   
   // Form state
   const [formData, setFormData] = useState<FormData>({
@@ -229,6 +230,28 @@ const ProfilePage = () => {
   const handleLogout = async () => {
     await signOut();
   };
+  
+  // ربط real-time لتحديث حالة الطلب وإشعار المستخدم
+  useEffect(() => {
+    if (!user) return;
+    // إنشاء قناة للطلبات الخاصة بالمستخدم
+    const subscription = supabase
+      .channel('order-status')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders', filter: `customer_id=eq.${user.id}` }, (payload) => {
+        const newStatus = payload.new.status;
+        const orderId = payload.new.id;
+        toast({
+          title: 'تحديث حالة الطلب',
+          description: `تم تغيير حالة طلبك رقم ${orderId.substring(0, 8)} إلى ${newStatus}`,
+          variant: 'info'
+        });
+        fetchOrders();
+      })
+      .subscribe();
+    return () => {
+      supabase.removeChannel(subscription);
+    };
+  }, [user]);
   
   if (loading) {
     return (
