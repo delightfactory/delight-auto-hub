@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ShoppingCart, User, Menu, X } from 'lucide-react';
@@ -37,9 +36,7 @@ const Header = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <div className="w-10 h-10 bg-gradient-to-r from-red-600 to-red-800 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-xl">د</span>
-            </div>
+            <img src="/lovable-uploads/7bb28241-5759-4c8e-8fd4-83cedb7bea1e.png" alt="Delight Logo" className="h-10 w-auto" />
             <span className="font-bold text-xl text-gray-900 hidden sm:block">ديلايت</span>
           </Link>
 
