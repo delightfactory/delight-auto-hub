@@ -56,14 +56,16 @@ function App() {
                   <Route path="/checkout" element={<MainLayout><CheckoutPage /></MainLayout>} />
                   <Route path="/orders" element={<MainLayout><OrdersPage /></MainLayout>} />
 
-                  <Route path="/admin" element={<AdminLayout><AdminDashboardPage /></AdminLayout>} />
-                  <Route path="/admin/products" element={<AdminLayout><AdminProductsPage /></AdminLayout>} />
-                  <Route path="/admin/orders" element={<AdminLayout><AdminOrdersPage /></AdminLayout>} />
-                  <Route path="/admin/users" element={<AdminLayout><AdminUsersPage /></AdminLayout>} />
-                  <Route path="/admin/comments" element={<AdminLayout><AdminCommentsPage /></AdminLayout>} />
-                  <Route path="/admin/articles" element={<AdminLayout><AdminArticlesPage /></AdminLayout>} />
-                  <Route path="/admin/settings" element={<AdminLayout><AdminSettingsPage /></AdminLayout>} />
-                  <Route path="/admin/notifications" element={<AdminLayout><NotificationsPage /></AdminLayout>} />
+                  <Route path="/admin" element={<AdminLayout />}>
+                    <Route index element={<AdminDashboardPage />} />
+                    <Route path="products" element={<AdminProductsPage />} />
+                    <Route path="orders" element={<AdminOrdersPage />} />
+                    <Route path="users" element={<AdminUsersPage />} />
+                    <Route path="comments" element={<AdminCommentsPage />} />
+                    <Route path="articles" element={<AdminArticlesPage />} />
+                    <Route path="settings" element={<AdminSettingsPage />} />
+                    <Route path="notifications" element={<NotificationsPage />} />
+                  </Route>
                   
                   {/* Add notification settings route */}
                   <Route 
