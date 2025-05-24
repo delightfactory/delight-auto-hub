@@ -12,7 +12,7 @@ import { ProductDataService } from '@/services/productDataService';
 import ProductCard from '@/components/ProductCard';
 
 const ProductPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'description'|'features'|'reviews'|'usage'>('description');
+  const [activeTab, setActiveTab] = useState<'features'|'reviews'|'usage'>('features');
   const { productId } = useParams<{ productId: string }>();
   const navigate = useNavigate();
   const controls = useAnimation();
@@ -178,37 +178,55 @@ const ProductPage: React.FC = () => {
               animate={controls}
               className="bg-white p-6 rounded-xl shadow-sm overflow-hidden"
             >
-              <div className="w-full md:aspect-square bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
-                <motion.img
-                  src={product.images?.[selectedImageIndex] || '/placeholder.svg'}
-                  alt={product.name}
-                  className="w-full h-auto object-contain"
-                  whileHover={canHover ? { scale: 1.05 } : undefined}
-                  transition={{ duration: 0.3 }}
-                  onError={(e) => {
-                    console.error('Image loading error for product:', product.id);
-                    e.currentTarget.src = '/placeholder.svg';
-                  }}
-                />
-              </div>
-              
-              {/* Additional Images */}
-              {product.images && product.images.length > 1 && (
-                <div className="flex flex-wrap gap-3 mt-4">
-                  {product.images.map((image, index) => (
-                    <div key={index} className={`w-1/3 sm:w-1/4 aspect-square bg-gray-100 rounded-lg overflow-hidden ${index === selectedImageIndex ? 'ring-2 ring-delight-600' : ''}`}>
-                      <button type="button" className="w-full h-full" onClick={() => setSelectedImageIndex(index)}>
-                        <img
-                          src={image}
-                          alt={`${product.name} ${index + 1}`}
-                          className="w-full h-full object-cover"
-                          onError={(e) => { e.currentTarget.src = '/placeholder.svg'; }}
-                        />
-                      </button>
-                    </div>
-                  ))}
+              <div className="w-full h-full">
+                <div className="w-full md:aspect-square bg-gray-100 rounded-lg overflow-hidden relative flex items-center justify-center">
+                  {product.isNew && (
+                    <span
+                      className="absolute top-0 left-0 w-16 h-16 bg-red-500 shadow-lg z-10"
+                      style={{ clipPath: 'polygon(0 0, 100% 0, 0 100%)' }}
+                    >
+                      <span className="absolute bottom-4 left-3 text-lg font-semibold text-white transform -rotate-45 origin-bottom-left">جديد</span>
+                    </span>
+                  )}
+                  {product.isFeatured && (
+                    <span
+                      className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-yellow-400 to-amber-500 shadow-lg z-10"
+                      style={{ clipPath: 'polygon(100% 0, 100% 100%, 0 0)' }}
+                    >
+                      <span className="absolute bottom-4 right-3 text-lg font-semibold text-white transform rotate-45 origin-bottom-right">مميز</span>
+                    </span>
+                  )}
+                  <motion.img
+                    src={product.images?.[selectedImageIndex] || '/placeholder.svg'}
+                    alt={product.name}
+                    className="w-full h-auto object-contain"
+                    whileHover={canHover ? { scale: 1.05 } : undefined}
+                    transition={{ duration: 0.3 }}
+                    onError={(e) => {
+                      console.error('Image loading error for product:', product.id);
+                      e.currentTarget.src = '/placeholder.svg';
+                    }}
+                  />
                 </div>
-              )}
+                
+                {/* Additional Images */}
+                {product.images && product.images.length > 1 && (
+                  <div className="flex flex-wrap gap-3 mt-4">
+                    {product.images.map((image, index) => (
+                      <div key={index} className={`w-1/3 sm:w-1/4 aspect-square bg-gray-100 rounded-lg overflow-hidden ${index === selectedImageIndex ? 'ring-2 ring-delight-600' : ''}`}>
+                        <button type="button" className="w-full h-full" onClick={() => setSelectedImageIndex(index)}>
+                          <img
+                            src={image}
+                            alt={`${product.name} ${index + 1}`}
+                            className="w-full h-full object-cover"
+                            onError={(e) => { e.currentTarget.src = '/placeholder.svg'; }}
+                          />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </motion.div>
 
             {/* Product Info */}
@@ -221,16 +239,6 @@ const ProductPage: React.FC = () => {
               {/* Title & Badges */}
               <div className="flex flex-col items-start sm:flex-row sm:items-center gap-2 mb-6">
                 <h1 className="text-3xl font-extrabold">{product.name}</h1>
-                {product.isFeatured && (
-                  <span className="inline-block w-max px-3 py-1 bg-gradient-to-r from-yellow-400 to-amber-500 text-xs font-semibold text-white rounded-full shadow-lg transition duration-150 hover:scale-105">
-                    مميز
-                  </span>
-                )}
-                {product.isNew && (
-                  <span className="inline-block w-max px-3 py-1 bg-gradient-to-r from-green-400 to-emerald-500 text-xs font-semibold text-white rounded-full shadow-lg transition duration-150 hover:scale-105">
-                    جديد
-                  </span>
-                )}
               </div>
               {/* Rating */}
               <div className="flex items-center mb-6 gap-2">
@@ -245,64 +253,78 @@ const ProductPage: React.FC = () => {
                 <span className="text-sm text-gray-700">{rating.toFixed(1)} ({reviews} تقييم)</span>
               </div>
               {/* Pricing & Discount */}
-              <div className="bg-white p-4 rounded-xl shadow-sm mb-6 flex flex-wrap items-center gap-4">
-                <span className="text-3xl font-bold text-delight-600">{product.price}</span>
-                {product.originalPrice && (
-                  <>
-                    <span className="text-base text-gray-400 line-through">{product.originalPrice}</span>
-                    {(() => {
+              <div className="bg-white p-4 rounded-xl shadow-sm mb-6 flex flex-col items-start gap-1">
+                <div className="flex items-center gap-3">
+                  <span className="text-3xl font-bold text-delight-600">{product.price}</span>
+                  {product.originalPrice && (
+                    (() => {
                       const parseNum = (str: string) => parseFloat(str.replace(/[^\d.]/g, ''));
                       const orig = parseNum(product.originalPrice);
                       const curr = parseNum(product.price);
                       const percent = orig > curr ? Math.round(((orig - curr) / orig) * 100) : 0;
                       return percent > 0 ? (
-                        <span className="bg-gradient-to-r from-red-400 to-amber-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow animate-bounce">
-                          خصم {percent}%
+                        <span className="inline-flex items-center bg-gradient-to-r from-red-600 to-red-800 text-white px-3 py-1.5 rounded-full shadow-lg animate-[bounce_1.5s_infinite] hover:scale-110 transition-transform duration-300">
+                          <span className="text-sm font-medium">خصم</span>
+                          <span className="ml-1 text-xl font-extrabold">{percent}%</span>
                         </span>
                       ) : null;
-                    })()}
-                  </>
+                    })()
+                  )}
+                </div>
+                {product.originalPrice && (
+                  <div className="flex flex-col items-start">
+                    <span className="text-sm text-gray-500 font-medium">بدلاً من</span>
+                    <span className="text-lg text-gray-500 line-through font-semibold">{product.originalPrice}</span>
+                  </div>
                 )}
               </div>
               {/* Trust Icons */}
               <div className="flex items-center gap-4 text-sm text-gray-600 mb-6">
-                <Shield className="w-4 h-4" />
-                <span>دفع آمن</span>
-                <RefreshCw className="w-4 h-4" />
-                <span>استرجاع مجاني</span>
+                <Shield className="w-4 h-4 text-delight-600" />
+                <span>الدفع عند الاستلام</span>
+                <RefreshCw className="w-4 h-4 text-delight-600" />
+                <span>دعم فني</span>
               </div>
+              <p className="text-gray-700 leading-relaxed mb-6">{product.fullDescription || product.description}</p>
               {/* Tabs */}
               <div className="mb-6">
                 <div className="flex border-b">
                   <button
-                    onClick={() => setActiveTab('description')}
-                    className={`${activeTab==='description'? 'border-delight-600 text-delight-600':'text-gray-500'} py-2 px-4 border-b-2 transition duration-150`}
-                  >الوصف</button>
-                  <button
                     onClick={() => setActiveTab('features')}
-                    className={`${activeTab==='features'? 'border-delight-600 text-delight-600':'text-gray-500'} py-2 px-4 border-b-2 transition duration-150 mx-4`}
+                    className={`${activeTab==='features'? 'border-delight-600 text-delight-600':'text-gray-500'} py-2 px-4 border-b-2 transition duration-150`}
                   >المميزات</button>
                   <button
                     onClick={() => setActiveTab('reviews')}
-                    className={`${activeTab==='reviews'? 'border-delight-600 text-delight-600':'text-gray-500'} py-2 px-4 border-b-2 transition duration-150`}
+                    className={`${activeTab==='reviews'? 'border-delight-600 text-delight-600':'text-gray-500'} py-2 px-4 border-b-2 transition duration-150 mx-4`}
                   >التقييمات</button>
                   <button
                     onClick={() => setActiveTab('usage')}
-                    className={`${activeTab==='usage'? 'border-delight-600 text-delight-600':'text-gray-500'} py-2 px-4 border-b-2 transition duration-150 ml-4`}
+                    className={`${activeTab==='usage'? 'border-delight-600 text-delight-600':'text-gray-500'} py-2 px-4 border-b-2 transition duration-150`}
                   >طريقة الاستخدام</button>
                 </div>
                 <div className="mt-4">
-                  {activeTab==='description' && (
-                    <p className="text-gray-700 leading-relaxed">{product.fullDescription || product.description}</p>
-                  )}
                   {activeTab==='features' && product.features && product.features.length>0 && (
-                    <ul className="space-y-2">
+                    <motion.div
+                      variants={staggerVariants}
+                      initial="hidden"
+                      animate={controls}
+                      className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 py-2"
+                    >
                       {product.features.map((feat, idx) => (
-                        <li key={idx} className="flex items-center gap-2">
-                          <Check className="w-4 h-4 text-green-500" /> <span>{feat}</span>
-                        </li>
+                        <motion.div
+                          key={idx}
+                          variants={fadeInVariants}
+                          whileHover={{ scale: 1.02 }}
+                          transition={{ duration: 0.2 }}
+                          className="cursor-pointer inline-flex items-center gap-2 py-1 px-2 bg-gradient-to-br from-gray-50 to-white dark:from-gray-800 dark:to-gray-900 border border-gray-200 dark:border-gray-700 hover:border-green-300 rounded-full shadow-sm hover:shadow-md transform hover:-translate-y-0.5 transition-all duration-200 text-sm"
+                        >
+                          <div className="p-1 bg-green-200 rounded-full flex-shrink-0">
+                            <Check strokeWidth={3} className="w-4 h-4 text-green-600" />
+                          </div>
+                          <p className="text-gray-800 dark:text-gray-100 text-sm font-medium">{feat}</p>
+                        </motion.div>
                       ))}
-                    </ul>
+                    </motion.div>
                   )}
                   {activeTab==='reviews' && (
                     <div>
