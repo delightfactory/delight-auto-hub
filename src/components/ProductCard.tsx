@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -16,6 +15,9 @@ interface ProductCardProps {
   className?: string;
   rating?: number;
   price?: string;
+  originalPrice?: string;
+  isFeatured?: boolean;
+  isNew?: boolean;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({
@@ -26,6 +28,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
   className,
   rating = 4.5,
   price = '',
+  originalPrice,
+  isFeatured = false,
+  isNew = false,
 }) => {
   const { addItem, items } = useCart();
   const [isLiked, setIsLiked] = React.useState(false);
@@ -90,6 +95,21 @@ const ProductCard: React.FC<ProductCardProps> = ({
       )}
     >
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-gray-50 border-b border-gray-100">
+        {/* BADGES for Featured/New */}
+        {isFeatured && (
+          <div className="absolute top-3 left-3 z-20">
+            <span className="px-3 py-1 rounded-full bg-gradient-to-r from-yellow-400 to-amber-500 text-xs font-bold text-white shadow-lg animate-pulse border-2 border-yellow-300">
+              مميز
+            </span>
+          </div>
+        )}
+        {isNew && (
+          <div className={`absolute ${isFeatured ? 'top-12' : 'top-3'} left-3 z-20`}>
+            <span className="px-3 py-1 rounded-full bg-gradient-to-r from-green-400 to-emerald-500 text-xs font-bold text-white shadow-lg border-2 border-green-300">
+              جديد
+            </span>
+          </div>
+        )}
         <motion.button
           onClick={toggleLike}
           whileHover={{ scale: 1.1 }}
@@ -102,11 +122,12 @@ const ProductCard: React.FC<ProductCardProps> = ({
         </motion.button>
         
         <motion.img
+          loading="lazy"
           whileHover={{ scale: 1.15, rotate: -2 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.15 }}
           src={imageError ? fallbackImage : image}
           alt={name}
-          className="h-full w-full object-cover transition-all"
+          className="h-full w-full object-cover transition-transform duration-150 ease-in-out"
           onError={handleImageError}
         />
         
@@ -119,9 +140,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
             <motion.div 
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="w-full"
+              className="w-full transition duration-150 ease-in-out"
             >
-              <Button variant="secondary" className="w-full bg-white/90 backdrop-blur-sm hover:bg-white shadow-md">
+              <Button variant="secondary" className="w-full bg-white/90 backdrop-blur-sm hover:bg-white shadow-md transition duration-150 ease-in-out">
                 <Eye className="w-4 h-4 ml-2" />
                 عرض المنتج
               </Button>
@@ -134,7 +155,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
             onClick={handleAddToCart}
             className="flex-1"
           >
-            <Button className="w-full bg-amazon-yellow hover:bg-amber-400 text-amazon-dark shadow-md group">
+            <Button className="w-full bg-amazon-yellow hover:bg-amber-400 text-amazon-dark shadow-md group transition duration-150 ease-in-out">
               {isAddedToCart ? (
                 <>
                   <Check className="w-4 h-4 ml-2" />
@@ -185,14 +206,40 @@ const ProductCard: React.FC<ProductCardProps> = ({
           {description}
         </p>
         
-        {price && (
+        {/* عرض السعر والخصم */}
+        {price && originalPrice ? (
+          <div className="mb-4 flex items-center gap-3">
+            <span className="text-lg font-bold text-delight-600 animate-pulse">
+              {price}
+            </span>
+            <span className="text-base text-gray-400 line-through">
+              {originalPrice}
+            </span>
+            {/* حساب نسبة الخصم */}
+            {(() => {
+              // استخراج الأرقام من النصوص
+              const parse = (str: string) => parseFloat(str.replace(/[^\d.]/g, ''));
+              const orig = parse(originalPrice);
+              const curr = parse(price);
+              if (!isNaN(orig) && !isNaN(curr) && orig > curr) {
+                const percent = Math.round(((orig - curr) / orig) * 100);
+                return (
+                  <span className="bg-gradient-to-r from-red-400 to-amber-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-md animate-bounce">
+                    خصم {percent}%
+                  </span>
+                );
+              }
+              return null;
+            })()}
+          </div>
+        ) : price && (
           <div className="amazon-price mb-4 text-lg">{price}</div>
         )}
         
         <div className="flex justify-between">
           <Link to={`/products/${id}`}>
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button variant="outline" className="border-gray-200 text-amazon-link hover:bg-gray-50 hover:text-amazon-link hover:border-gray-300">
+              <Button variant="outline" className="border-gray-200 text-amazon-link hover:bg-gray-50 hover:text-amazon-link hover:border-gray-300 transition duration-150 ease-in-out">
                 <Eye className="w-4 h-4 ml-2" />
                 <span>التفاصيل</span>
               </Button>

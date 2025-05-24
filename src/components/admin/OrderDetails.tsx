@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { orderService } from '@/services/adminService';
-import { Loader2, Package, MapPin, User, Phone, Mail } from 'lucide-react';
+import { Loader2, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import {
   Select,
@@ -95,6 +93,10 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onStatusUpdate }) 
     }
   };
 
+  // حساب المجموع الفرعي وتكلفة الشحن
+  const itemsTotal = order?.order_items?.reduce((sum, item) => sum + item.product_price * item.quantity, 0) ?? 0;
+  const shippingCost = order ? order.total_amount - itemsTotal : 0;
+
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
@@ -116,132 +118,124 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onStatusUpdate }) 
   }
 
   return (
-    <div className="mt-6 space-y-6">
-      {/* معلومات الطلب الأساسية */}
-      <div>
-        <h3 className="text-lg font-medium mb-2">معلومات الطلب</h3>
-        <div className="space-y-2">
-          <div className="flex justify-between">
-            <span className="text-gray-500">رقم الطلب:</span>
-            <span className="font-medium">{order.id}</span>
+    <div className="flex flex-col h-full">
+      {/* Header */}
+      <div className="flex justify-between items-center p-6 border-b">
+        <h3 className="text-2xl font-semibold">تفاصيل الطلب #{order.id.substring(0, 8)}</h3>
+        <Select value={order.status} onValueChange={handleStatusChange} disabled={updatingStatus}>
+          <SelectTrigger className="w-40">
+            <SelectValue placeholder="اختر الحالة" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="pending">قيد الانتظار</SelectItem>
+            <SelectItem value="processing">قيد المعالجة</SelectItem>
+            <SelectItem value="completed">مكتمل</SelectItem>
+            <SelectItem value="cancelled">ملغي</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      {/* Content */}
+      <div className="overflow-y-auto flex-1 px-6 py-4 w-full max-w-3xl lg:max-w-4xl space-y-8">
+        {/* Order & Customer Info */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+          {/* Order Info */}
+          <div className="space-y-4">
+            <div>
+              <p className="text-gray-500">رقم الطلب</p>
+              <p className="font-medium">{order.id}</p>
+            </div>
+            <div>
+              <p className="text-gray-500">التاريخ</p>
+              <p className="font-medium">{formatDate(order.created_at)}</p>
+            </div>
+            <div>
+              <p className="text-gray-500">طريقة الدفع</p>
+              <p className="font-medium">{order.payment_method}</p>
+            </div>
+            <div>
+              <p className="text-gray-500">العنوان</p>
+              <p className="font-medium">{order.shipping_address}, {order.shipping_city}</p>
+            </div>
           </div>
-          <div className="flex justify-between">
-            <span className="text-gray-500">تاريخ الطلب:</span>
-            <span>{formatDate(order.created_at)}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-500">المبلغ الإجمالي:</span>
-            <span className="font-medium">{order.total_amount.toLocaleString('en-US')} ر.س</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-500">طريقة الدفع:</span>
-            <span>{order.payment_method}</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-gray-500">الحالة:</span>
-            <Badge variant="outline" className={getStatusColor(order.status)}>
-              {translateStatus(order.status)}
-            </Badge>
+          {/* Customer Info */}
+          <div className="space-y-4">
+            <div>
+              <p className="text-gray-500">اسم العميل</p>
+              <p className="font-medium">{order.customer?.name || '-'}</p>
+            </div>
+            <div>
+              <p className="text-gray-500">البريد الإلكتروني</p>
+              <p className="font-medium">{order.customer?.email || '-'}</p>
+            </div>
+            <div>
+              <p className="text-gray-500">الهاتف</p>
+              <p className="font-medium">{order.customer?.phone || '-'}</p>
+            </div>
+            {order.notes && (
+              <div>
+                <p className="text-gray-500">ملاحظات</p>
+                <p className="font-medium">{order.notes}</p>
+              </div>
+            )}
           </div>
         </div>
-      </div>
-      
-      <Separator />
-      
-      {/* تغيير حالة الطلب */}
-      <div>
-        <h3 className="text-lg font-medium mb-3">تغيير حالة الطلب</h3>
-        <div className="flex gap-2">
-          <Select
-            value={order.status}
-            onValueChange={handleStatusChange}
-            disabled={updatingStatus}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="اختر الحالة" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="pending">قيد الانتظار</SelectItem>
-              <SelectItem value="processing">قيد المعالجة</SelectItem>
-              <SelectItem value="completed">مكتمل</SelectItem>
-              <SelectItem value="cancelled">ملغي</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-      
-      <Separator />
-      
-      {/* معلومات العميل */}
-      <div>
-        <h3 className="text-lg font-medium mb-3">معلومات العميل</h3>
-        <div className="space-y-3">
-          <div className="flex items-center">
-            <User className="h-5 w-5 text-gray-500 ml-2" />
-            <span className="text-gray-700">{order.customer?.name || 'غير متاح'}</span>
-          </div>
-          <div className="flex items-center">
-            <Mail className="h-5 w-5 text-gray-500 ml-2" />
-            <span className="text-gray-700">{order.customer?.email || 'غير متاح'}</span>
-          </div>
-          <div className="flex items-center">
-            <Phone className="h-5 w-5 text-gray-500 ml-2" />
-            <span className="text-gray-700">{order.customer?.phone || 'غير متاح'}</span>
-          </div>
-          <div className="flex items-start">
-            <MapPin className="h-5 w-5 text-gray-500 ml-2 mt-0.5" />
-            <span className="text-gray-700">
-              {order.shipping_address}، {order.shipping_city}
-            </span>
-          </div>
-        </div>
-      </div>
-      
-      <Separator />
-      
-      {/* منتجات الطلب */}
-      <div>
-        <h3 className="text-lg font-medium mb-3">منتجات الطلب</h3>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>المنتج</TableHead>
-              <TableHead>السعر</TableHead>
-              <TableHead>الكمية</TableHead>
-              <TableHead>الإجمالي</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {order.order_items?.map((item: any) => (
-              <TableRow key={item.id}>
-                <TableCell>{item.product_name}</TableCell>
-                <TableCell>{item.product_price.toLocaleString('en-US')} ر.س</TableCell>
-                <TableCell>{item.quantity}</TableCell>
-                <TableCell>{(item.product_price * item.quantity).toLocaleString('en-US')} ر.س</TableCell>
+
+        {/* Products Table */}
+        <div className="overflow-x-auto mb-4">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>صورة</TableHead>
+                <TableHead>رمز المنتج</TableHead>
+                <TableHead>اسم المنتج</TableHead>
+                <TableHead>سعر الوحدة</TableHead>
+                <TableHead>الكمية</TableHead>
+                <TableHead>الإجمالي</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-        <div className="border-t pt-3 mt-4">
-          <div className="flex justify-between font-bold text-lg">
-            <span>الإجمالي:</span>
-            <span>{order.total_amount.toLocaleString('en-US')} ر.س</span>
+            </TableHeader>
+            <TableBody>
+              {order.order_items?.map(item => (
+                <TableRow key={item.id}>
+                  <TableCell className="p-2">
+                    {item.product?.image_url ? (
+                      <img
+                        src={item.product.image_url}
+                        alt={item.product.name}
+                        className="h-10 w-10 object-cover rounded"
+                      />
+                    ) : (
+                      <Package className="h-10 w-10 text-gray-400" />
+                    )}
+                  </TableCell>
+                  <TableCell>{item.product_id || item.temp_product_code}</TableCell>
+                  <TableCell>{item.product?.name || item.product_name}</TableCell>
+                  <TableCell>{item.product_price.toLocaleString('en-US')} ر.س</TableCell>
+                  <TableCell>{item.quantity}</TableCell>
+                  <TableCell>
+                    {(item.product_price * item.quantity).toLocaleString('en-US')} ر.س
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+
+        {/* Cost Summary */}
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-6 text-gray-800 font-medium">
+          <div>
+            <p className="text-gray-500">المجموع الفرعي</p>
+            <p>{itemsTotal.toLocaleString('en-US')} ر.س</p>
+          </div>
+          <div>
+            <p className="text-gray-500">تكلفة الشحن</p>
+            <p>{shippingCost.toLocaleString('en-US')} ر.س</p>
+          </div>
+          <div>
+            <p className="text-gray-500">الإجمالي الكلي</p>
+            <p className="font-semibold">{order.total_amount.toLocaleString('en-US')} ر.س</p>
           </div>
         </div>
       </div>
-      
-      {/* ملاحظات الطلب */}
-      {order.notes && (
-        <>
-          <Separator />
-          <div>
-            <h3 className="text-lg font-medium mb-2">ملاحظات</h3>
-            <p className="text-gray-700 bg-gray-50 p-3 rounded-md">
-              {order.notes}
-            </p>
-          </div>
-        </>
-      )}
     </div>
   );
 };

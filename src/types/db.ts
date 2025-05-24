@@ -12,6 +12,7 @@ export interface Product {
   is_new: boolean;
   features?: string[];
   images?: string[];
+  usage_instructions?: string;
   product_code: string;
 }
 

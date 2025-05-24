@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Check, CreditCard, MapPin, Truck, ChevronRight, Mail, Phone, User } from 'lucide-react';
@@ -155,6 +154,10 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose }) => {
       );
       
       if (result.success) {
+        // تفريغ السلة فورًا بعد إتمام الطلب
+        clearCart();
+        console.log('Cart cleared after order placement');
+        
         setOrderId(result.orderId);
         setStep('confirmation');
         
@@ -184,20 +187,6 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose }) => {
   };
 
   const handleCompleteCheckout = () => {
-    // Clear the cart properly
-    try {
-      clearCart();
-      console.log("Cart cleared successfully");
-      
-      toast({
-        title: "شكراً لاختيارك ديلايت!",
-        description: "سنتواصل معك خلال 24 ساعة لتأكيد موعد التوصيل",
-        variant: "default",
-      });
-    } catch (error) {
-      console.error("Error clearing cart:", error);
-    }
-    
     // Close the checkout modal
     setTimeout(() => {
       onClose();

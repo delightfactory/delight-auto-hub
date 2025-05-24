@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 interface CustomerData {
@@ -36,22 +35,33 @@ export const placeOrder = async (customerData: CustomerData, orderData: OrderDat
       throw new Error("طريقة الدفع مطلوبة");
     }
 
-    // 1. إضافة أو تحديث بيانات العميل
+    // 1. جلب الدور الحالي لبناء upsert آمن
+    const { data: existing, error: existingError } = await supabase
+      .from('customers')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+    if (existingError) {
+      console.error('خطأ في جلب دور العميل الحالي:', existingError);
+    }
+
+    const customerBody: any = {
+      id: user.id,
+      user_id: user.id,
+      email: customerData.email,
+      name: customerData.name,
+      phone: customerData.phone,
+      address: customerData.address,
+      city: customerData.city
+    };
+    // إضافة role للعميل الجديد فقط
+    if (!existing) {
+      customerBody.role = 'customer';
+    }
+
     const { data: customerRecord, error: customerError } = await supabase
       .from('customers')
-      .upsert(
-        { 
-          id: user.id,
-          user_id: user.id,
-          email: customerData.email,
-          name: customerData.name,
-          phone: customerData.phone,
-          address: customerData.address,
-          city: customerData.city,
-          role: 'customer'
-        },
-        { onConflict: 'id' }
-      )
+      .upsert(customerBody, { onConflict: 'id' })
       .select()
       .single();
 
@@ -103,7 +113,7 @@ export const placeOrder = async (customerData: CustomerData, orderData: OrderDat
 
     console.log('Order created:', order.id);
 
-    // 3. إضافة عناصر الطلب
+    // 3. إنشاء قائمة عناصر الطلب
     const orderItems = cartItems.items.map((item: any) => {
       const itemPrice = parseInt(item.price?.replace(/\D/g, '')) || 0;
       return {
@@ -115,15 +125,16 @@ export const placeOrder = async (customerData: CustomerData, orderData: OrderDat
       };
     });
 
+    // إضافة عناصر الطلب
     const { error: itemsError } = await supabase
       .from('order_items')
       .insert(orderItems);
 
     if (itemsError) {
       console.error("خطأ في إضافة عناصر الطلب:", itemsError);
-      // Try to delete the order if items failed
+      // حذف الطلب إذا فشلت إضافة العناصر
       await supabase.from('orders').delete().eq('id', order.id);
-      throw new Error("فشل في إضافة عناصر الطلب");
+      throw new Error(`فشل في إضافة عناصر الطلب: ${itemsError.message}`);
     }
 
     console.log('Order items added successfully');

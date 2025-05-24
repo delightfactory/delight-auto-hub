@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { 
@@ -200,6 +199,7 @@ const ProductsPage = () => {
                   <TableRow>
                     <TableHead className="w-[50px]">الصورة</TableHead>
                     <TableHead>الاسم</TableHead>
+                    <TableHead>رمز المنتج</TableHead>
                     <TableHead>الوصف</TableHead>
                     <TableHead>السعر</TableHead>
                     <TableHead>المخزون</TableHead>
@@ -224,6 +224,7 @@ const ProductsPage = () => {
                         )}
                       </TableCell>
                       <TableCell className="font-medium">{product.name}</TableCell>
+                      <TableCell className="text-gray-600">{product.product_code}</TableCell>
                       <TableCell className="max-w-[300px] truncate">
                         {product.description || "لا يوجد وصف"}
                       </TableCell>

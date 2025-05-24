@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Product } from "@/types/db";
 
@@ -18,6 +17,7 @@ export interface ProductDisplay {
   isNew?: boolean;
   isFeatured?: boolean;
   category?: string;
+  usage_instructions?: string;
 }
 
 // تحويل بيانات المنتج من قاعدة البيانات إلى تنسيق العرض
@@ -40,7 +40,8 @@ const transformProductToDisplay = (product: Product): ProductDisplay => {
     stock: product.stock || 0,
     isNew: product.is_new || false,
     isFeatured: product.is_featured || false,
-    category: product.category || undefined
+    category: product.category || undefined,
+    usage_instructions: product.usage_instructions || '',
   };
 };
 

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -30,6 +29,8 @@ import { useToast } from '@/hooks/use-toast';
 const productSchema = z.object({
   name: z.string().min(2, "اسم المنتج مطلوب ويجب أن يتكون من حرفين على الأقل"),
   description: z.string().optional(),
+  usage_instructions: z.string().optional(),
+  product_code: z.string().min(1, "رمز المنتج مطلوب"),
   price: z.coerce.number().min(0, "يجب أن يكون السعر عددًا موجبًا"),
   discount_price: z.coerce.number().min(0, "يجب أن يكون سعر الخصم عددًا موجبًا").optional().nullable(),
   stock: z.coerce.number().min(0, "يجب أن تكون الكمية عددًا موجبًا").optional().nullable(),
@@ -61,6 +62,8 @@ const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit, onCanc
     defaultValues: {
       name: initialData?.name || '',
       description: initialData?.description || '',
+      usage_instructions: initialData?.usage_instructions || '',
+      product_code: initialData?.product_code || '',
       price: initialData?.price || 0,
       discount_price: initialData?.discount_price || null,
       stock: initialData?.stock || 0,
@@ -203,6 +206,39 @@ const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit, onCanc
                             {...field}
                             value={field.value || ''}
                           />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="usage_instructions"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>طريقة الاستخدام</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="أدخل تعليمات الاستخدام"
+                            className="min-h-32"
+                            {...field}
+                            value={field.value || ''}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="product_code"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>رمز المنتج</FormLabel>
+                        <FormControl>
+                          <Input placeholder="أدخل رمز المنتج" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

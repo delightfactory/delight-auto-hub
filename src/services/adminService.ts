@@ -174,7 +174,7 @@ export const orderService = {
   
   // جلب طلب بواسطة المعرف
   getOrderById: async (id: string) => {
-    const { data, error } = await supabase
+    const { data: order, error } = await supabase
       .from('orders')
       .select(`
         *,
@@ -183,12 +183,29 @@ export const orderService = {
       `)
       .eq('id', id)
       .single();
-    
-    if (error) {
+
+    if (error || !order) {
       console.error(`خطأ في جلب الطلب رقم ${id}:`, error);
-      throw error;
+      throw error || new Error("Order not found");
     }
-    return data;
+
+    // جلب تفاصيل المنتجات وربطها بكل عنصر
+    const productIds = order.order_items?.map(item => item.product_id).filter(pid => pid) ?? [];
+    if (productIds.length) {
+      const { data: products, error: productsError } = await supabase
+        .from('products')
+        .select('id, name, image_url')
+        .in('id', productIds);
+      if (!productsError && products) {
+        const prodMap = products.reduce((acc, p) => ({ ...acc, [p.id]: p }), {} as Record<string, any>);
+        order.order_items = order.order_items.map(item => ({
+          ...item,
+          product: prodMap[item.product_id] ?? null
+        }));
+      }
+    }
+
+    return order;
   },
   
   // تحديث حالة طلب

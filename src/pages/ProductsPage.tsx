@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Search, Loader2, Filter } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -10,25 +9,20 @@ import { ProductDataService } from '@/services/productDataService';
 
 const ProductsPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
-
+  
   // جلب جميع المنتجات من Supabase
   const { data: products = [], isLoading, error } = useQuery({
     queryKey: ['products'],
     queryFn: ProductDataService.getAllProducts
   });
 
-  // تطبيق الفلترة عند تغيير البحث أو المنتجات
-  React.useEffect(() => {
-    if (!searchTerm.trim()) {
-      setFilteredProducts(products);
-    } else {
-      const filtered = products.filter(product =>
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.description.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredProducts(filtered);
-    }
+  // احسب الفلترة ديناميكياً دون حلقة لا نهائية
+  const filteredProducts = useMemo(() => {
+    if (!searchTerm.trim()) return products;
+    return products.filter(product =>
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.description.toLowerCase().includes(searchTerm.toLowerCase())
+    );
   }, [searchTerm, products]);
 
   if (error) {
@@ -96,6 +90,9 @@ const ProductsPage: React.FC = () => {
                     image={product.image}
                     price={product.price}
                     rating={product.rating}
+                    isFeatured={product.isFeatured}
+                    isNew={product.isNew}
+                    originalPrice={product.originalPrice}
                   />
                 ))}
               </div>

@@ -214,7 +214,7 @@ const OrdersPage = () => {
                             <Eye className="h-4 w-4 text-blue-600" />
                           </Button>
                         </SheetTrigger>
-                        <SheetContent className="w-full sm:max-w-lg">
+                        <SheetContent className="w-full sm:max-w-lg h-[80vh] overflow-y-auto">
                           <SheetHeader>
                             <SheetTitle className="text-right">تفاصيل الطلب #{order.id.substring(0, 8)}</SheetTitle>
                           </SheetHeader>

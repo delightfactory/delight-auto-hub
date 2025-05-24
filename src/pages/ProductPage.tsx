@@ -1,9 +1,9 @@
-
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion, useAnimation } from 'framer-motion';
-import { ArrowLeft, ShoppingCart, Star, Check, AlertTriangle, Loader2 } from 'lucide-react';
+import { ArrowLeft, ShoppingCart, Star, Check, AlertTriangle, Loader2, Share2, Shield, RefreshCw } from 'lucide-react';
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
 import SectionHeading from '@/components/SectionHeading';
 import { toast } from '@/components/ui/use-toast';
@@ -12,11 +12,23 @@ import { ProductDataService } from '@/services/productDataService';
 import ProductCard from '@/components/ProductCard';
 
 const ProductPage: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<'description'|'features'|'reviews'|'usage'>('description');
   const { productId } = useParams<{ productId: string }>();
   const navigate = useNavigate();
   const controls = useAnimation();
   const { addItem } = useCart();
+  const [canHover, setCanHover] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   
+  useEffect(() => {
+    const mql = window.matchMedia('(hover: hover)');
+    setCanHover(mql.matches);
+  }, []);
+
+  useEffect(() => {
+    if (productId) setSelectedImageIndex(0);
+  }, [productId]);
+
   // جلب بيانات المنتج من Supabase
   const { data: product, isLoading, error } = useQuery({
     queryKey: ['product', productId],
@@ -134,14 +146,24 @@ const ProductPage: React.FC = () => {
   const reviews = product.reviews || 0;
 
   return (
-    <div className="pb-20">
-      {/* Breadcrumb */}
+    <div className="pb-20 overflow-x-hidden">
+      {/* Breadcrumb + Share */}
       <div className="bg-gray-100 py-4">
-        <div className="container-custom">
-          <Link to="/products" className="inline-flex items-center text-delight-600 hover:text-delight-800 transition-colors">
+        <div className="container-custom flex justify-between items-center">
+          <Link to="/products" className="inline-flex items-center text-delight-600 hover:text-delight-800 transition duration-150">
             <ArrowLeft className="w-4 h-4 ml-1" />
             <span>العودة إلى المنتجات</span>
           </Link>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button className="p-2 bg-white rounded-full shadow hover:bg-gray-50 transition duration-150">
+                  <Share2 className="w-4 h-4 text-gray-700" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>مشاركة</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </div>
 
@@ -154,14 +176,14 @@ const ProductPage: React.FC = () => {
               variants={fadeInVariants}
               initial="hidden"
               animate={controls}
-              className="bg-white p-6 rounded-xl shadow-sm"
+              className="bg-white p-6 rounded-xl shadow-sm overflow-hidden"
             >
-              <div className="aspect-square w-full bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
-                <motion.img 
-                  src={product.image || '/placeholder.svg'} 
-                  alt={product.name} 
-                  className="w-full h-full object-contain"
-                  whileHover={{ scale: 1.05 }}
+              <div className="w-full md:aspect-square bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
+                <motion.img
+                  src={product.images?.[selectedImageIndex] || '/placeholder.svg'}
+                  alt={product.name}
+                  className="w-full h-auto object-contain"
+                  whileHover={canHover ? { scale: 1.05 } : undefined}
                   transition={{ duration: 0.3 }}
                   onError={(e) => {
                     console.error('Image loading error for product:', product.id);
@@ -172,17 +194,17 @@ const ProductPage: React.FC = () => {
               
               {/* Additional Images */}
               {product.images && product.images.length > 1 && (
-                <div className="flex gap-3 mt-4">
-                  {product.images.slice(1, 4).map((image, index) => (
-                    <div key={index} className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden">
-                      <img 
-                        src={image} 
-                        alt={`${product.name} ${index + 2}`}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.currentTarget.src = '/placeholder.svg';
-                        }}
-                      />
+                <div className="flex flex-wrap gap-3 mt-4">
+                  {product.images.map((image, index) => (
+                    <div key={index} className={`w-1/3 sm:w-1/4 aspect-square bg-gray-100 rounded-lg overflow-hidden ${index === selectedImageIndex ? 'ring-2 ring-delight-600' : ''}`}>
+                      <button type="button" className="w-full h-full" onClick={() => setSelectedImageIndex(index)}>
+                        <img
+                          src={image}
+                          alt={`${product.name} ${index + 1}`}
+                          className="w-full h-full object-cover"
+                          onError={(e) => { e.currentTarget.src = '/placeholder.svg'; }}
+                        />
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -196,77 +218,105 @@ const ProductPage: React.FC = () => {
               animate={controls}
               transition={{ delay: 0.2 }}
             >
-              <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
-              
-              <div className="flex items-center mb-4">
-                <div className="flex items-center text-amber-500">
-                  {[...Array(5)].map((_, i) => (
-                    <Star 
-                      key={i} 
-                      className={`w-4 h-4 ${i < Math.floor(rating) ? 'fill-amber-500' : 'fill-gray-200'}`} 
-                    />
-                  ))}
-                  <span className="text-sm text-gray-700 mr-2">
-                    {rating.toFixed(1)} ({reviews} تقييم)
+              {/* Title & Badges */}
+              <div className="flex flex-col items-start sm:flex-row sm:items-center gap-2 mb-6">
+                <h1 className="text-3xl font-extrabold">{product.name}</h1>
+                {product.isFeatured && (
+                  <span className="inline-block w-max px-3 py-1 bg-gradient-to-r from-yellow-400 to-amber-500 text-xs font-semibold text-white rounded-full shadow-lg transition duration-150 hover:scale-105">
+                    مميز
                   </span>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-3 mb-6">
-                <div className="text-2xl font-bold text-delight-600">
-                  {product.price}
-                </div>
-                {product.originalPrice && (
-                  <div className="text-lg text-gray-400 line-through">
-                    {product.originalPrice}
-                  </div>
                 )}
                 {product.isNew && (
-                  <span className="bg-green-100 text-green-600 px-2 py-1 rounded-full text-xs font-medium">
+                  <span className="inline-block w-max px-3 py-1 bg-gradient-to-r from-green-400 to-emerald-500 text-xs font-semibold text-white rounded-full shadow-lg transition duration-150 hover:scale-105">
                     جديد
                   </span>
                 )}
               </div>
-
-              {/* Stock Status */}
-              <div className="mb-6">
-                {product.stock && product.stock > 0 ? (
-                  <div className="flex items-center text-green-600">
-                    <Check className="w-4 h-4 ml-1" />
-                    <span>متوفر في المخزون ({product.stock} قطعة)</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center text-red-600">
-                    <AlertTriangle className="w-4 h-4 ml-1" />
-                    <span>غير متوفر في المخزون</span>
-                  </div>
+              {/* Rating */}
+              <div className="flex items-center mb-6 gap-2">
+                <div className="flex items-center text-amber-500">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      className={`w-4 h-4 ${i < Math.floor(rating) ? 'fill-amber-500' : 'fill-gray-200'}`}
+                    />
+                  ))}
+                </div>
+                <span className="text-sm text-gray-700">{rating.toFixed(1)} ({reviews} تقييم)</span>
+              </div>
+              {/* Pricing & Discount */}
+              <div className="bg-white p-4 rounded-xl shadow-sm mb-6 flex flex-wrap items-center gap-4">
+                <span className="text-3xl font-bold text-delight-600">{product.price}</span>
+                {product.originalPrice && (
+                  <>
+                    <span className="text-base text-gray-400 line-through">{product.originalPrice}</span>
+                    {(() => {
+                      const parseNum = (str: string) => parseFloat(str.replace(/[^\d.]/g, ''));
+                      const orig = parseNum(product.originalPrice);
+                      const curr = parseNum(product.price);
+                      const percent = orig > curr ? Math.round(((orig - curr) / orig) * 100) : 0;
+                      return percent > 0 ? (
+                        <span className="bg-gradient-to-r from-red-400 to-amber-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow animate-bounce">
+                          خصم {percent}%
+                        </span>
+                      ) : null;
+                    })()}
+                  </>
                 )}
               </div>
-              
-              <p className="text-gray-700 mb-6 leading-relaxed">
-                {product.fullDescription || product.description}
-              </p>
-              
-              {product.features && product.features.length > 0 && (
-                <div className="mb-8">
-                  <h3 className="text-lg font-semibold mb-3">المميزات</h3>
-                  <motion.ul 
-                    className="space-y-2"
-                    variants={staggerVariants}
-                    initial="hidden"
-                    animate={controls}
-                  >
-                    {product.features.map((feature, index) => (
-                      <motion.li key={index} variants={fadeInVariants} className="flex items-start">
-                        <Check className="w-5 h-5 text-green-500 mt-0.5 ml-2 flex-shrink-0" />
-                        <span>{feature}</span>
-                      </motion.li>
-                    ))}
-                  </motion.ul>
+              {/* Trust Icons */}
+              <div className="flex items-center gap-4 text-sm text-gray-600 mb-6">
+                <Shield className="w-4 h-4" />
+                <span>دفع آمن</span>
+                <RefreshCw className="w-4 h-4" />
+                <span>استرجاع مجاني</span>
+              </div>
+              {/* Tabs */}
+              <div className="mb-6">
+                <div className="flex border-b">
+                  <button
+                    onClick={() => setActiveTab('description')}
+                    className={`${activeTab==='description'? 'border-delight-600 text-delight-600':'text-gray-500'} py-2 px-4 border-b-2 transition duration-150`}
+                  >الوصف</button>
+                  <button
+                    onClick={() => setActiveTab('features')}
+                    className={`${activeTab==='features'? 'border-delight-600 text-delight-600':'text-gray-500'} py-2 px-4 border-b-2 transition duration-150 mx-4`}
+                  >المميزات</button>
+                  <button
+                    onClick={() => setActiveTab('reviews')}
+                    className={`${activeTab==='reviews'? 'border-delight-600 text-delight-600':'text-gray-500'} py-2 px-4 border-b-2 transition duration-150`}
+                  >التقييمات</button>
+                  <button
+                    onClick={() => setActiveTab('usage')}
+                    className={`${activeTab==='usage'? 'border-delight-600 text-delight-600':'text-gray-500'} py-2 px-4 border-b-2 transition duration-150 ml-4`}
+                  >طريقة الاستخدام</button>
                 </div>
-              )}
-              
-              <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
+                <div className="mt-4">
+                  {activeTab==='description' && (
+                    <p className="text-gray-700 leading-relaxed">{product.fullDescription || product.description}</p>
+                  )}
+                  {activeTab==='features' && product.features && product.features.length>0 && (
+                    <ul className="space-y-2">
+                      {product.features.map((feat, idx) => (
+                        <li key={idx} className="flex items-center gap-2">
+                          <Check className="w-4 h-4 text-green-500" /> <span>{feat}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {activeTab==='reviews' && (
+                    <div>
+                      <p className="font-medium mb-2">{reviews} تقييم</p>
+                      <blockquote className="border-l-4 border-gray-200 pl-4 italic text-gray-600">“منتج رائع وخدمة سريعة”</blockquote>
+                    </div>
+                  )}
+                  {activeTab==='usage' && (
+                    <p className="text-gray-700 leading-relaxed">{product.usage_instructions}</p>
+                  )}
+                </div>
+              </div>
+              {/* Add to Cart */}
+              <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }} className="hidden lg:block">
                 <Button 
                   onClick={handleAddToCart}
                   className="w-full md:w-auto text-lg py-6"
@@ -281,8 +331,13 @@ const ProductPage: React.FC = () => {
           </div>
         </div>
       </section>
-
-      {/* Related Products */}
+      {/* Sticky CTA Mobile */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white p-4 shadow-t lg:hidden">
+        <Button onClick={handleAddToCart} disabled={!product.stock} className="w-full flex justify-center items-center gap-2 transition duration-150">
+          <ShoppingCart className="w-5 h-5" /> إضافة للسلة
+        </Button>
+      </div>
+      {/* Related Products Carousel */}
       {relatedProducts.length > 0 && (
         <section className="py-12 bg-gray-50">
           <div className="container-custom">
@@ -291,25 +346,24 @@ const ProductPage: React.FC = () => {
               subtitle="منتجات أخرى قد تهمك من مجموعة ديلايت للعناية بالسيارات"
               center
             />
-            
             <motion.div 
-              className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-10"
+              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 py-4"
               variants={staggerVariants}
               initial="hidden"
               animate={controls}
             >
-              {relatedProducts.map((relatedProduct) => (
-                <motion.div 
-                  key={relatedProduct.id}
-                  variants={fadeInVariants}
-                >
-                  <ProductCard
-                    id={relatedProduct.id}
-                    name={relatedProduct.name}
-                    description={relatedProduct.description}
-                    image={relatedProduct.image}
-                    price={relatedProduct.price}
-                    rating={relatedProduct.rating}
+              {relatedProducts.map(rp => (
+                <motion.div key={rp.id} variants={fadeInVariants} className="w-full">
+                  <ProductCard 
+                    id={rp.id}
+                    name={rp.name}
+                    description={rp.description}
+                    image={rp.image}
+                    price={rp.price}
+                    rating={rp.rating}
+                    isFeatured={rp.isFeatured}
+                    isNew={rp.isNew}
+                    originalPrice={rp.originalPrice}
                   />
                 </motion.div>
               ))}
