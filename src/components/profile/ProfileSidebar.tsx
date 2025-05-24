@@ -1,23 +1,28 @@
-
 import React from 'react';
-import { User, Package, Bell, Settings, LogOut } from 'lucide-react';
-import { Card, CardContent } from "@/components/ui/card";
+import { Link } from 'react-router-dom';
+import {
+  Card,
+  CardContent,
+} from "@/components/ui/card";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { LogOut, User, ShoppingBag, Settings, Camera, Bell } from 'lucide-react';
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { motion } from 'framer-motion';
+import { Tabs } from '@radix-ui/react-tabs';
 
 interface ProfileSidebarProps {
   user: {
-    name?: string;
+    id: string;
+    name: string;
     email: string;
-    avatar_url?: string;
+    avatar_url: string | null;
   } | null;
   activeTab: string;
   setActiveTab: (tab: string) => void;
   avatarUrl: string | null;
   uploadingAvatar: boolean;
   handleAvatarUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  handleLogout: () => void;
+  handleLogout: () => Promise<void>;
 }
 
 const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
@@ -29,90 +34,97 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
   handleAvatarUpload,
   handleLogout
 }) => {
+  const tabs = [
+    { id: "profile", label: "الملف الشخصي", icon: User },
+    { id: "orders", label: "طلباتي", icon: ShoppingBag },
+    { id: "notifications", label: "إعدادات الإشعارات", icon: Bell },
+    { id: "settings", label: "الإعدادات", icon: Settings },
+  ];
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-    >
-      <Card className="sticky top-24">
-        <CardContent className="p-4">
-          <div className="flex flex-col items-center py-6">
-            <div className="relative group mb-4">
-              <div className={`w-24 h-24 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center border-4 border-white shadow-md ${uploadingAvatar ? 'opacity-50' : ''}`}>
-                {avatarUrl ? (
-                  <img 
-                    src={avatarUrl} 
-                    alt="صورة المستخدم" 
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <User className="h-12 w-12 text-gray-400" />
-                )}
-              </div>
-              <label 
-                htmlFor="avatar-upload" 
-                className="absolute bottom-0 right-0 bg-red-600 hover:bg-red-700 text-white p-2 rounded-full cursor-pointer shadow-md transition-all"
-              >
-                {uploadingAvatar ? (
-                  <span className="animate-spin block w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
-                ) : (
-                  <div className="h-4 w-4 flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
-                      <circle cx="12" cy="13" r="3" />
-                    </svg>
-                  </div>
-                )}
+    <Card className="h-fit">
+      <CardContent className="p-6">
+        {/* User Info */}
+        <div className="text-center mb-6">
+          <div className="relative inline-block mb-4">
+            <Avatar className="h-20 w-20 mx-auto">
+              <AvatarImage src={avatarUrl || ''} alt={user?.name || 'صورة المستخدم'} />
+              <AvatarFallback className="bg-red-100 text-red-600 text-lg">
+                {user?.name?.[0]?.toUpperCase() || 'U'}
+              </AvatarFallback>
+            </Avatar>
+            
+            <div className="absolute bottom-0 right-0">
+              <label htmlFor="avatar-upload" className="cursor-pointer">
+                <div className="bg-red-600 hover:bg-red-700 text-white p-1.5 rounded-full shadow-lg transition-colors">
+                  {uploadingAvatar ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Camera className="w-4 h-4" />
+                  )}
+                </div>
               </label>
-              <input 
-                id="avatar-upload" 
-                type="file" 
-                accept="image/*" 
+              <input
+                id="avatar-upload"
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarUpload}
                 className="hidden"
-                onChange={handleAvatarUpload} 
                 disabled={uploadingAvatar}
               />
             </div>
-            <h3 className="text-xl font-bold mb-1">{user?.name || 'المستخدم'}</h3>
-            <p className="text-sm text-gray-500 mb-3">{user?.email}</p>
-            <div className="w-full mt-2">
-              <Button 
-                variant="destructive" 
-                className="w-full flex items-center justify-center gap-2"
-                onClick={handleLogout}
-              >
-                <LogOut className="h-4 w-4" />
-                <span>تسجيل الخروج</span>
-              </Button>
-            </div>
           </div>
           
-          <div className="mt-2">
-            <div className="flex flex-col space-y-1">
-              <TabsList className="grid grid-cols-1 h-auto bg-transparent mb-4">
-                {[
-                  { id: "profile", icon: <User className="h-4 w-4 ml-2" />, label: "المعلومات الشخصية" },
-                  { id: "orders", icon: <Package className="h-4 w-4 ml-2" />, label: "طلباتي" },
-                  { id: "notifications", icon: <Bell className="h-4 w-4 ml-2" />, label: "الإشعارات" },
-                  { id: "settings", icon: <Settings className="h-4 w-4 ml-2" />, label: "الإعدادات" }
-                ].map(item => (
-                  <TabsTrigger 
-                    key={item.id}
-                    value={item.id} 
-                    className={`flex items-center justify-start p-3 mb-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 ${activeTab === item.id ? 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400' : ''}`}
-                    onClick={() => setActiveTab(item.id)}
-                  >
-                    {item.icon}
-                    <span>{item.label}</span>
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </motion.div>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">{user?.name}</h2>
+          <p className="text-gray-600 dark:text-gray-400">{user?.email}</p>
+        </div>
+
+        {/* Navigation Tabs */}
+        <TabsList className="grid w-full grid-cols-1 gap-2 mb-6 bg-transparent h-auto p-0">
+          {tabs.map((tab) => {
+            const IconComponent = tab.icon;
+            return (
+              <TabsTrigger
+                key={tab.id}
+                value={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`w-full justify-start p-3 text-right data-[state=active]:bg-red-50 dark:data-[state=active]:bg-red-900/20 data-[state=active]:text-red-600 dark:data-[state=active]:text-red-400 hover:bg-gray-50 dark:hover:bg-gray-800 ${
+                  activeTab === tab.id 
+                    ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800' 
+                    : 'bg-transparent text-gray-700 dark:text-gray-300'
+                }`}
+              >
+                <div className="flex items-center w-full">
+                  <IconComponent className="w-4 h-4 ml-3" />
+                  <span>{tab.label}</span>
+                </div>
+              </TabsTrigger>
+            );
+          })}
+        </TabsList>
+
+        {/* Add link to notification settings page */}
+        <div className="mb-4">
+          <Link 
+            to="/settings/notifications"
+            className="flex items-center w-full p-3 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors"
+          >
+            <Bell className="w-4 h-4 ml-3" />
+            <span>إدارة الإشعارات</span>
+          </Link>
+        </div>
+
+        {/* Logout Button */}
+        <Button
+          variant="outline"
+          className="w-full border-red-600 text-red-600 hover:bg-red-50 dark:border-red-400 dark:text-red-400 dark:hover:bg-red-900/20"
+          onClick={handleLogout}
+        >
+          <LogOut className="w-4 h-4 ml-2" />
+          تسجيل الخروج
+        </Button>
+      </CardContent>
+    </Card>
   );
 };
 

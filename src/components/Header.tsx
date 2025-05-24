@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ShoppingCart, User, Menu, X } from 'lucide-react';
@@ -7,6 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import CartDropdown from './CartDropdown';
 import NotificationCenter from './notifications/NotificationCenter';
+import AdminSidebarLink from './AdminSidebarLink';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -83,6 +85,8 @@ const Header = () => {
                 >
                   تسجيل الخروج
                 </Button>
+                {/* Admin Link - إضافة رابط لوحة التحكم */}
+                <AdminSidebarLink />
               </div>
             ) : (
               <Link to="/auth">
@@ -141,6 +145,8 @@ const Header = () => {
                   >
                     تسجيل الخروج
                   </Button>
+                  {/* Admin Link for Mobile */}
+                  <AdminSidebarLink />
                 </div>
               ) : (
                 <div className="pt-4 border-t">
