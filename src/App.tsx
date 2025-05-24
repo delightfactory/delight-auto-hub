@@ -1,42 +1,45 @@
+
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
-import MainLayout from './layouts/MainLayout';
+import { MainLayout } from './components/MainLayout';
 import AdminLayout from './layouts/AdminLayout';
-import HomePage from './pages/HomePage';
+import HomePage from './pages/Index';
 import ProductsPage from './pages/ProductsPage';
-import ProductDetailsPage from './pages/ProductDetailsPage';
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
+import ProductDetailsPage from './pages/ProductPage';
+import LoginPage from './pages/AuthPage';
+import RegisterPage from './pages/AuthPage';
 import ProfilePage from './pages/ProfilePage';
 import ContactPage from './pages/ContactPage';
 import AboutPage from './pages/AboutPage';
 import FactoryPage from './pages/FactoryPage';
 import ArticlesPage from './pages/ArticlesPage';
-import ArticleDetailsPage from './pages/ArticleDetailsPage';
-import CheckoutPage from './pages/CheckoutPage';
+import ArticleDetailsPage from './pages/ArticleDetailPage';
+import CheckoutPage from './pages/CartPage';
 import OrdersPage from './pages/OrdersPage';
-import AdminDashboardPage from './pages/admin/AdminDashboardPage';
-import AdminProductsPage from './pages/admin/AdminProductsPage';
-import AdminOrdersPage from './pages/admin/AdminOrdersPage';
-import AdminUsersPage from './pages/admin/AdminUsersPage';
+import AdminDashboardPage from './pages/admin/DashboardPage';
+import AdminProductsPage from './pages/admin/ProductsPage';
+import AdminOrdersPage from './pages/admin/OrdersPage';
+import AdminUsersPage from './pages/admin/CustomersPage';
 import AdminSettingsPage from './pages/admin/SettingsPage';
 import AdminCommentsPage from './pages/admin/CommentsPage';
-import AdminArticlesPage from './pages/admin/AdminArticlesPage';
+import AdminArticlesPage from './pages/admin/ArticlesPage';
 import { ThemeProvider } from "@/context/ThemeContext"
-import { QueryClient } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from "@/components/ui/toaster"
 import NotificationsPage from './pages/admin/NotificationsPage';
 import NotificationSettingsPage from './pages/NotificationSettingsPage';
+
+const queryClient = new QueryClient();
 
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
         <CartProvider>
-          <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-            <QueryClient>
+          <ThemeProvider>
+            <QueryClientProvider client={queryClient}>
               <div className="min-h-screen bg-background font-sans antialiased">
                 <Routes>
                   <Route path="/" element={<MainLayout><HomePage /></MainLayout>} />
@@ -77,7 +80,7 @@ function App() {
                 </Routes>
                 <Toaster />
               </div>
-            </QueryClient>
+            </QueryClientProvider>
           </ThemeProvider>
         </CartProvider>
       </AuthProvider>

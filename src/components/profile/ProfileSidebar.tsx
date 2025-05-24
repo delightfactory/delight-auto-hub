@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -13,9 +14,9 @@ import { Tabs } from '@radix-ui/react-tabs';
 interface ProfileSidebarProps {
   user: {
     id: string;
-    name: string;
+    name?: string;
     email: string;
-    avatar_url: string | null;
+    avatar_url?: string | null;
   } | null;
   activeTab: string;
   setActiveTab: (tab: string) => void;
@@ -75,7 +76,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
             </div>
           </div>
           
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white">{user?.name}</h2>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">{user?.name || 'مستخدم'}</h2>
           <p className="text-gray-600 dark:text-gray-400">{user?.email}</p>
         </div>
 

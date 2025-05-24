@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/sidebar';
 import { SidebarMenu } from './SidebarMenu';
 
-const MainLayout: React.FC = () => {
+const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { theme } = useTheme();
   const location = useLocation();
   
@@ -37,7 +37,7 @@ const MainLayout: React.FC = () => {
           
           <SidebarInset>
             <main className="flex-grow transition-all duration-300">
-              <Outlet />
+              {children}
             </main>
             <Footer />
           </SidebarInset>
@@ -47,4 +47,5 @@ const MainLayout: React.FC = () => {
   );
 };
 
+export { MainLayout };
 export default MainLayout;

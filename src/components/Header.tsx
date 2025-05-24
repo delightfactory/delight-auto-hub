@@ -86,7 +86,9 @@ const Header = () => {
                   تسجيل الخروج
                 </Button>
                 {/* Admin Link - إضافة رابط لوحة التحكم */}
-                <AdminSidebarLink />
+                <AdminSidebarLink>
+                  <span>لوحة التحكم</span>
+                </AdminSidebarLink>
               </div>
             ) : (
               <Link to="/auth">
@@ -146,7 +148,9 @@ const Header = () => {
                     تسجيل الخروج
                   </Button>
                   {/* Admin Link for Mobile */}
-                  <AdminSidebarLink />
+                  <AdminSidebarLink>
+                    <span>لوحة التحكم</span>
+                  </AdminSidebarLink>
                 </div>
               ) : (
                 <div className="pt-4 border-t">
