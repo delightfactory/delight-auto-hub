@@ -62,6 +62,56 @@ export type Database = {
           },
         ]
       }
+      broadcast_notifications: {
+        Row: {
+          created_at: string | null
+          data: Json | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          message: string
+          priority: number | null
+          target_role: string | null
+          title: string
+          type_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          data?: Json | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          message: string
+          priority?: number | null
+          target_role?: string | null
+          title: string
+          type_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          data?: Json | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          message?: string
+          priority?: number | null
+          target_role?: string | null
+          title?: string
+          type_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "broadcast_notifications_type_id_fkey"
+            columns: ["type_id"]
+            isOneToOne: false
+            referencedRelation: "notification_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           created_at: string
@@ -197,6 +247,141 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_preferences: {
+        Row: {
+          created_at: string | null
+          email_enabled: boolean | null
+          id: string
+          in_app_enabled: boolean | null
+          push_enabled: boolean | null
+          type_id: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email_enabled?: boolean | null
+          id?: string
+          in_app_enabled?: boolean | null
+          push_enabled?: boolean | null
+          type_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email_enabled?: boolean | null
+          id?: string
+          in_app_enabled?: boolean | null
+          push_enabled?: boolean | null
+          type_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_preferences_type_id_fkey"
+            columns: ["type_id"]
+            isOneToOne: false
+            referencedRelation: "notification_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_types: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          description: string | null
+          icon: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          created_at: string | null
+          data: Json | null
+          expires_at: string | null
+          id: string
+          is_read: boolean | null
+          message: string
+          priority: number | null
+          read_at: string | null
+          title: string
+          type_id: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          data?: Json | null
+          expires_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message: string
+          priority?: number | null
+          read_at?: string | null
+          title: string
+          type_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          data?: Json | null
+          expires_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          priority?: number | null
+          read_at?: string | null
+          title?: string
+          type_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_type_id_fkey"
+            columns: ["type_id"]
+            isOneToOne: false
+            referencedRelation: "notification_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_items: {
         Row: {
           created_at: string
@@ -206,7 +391,6 @@ export type Database = {
           product_name: string
           product_price: number
           quantity: number
-          temp_product_code: string | null
         }
         Insert: {
           created_at?: string
@@ -216,7 +400,6 @@ export type Database = {
           product_name: string
           product_price: number
           quantity: number
-          temp_product_code?: string | null
         }
         Update: {
           created_at?: string
@@ -226,7 +409,6 @@ export type Database = {
           product_name?: string
           product_price?: number
           quantity?: number
-          temp_product_code?: string | null
         }
         Relationships: [
           {
@@ -237,11 +419,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "order_items_product_code_fkey"
+            foreignKeyName: "order_items_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
-            referencedColumns: ["product_code"]
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -308,6 +490,7 @@ export type Database = {
           product_code: string
           stock: number | null
           updated_at: string
+          usage_instructions: string | null
         }
         Insert: {
           category?: string | null
@@ -324,6 +507,7 @@ export type Database = {
           product_code: string
           stock?: number | null
           updated_at?: string
+          usage_instructions?: string | null
         }
         Update: {
           category?: string | null
@@ -340,6 +524,7 @@ export type Database = {
           product_code?: string
           stock?: number | null
           updated_at?: string
+          usage_instructions?: string | null
         }
         Relationships: [
           {
@@ -356,9 +541,40 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_unread_notifications_count: {
+        Args: { p_user_id?: string }
+        Returns: number
+      }
       is_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
+      }
+      mark_notification_as_read: {
+        Args: { p_notification_id: string }
+        Returns: boolean
+      }
+      send_broadcast_notification: {
+        Args: {
+          p_type_name: string
+          p_title: string
+          p_message: string
+          p_target_role?: string
+          p_data?: Json
+          p_priority?: number
+          p_expires_at?: string
+        }
+        Returns: string
+      }
+      send_notification: {
+        Args: {
+          p_user_id: string
+          p_type_name: string
+          p_title: string
+          p_message: string
+          p_data?: Json
+          p_priority?: number
+        }
+        Returns: string
       }
     }
     Enums: {

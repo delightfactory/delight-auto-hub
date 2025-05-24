@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -41,6 +40,7 @@ const AdminSettingsPage = lazy(() => import("./pages/admin/SettingsPage"));
 const AppearancePage = lazy(() => import("./pages/admin/AppearancePage"));
 const CommentsPage = lazy(() => import("./pages/admin/CommentsPage"));
 const BackupsPage = lazy(() => import("./pages/admin/BackupsPage"));
+const NotificationsPage = lazy(() => import("./pages/admin/NotificationsPage"));
 
 // Create custom QueryClient with optimized settings
 const queryClient = new QueryClient({
@@ -107,7 +107,7 @@ const AnimatedRoutes = () => {
               <Route path="appearance" element={<AppearancePage />} />
               <Route path="comments" element={<CommentsPage />} />
               <Route path="backups" element={<BackupsPage />} />
-              <Route path="notifications" element={<CommentsPage />} />
+              <Route path="notifications" element={<NotificationsPage />} />
               <Route path="help" element={<BackupsPage />} />
             </Route>
           </Routes>
