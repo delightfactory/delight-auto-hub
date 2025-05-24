@@ -42,7 +42,7 @@ const NotificationsList: React.FC = () => {
   const loadNotifications = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data: rawData, error } = await supabase
         .from('notifications')
         .select(`
           id,
@@ -66,12 +66,20 @@ const NotificationsList: React.FC = () => {
 
       if (error) throw error;
       
-      const formattedData = data?.map(item => ({
-        ...item,
-        user: item.customers ? {
-          name: item.customers.name,
-          email: item.customers.email
-        } : null
+      const formattedData: NotificationHistory[] = rawData?.map(item => ({
+        id: item.id,
+        title: item.title,
+        message: item.message,
+        is_read: item.is_read,
+        priority: item.priority,
+        created_at: item.created_at,
+        user: Array.isArray(item.customers) && item.customers.length > 0 ? {
+          name: item.customers[0].name,
+          email: item.customers[0].email
+        } : null,
+        notification_types: Array.isArray(item.notification_types) && item.notification_types.length > 0 
+          ? item.notification_types[0] 
+          : { name: '', description: '', color: '#3B82F6' }
       })) || [];
       
       setNotifications(formattedData);

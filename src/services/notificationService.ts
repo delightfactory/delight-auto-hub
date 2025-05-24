@@ -50,7 +50,7 @@ export interface BroadcastNotification {
 export const notificationService = {
   // جلب إشعارات المستخدم
   async getUserNotifications(userId: string, limit = 20, offset = 0) {
-    const { data, error } = await supabase
+    const { data: notificationsData, error } = await supabase
       .from('notifications')
       .select(`
         *,
@@ -65,12 +65,12 @@ export const notificationService = {
       .range(offset, offset + limit - 1);
 
     if (error) throw error;
-    return data as Notification[];
+    return notificationsData as Notification[];
   },
 
   // جلب الإشعارات العامة
   async getBroadcastNotifications(userRole: string = 'customer') {
-    const { data, error } = await supabase
+    const { data: broadcastData, error } = await supabase
       .from('broadcast_notifications')
       .select(`
         *,
@@ -87,7 +87,7 @@ export const notificationService = {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data as BroadcastNotification[];
+    return broadcastData as BroadcastNotification[];
   },
 
   // تحديد إشعار كمقروء
@@ -118,12 +118,12 @@ export const notificationService = {
 
   // حساب عدد الإشعارات غير المقروءة
   async getUnreadCount(userId?: string) {
-    const { data, error } = await supabase.rpc('get_unread_notifications_count', {
+    const { data: countData, error } = await supabase.rpc('get_unread_notifications_count', {
       p_user_id: userId || null
     });
 
     if (error) throw error;
-    return data as number;
+    return countData as number;
   },
 
   // إرسال إشعار (للأدمن)
@@ -132,20 +132,20 @@ export const notificationService = {
     typeName: string,
     title: string,
     message: string,
-    data: any = {},
+    notificationData: any = {},
     priority: number = 1
   ) {
-    const { data, error } = await supabase.rpc('send_notification', {
+    const { data: resultData, error } = await supabase.rpc('send_notification', {
       p_user_id: userId,
       p_type_name: typeName,
       p_title: title,
       p_message: message,
-      p_data: data,
+      p_data: notificationData,
       p_priority: priority
     });
 
     if (error) throw error;
-    return data;
+    return resultData;
   },
 
   // إرسال إشعار عام (للأدمن)
@@ -154,33 +154,33 @@ export const notificationService = {
     title: string,
     message: string,
     targetRole: string = 'customer',
-    data: any = {},
+    broadcastData: any = {},
     priority: number = 1,
     expiresAt?: string
   ) {
-    const { data, error } = await supabase.rpc('send_broadcast_notification', {
+    const { data: broadcastResult, error } = await supabase.rpc('send_broadcast_notification', {
       p_type_name: typeName,
       p_title: title,
       p_message: message,
       p_target_role: targetRole,
-      p_data: data,
+      p_data: broadcastData,
       p_priority: priority,
       p_expires_at: expiresAt || null
     });
 
     if (error) throw error;
-    return data;
+    return broadcastResult;
   },
 
   // جلب أنواع الإشعارات
   async getNotificationTypes() {
-    const { data, error } = await supabase
+    const { data: typesData, error } = await supabase
       .from('notification_types')
       .select('*')
       .order('name');
 
     if (error) throw error;
-    return data as NotificationType[];
+    return typesData as NotificationType[];
   },
 
   // حذف إشعار
