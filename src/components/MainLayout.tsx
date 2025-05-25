@@ -1,9 +1,10 @@
-
 import React, { useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { useTheme } from '@/context/ThemeContext';
 import Header from './Header';
 import Footer from './Footer';
+import MobileTopBar from './MobileTopBar';
+import MobileNavigation from './MobileNavigation';
 import {
   SidebarProvider,
   Sidebar,
@@ -25,7 +26,12 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
     <SidebarProvider defaultOpen={false}>
       <div className="flex flex-col min-h-screen w-full" dir="rtl">
-        <Header />
+        <div className="hidden sm:block">
+          <Header />
+        </div>
+        <div className="sm:hidden">
+          <MobileTopBar />
+        </div>
         
         <div className="flex flex-1 pt-14"> {/* Add padding top to account for fixed header */}
           <Sidebar side="right" variant="floating" className="hidden lg:flex"> 
@@ -36,10 +42,13 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           </Sidebar>
           
           <SidebarInset>
-            <main className="flex-grow transition-all duration-300">
+            <main className="flex-grow transition-all duration-300 pb-14 sm:pb-0">
               {children}
             </main>
             <Footer />
+            <div className="sm:hidden">
+              <MobileNavigation />
+            </div>
           </SidebarInset>
         </div>
       </div>

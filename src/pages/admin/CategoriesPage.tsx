@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { 
@@ -9,6 +8,10 @@ import {
   Trash2, 
   FileX,
   Tag,
+  ShoppingCart,
+  Heart,
+  Star,
+  Truck,
   TagsIcon,
   ImageIcon
 } from 'lucide-react';
@@ -65,6 +68,7 @@ const categorySchema = z.object({
   description: z.string().optional(),
   image: z.string().optional().nullable(),
   parent_id: z.string().optional().nullable(),
+  icon: z.string().optional().nullable(),
 });
 
 type CategoryFormValues = z.infer<typeof categorySchema>;
@@ -75,6 +79,7 @@ const CategoriesPage = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<any>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadingIcon, setUploadingIcon] = useState(false);
   
   const {
     data: categories = [],
@@ -93,6 +98,7 @@ const CategoriesPage = () => {
       description: '',
       image: null,
       parent_id: null,
+      icon: null,
     }
   });
   
@@ -104,6 +110,7 @@ const CategoriesPage = () => {
       description: category.description || '',
       image: category.image,
       parent_id: category.parent_id,
+      icon: category.icon,
     });
     setIsDialogOpen(true);
   };
@@ -116,6 +123,7 @@ const CategoriesPage = () => {
       description: '',
       image: null,
       parent_id: null,
+      icon: null,
     });
     setIsDialogOpen(true);
   };
@@ -216,6 +224,33 @@ const CategoriesPage = () => {
   const handleRemoveImage = () => {
     form.setValue('image', null);
   };
+  
+  // رفع أيقونة الفئة
+  const handleIconUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+    const file = files[0];
+    setUploadingIcon(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2,15)}_${Date.now()}.${fileExt}`;
+      const filePath = `icons/${fileName}`;
+      const { data, error } = await supabase.storage.from('category-icons').upload(filePath, file);
+      if (error) throw error;
+      // البوكت عام، استخدم الرابط العام
+      const { data: { publicUrl } } = supabase.storage
+        .from('category-icons')
+        .getPublicUrl(filePath);
+      form.setValue('icon', publicUrl);
+      toast({ title: 'تم رفع الأيقونة', description: 'تم رفع أيقونة الفئة بنجاح' });
+    } catch (error) {
+      console.error('خطأ في رفع الأيقونة:', error);
+      toast({ title: 'خطأ في رفع الأيقونة', description: 'حدث خطأ أثناء رفع الأيقونة', variant: 'destructive' });
+    } finally {
+      setUploadingIcon(false);
+    }
+  };
+  const handleRemoveIcon = () => form.setValue('icon', null);
   
   // تصفية الفئات بناءً على مصطلح البحث
   const filteredCategories = searchTerm
@@ -466,6 +501,55 @@ const CategoriesPage = () => {
                     <FormDescription>
                       اختياري: يمكنك إضافة صورة للفئة
                     </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="icon"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>أيقونة الفئة</FormLabel>
+                    <FormControl>
+                      <div>
+                        {field.value ? (
+                          <div className="relative border rounded-lg overflow-hidden mb-2">
+                            <img
+                              src={field.value}
+                              alt="أيقونة الفئة"
+                              className="w-16 h-16 object-cover rounded"
+                            />
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="sm"
+                              className="absolute top-2 left-2"
+                              onClick={handleRemoveIcon}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                            <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer">
+                              <ImageIcon className="w-8 h-8 mb-2 text-gray-500" />
+                              <p className="text-sm text-gray-500">اضغط لرفع أيقونة</p>
+                              <Input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={handleIconUpload}
+                                disabled={uploadingIcon}
+                              />
+                            </label>
+                          </div>
+                        )}
+                        {uploadingIcon && <p className="text-xs text-center mt-1">جارِ رفع الأيقونة...</p>}
+                      </div>
+                    </FormControl>
+                    <FormDescription>اختياري: يمكنك إضافة أيقونة مخصصة للفئة</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

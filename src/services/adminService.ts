@@ -37,6 +37,16 @@ export const fetchDashboardStats = async () => {
       .from('customers')
       .select('*', { count: 'exact', head: true });
 
+    // حساب متوسط قيمة الطلبات من جميع total_amounts
+    const { data: ordersList, error: ordersListError } = await supabase
+      .from('orders')
+      .select('total_amount');
+    if (ordersListError) {
+      console.error("خطأ في جلب قيم الطلبات لحساب المتوسط:", ordersListError);
+    }
+    const sumAmount = ordersList?.reduce((acc, o) => acc + (o.total_amount ?? 0), 0) ?? 0;
+    const averageOrder = ordersList && ordersList.length > 0 ? sumAmount / ordersList.length : 0;
+
     // آخر الطلبات
     const { data: recentOrders, error: recentOrdersError } = await supabase
       .from('orders')
@@ -51,11 +61,22 @@ export const fetchDashboardStats = async () => {
       console.error("خطأ في جلب الإحصائيات:", { productsError, ordersError, customersError, recentOrdersError });
     }
 
+    // عدد الطلبات الجديدة (قيد المعالجة أو قيد الانتظار)
+    const { count: newOrdersCount, error: newOrdersError } = await supabase
+      .from('orders')
+      .select('*', { count: 'exact', head: true })
+      .in('status', ['processing', 'pending']);
+    if (newOrdersError) {
+      console.error("خطأ في جلب عدد الطلبات الجديدة:", newOrdersError);
+    }
+
     return {
       productsCount: productsCount || 0,
       ordersCount: ordersCount || 0,
       customersCount: customersCount || 0,
-      recentOrders: recentOrders || []
+      averageOrder,
+      recentOrders: recentOrders || [],
+      newOrdersCount: newOrdersCount || 0
     };
   } catch (error) {
     console.error("خطأ غير متوقع في جلب الإحصائيات:", error);
@@ -63,7 +84,9 @@ export const fetchDashboardStats = async () => {
       productsCount: 0,
       ordersCount: 0,
       customersCount: 0,
-      recentOrders: []
+      averageOrder: 0,
+      recentOrders: [],
+      newOrdersCount: 0
     };
   }
 };
@@ -155,16 +178,20 @@ export const productService = {
 
 // خدمات إدارة الطلبات
 export const orderService = {
-  // جلب جميع الطلبات
-  getOrders: async () => {
-    const { data, error } = await supabase
+  // جلب الطلبات (جميعها أو الخاصة بعميل محدد)
+  getOrders: async (customerId?: string) => {
+    let query = supabase
       .from('orders')
       .select(`
         *,
         customer:customers(name, email)
       `)
       .order('created_at', { ascending: false });
-    
+    if (customerId) {
+      query = query.eq('customer_id', customerId);
+    }
+    const { data, error } = await query;
+
     if (error) {
       console.error("خطأ في جلب الطلبات:", error);
       throw error;
@@ -186,7 +213,7 @@ export const orderService = {
 
     if (error || !order) {
       console.error(`خطأ في جلب الطلب رقم ${id}:`, error);
-      throw error || new Error("Order not found");
+      throw error;
     }
 
     // جلب تفاصيل المنتجات وربطها بكل عنصر

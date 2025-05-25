@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, Search } from 'lucide-react';
@@ -14,7 +13,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ toggleSidebar }) => {
   return (
     <header className="bg-white dark:bg-gray-800 shadow-sm py-3 px-4 lg:px-6 flex justify-between items-center">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="sm" onClick={toggleSidebar} className="lg:hidden">
+        <Button variant="ghost" size="sm" onClick={toggleSidebar} className="mr-2">
           <Menu size={20} />
         </Button>
         

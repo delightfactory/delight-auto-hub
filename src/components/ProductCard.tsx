@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart, Eye, Star, Heart, Check } from 'lucide-react';
@@ -36,6 +36,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const [isLiked, setIsLiked] = React.useState(false);
   const [isAddedToCart, setIsAddedToCart] = React.useState(false);
   const [imageError, setImageError] = React.useState(false);
+  const navigate = useNavigate();
   
   // Check if item is already in cart
   React.useEffect(() => {
@@ -85,12 +86,13 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   return (
     <motion.div 
+      onClick={() => navigate(`/products/${id}`)}
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
       whileHover={{ y: -8, boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)" }}
       className={cn(
-        'group overflow-hidden rounded-xl bg-white border border-gray-200 shadow-sm hover:shadow-xl transition-all duration-300',
+        'cursor-pointer group overflow-hidden rounded-xl bg-white border border-gray-200 shadow-sm hover:shadow-xl transition-all duration-300',
         className
       )}
     >
@@ -132,44 +134,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
         />
         
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-        
-        <motion.div 
-          className="absolute bottom-4 right-4 left-4 flex justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 gap-2"
-        >
-          <Link to={`/products/${id}`} className="flex-1">
-            <motion.div 
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="w-full transition duration-150 ease-in-out"
-            >
-              <Button variant="secondary" className="w-full bg-white/90 backdrop-blur-sm hover:bg-white shadow-md transition duration-150 ease-in-out">
-                <Eye className="w-4 h-4 ml-2" />
-                عرض المنتج
-              </Button>
-            </motion.div>
-          </Link>
-          
-          <motion.div 
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={handleAddToCart}
-            className="flex-1"
-          >
-            <Button className="w-full bg-amazon-yellow hover:bg-amber-400 text-amazon-dark shadow-md group transition duration-150 ease-in-out">
-              {isAddedToCart ? (
-                <>
-                  <Check className="w-4 h-4 ml-2" />
-                  في السلة
-                </>
-              ) : (
-                <>
-                  <ShoppingCart className="w-4 h-4 ml-2 group-hover:animate-pulse" />
-                  إضافة للسلة
-                </>
-              )}
-            </Button>
-          </motion.div>
-        </motion.div>
       </div>
       
       <div className="p-6">
@@ -198,17 +162,17 @@ const ProductCard: React.FC<ProductCardProps> = ({
           </AnimatePresence>
         </div>
         
-        <h3 className="text-xl font-bold mb-2 text-amazon-dark line-clamp-1 group-hover:text-amazon-link transition-colors">
+        <h3 className="text-xl font-bold mb-1 text-amazon-dark sm:line-clamp-1 group-hover:text-amazon-link transition-colors">
           {name}
         </h3>
         
-        <p className="text-gray-600 mb-4 text-sm line-clamp-2">
+        <p className="text-gray-600 mb-2 text-sm line-clamp-2">
           {description}
         </p>
         
         {/* عرض السعر والخصم */}
         {price && originalPrice ? (
-          <div className="mb-4 flex items-center gap-3">
+          <div className="mb-2 flex items-center gap-3">
             <span className="text-lg font-bold text-delight-600 animate-pulse">
               {price}
             </span>
@@ -224,7 +188,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
               if (!isNaN(orig) && !isNaN(curr) && orig > curr) {
                 const percent = Math.round(((orig - curr) / orig) * 100);
                 return (
-                  <span className="bg-gradient-to-r from-red-400 to-amber-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-md animate-bounce">
+                  <span className="inline-flex items-center justify-center bg-gradient-to-r from-red-400 to-red-700 text-white text-sm font-semibold px-3 py-1.5 rounded-full shadow-md animate-bounce">
                     خصم {percent}%
                   </span>
                 );
@@ -236,17 +200,20 @@ const ProductCard: React.FC<ProductCardProps> = ({
           <div className="amazon-price mb-4 text-lg">{price}</div>
         )}
         
-        <div className="flex justify-between">
-          <Link to={`/products/${id}`}>
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button variant="outline" className="border-gray-200 text-amazon-link hover:bg-gray-50 hover:text-amazon-link hover:border-gray-300 transition duration-150 ease-in-out">
-                <Eye className="w-4 h-4 ml-2" />
-                <span>التفاصيل</span>
-              </Button>
-            </motion.div>
-          </Link>
+        <div className="flex flex-col sm:flex-row justify-between gap-2">
+          <motion.div className="w-full sm:w-auto" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <Button
+              variant="outline"
+              className="border-gray-200 text-amazon-link hover:bg-gray-50 hover:text-amazon-link hover:border-gray-300 transition duration-150 ease-in-out"
+              onClick={() => navigate(`/products/${id}`)}
+            >
+              <Eye className="w-4 h-4 ml-2" />
+              <span>التفاصيل</span>
+            </Button>
+          </motion.div>
           
           <motion.div 
+            className="w-full sm:w-auto"
             whileHover={{ scale: 1.05 }} 
             whileTap={{ scale: 0.95 }}
             animate={isAddedToCart ? { y: [0, -5, 0] } : {}}

@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface Notification {
@@ -70,6 +69,7 @@ export const notificationService = {
 
   // جلب الإشعارات العامة
   async getBroadcastNotifications(userRole: string = 'customer') {
+    const now = new Date().toISOString();
     const { data: broadcastData, error } = await supabase
       .from('broadcast_notifications')
       .select(`
@@ -82,7 +82,7 @@ export const notificationService = {
       `)
       .eq('is_active', true)
       .in('target_role', [userRole, 'all'])
-      .gt('expires_at', new Date().toISOString())
+      .or(`expires_at.gt.${now},expires_at.is.null`)
       .order('priority', { ascending: false })
       .order('created_at', { ascending: false });
 

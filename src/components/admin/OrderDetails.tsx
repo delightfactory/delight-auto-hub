@@ -44,10 +44,11 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onStatusUpdate }) 
   
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'completed':
+      case 'delivered':
         return 'bg-green-100 text-green-800 border-green-300 hover:bg-green-50';
-      case 'processing':
+      case 'shipped':
         return 'bg-blue-100 text-blue-800 border-blue-300 hover:bg-blue-50';
+      case 'paid':
       case 'pending':
         return 'bg-yellow-100 text-yellow-800 border-yellow-300 hover:bg-yellow-50';
       case 'cancelled':
@@ -59,9 +60,11 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onStatusUpdate }) 
   
   const translateStatus = (status: string) => {
     switch (status) {
-      case 'completed':
+      case 'delivered':
         return 'مكتمل';
-      case 'processing':
+      case 'shipped':
+        return 'تم الشحن';
+      case 'paid':
         return 'قيد المعالجة';
       case 'pending':
         return 'قيد الانتظار';
@@ -128,8 +131,9 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onStatusUpdate }) 
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="pending">قيد الانتظار</SelectItem>
-            <SelectItem value="processing">قيد المعالجة</SelectItem>
-            <SelectItem value="completed">مكتمل</SelectItem>
+            <SelectItem value="paid">قيد المعالجة</SelectItem>
+            <SelectItem value="shipped">تم الشحن</SelectItem>
+            <SelectItem value="delivered">مكتمل</SelectItem>
             <SelectItem value="cancelled">ملغي</SelectItem>
           </SelectContent>
         </Select>
@@ -209,10 +213,10 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onStatusUpdate }) 
                   </TableCell>
                   <TableCell>{item.product_id || item.temp_product_code}</TableCell>
                   <TableCell>{item.product?.name || item.product_name}</TableCell>
-                  <TableCell>{item.product_price.toLocaleString('en-US')} ر.س</TableCell>
+                  <TableCell>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'EGP' }).format(item.product_price)}</TableCell>
                   <TableCell>{item.quantity}</TableCell>
                   <TableCell>
-                    {(item.product_price * item.quantity).toLocaleString('en-US')} ر.س
+                    {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'EGP' }).format(item.product_price * item.quantity)}
                   </TableCell>
                 </TableRow>
               ))}
@@ -224,15 +228,15 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onStatusUpdate }) 
         <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-6 text-gray-800 font-medium">
           <div>
             <p className="text-gray-500">المجموع الفرعي</p>
-            <p>{itemsTotal.toLocaleString('en-US')} ر.س</p>
+            <p>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'EGP' }).format(itemsTotal)}</p>
           </div>
           <div>
             <p className="text-gray-500">تكلفة الشحن</p>
-            <p>{shippingCost.toLocaleString('en-US')} ر.س</p>
+            <p>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'EGP' }).format(shippingCost)}</p>
           </div>
           <div>
             <p className="text-gray-500">الإجمالي الكلي</p>
-            <p className="font-semibold">{order.total_amount.toLocaleString('en-US')} ر.س</p>
+            <p className="font-semibold">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'EGP' }).format(order.total_amount)}</p>
           </div>
         </div>
       </div>

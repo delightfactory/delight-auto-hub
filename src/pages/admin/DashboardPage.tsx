@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { 
@@ -17,6 +16,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { Link } from 'react-router-dom';
 import { fetchDashboardStats, orderService } from '@/services/adminService';
 import {
   Table,
@@ -35,7 +35,7 @@ const DashboardPage = () => {
   
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return new Intl.DateTimeFormat('ar-SA', {
+    return new Intl.DateTimeFormat('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -143,9 +143,9 @@ const DashboardPage = () => {
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400">متوسط الطلب</p>
                 <h3 className="text-3xl font-bold mt-2">
                   {stats?.ordersCount && stats.ordersCount > 0 ? (
-                    `${200} ر.س`
+                    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'EGP' }).format(stats.averageOrder)
                   ) : (
-                    '0 ر.س'
+                    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'EGP' }).format(0)
                   )}
                 </h3>
               </div>
@@ -180,7 +180,7 @@ const DashboardPage = () => {
                     <TableCell className="font-medium">{order.id.substring(0, 8)}</TableCell>
                     <TableCell>{order.customer?.name || 'غير متاح'}</TableCell>
                     <TableCell>{formatDate(order.created_at)}</TableCell>
-                    <TableCell>{order.total_amount} ر.س</TableCell>
+                    <TableCell>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'EGP' }).format(order.total_amount)}</TableCell>
                     <TableCell>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(order.status)}`}>
                         {translateStatus(order.status)}
@@ -207,18 +207,24 @@ const DashboardPage = () => {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Button variant="outline" className="h-auto py-4 flex flex-col items-center">
-              <Package className="h-6 w-6 mb-2" />
-              <span>إضافة منتج جديد</span>
-            </Button>
-            <Button variant="outline" className="h-auto py-4 flex flex-col items-center">
-              <FileText className="h-6 w-6 mb-2" />
-              <span>إضافة مقالة جديدة</span>
-            </Button>
-            <Button variant="outline" className="h-auto py-4 flex flex-col items-center">
-              <Tag className="h-6 w-6 mb-2" />
-              <span>إضافة فئة جديدة</span>
-            </Button>
+            <Link to="/admin/products">
+              <Button variant="outline" className="h-auto py-4 flex flex-col items-center">
+                <Package className="h-6 w-6 mb-2" />
+                <span>إضافة منتج جديد</span>
+              </Button>
+            </Link>
+            <Link to="/admin/articles">
+              <Button variant="outline" className="h-auto py-4 flex flex-col items-center">
+                <FileText className="h-6 w-6 mb-2" />
+                <span>إضافة مقالة جديدة</span>
+              </Button>
+            </Link>
+            <Link to="/admin/categories">
+              <Button variant="outline" className="h-auto py-4 flex flex-col items-center">
+                <Tag className="h-6 w-6 mb-2" />
+                <span>إضافة فئة جديدة</span>
+              </Button>
+            </Link>
           </div>
         </CardContent>
       </Card>

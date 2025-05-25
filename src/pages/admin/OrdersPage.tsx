@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import { 
   Search, 
   Loader2, 
@@ -10,7 +11,8 @@ import {
   X,
   Check,
   Clock,
-  Ban
+  Ban,
+  Truck
 } from 'lucide-react';
 import { orderService } from '@/services/adminService';
 import { Button } from '@/components/ui/button';
@@ -43,6 +45,8 @@ import OrderDetails from '@/components/admin/OrderDetails';
 
 const OrdersPage = () => {
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const customerId = searchParams.get('customer') || undefined;
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
@@ -52,8 +56,8 @@ const OrdersPage = () => {
     isLoading,
     refetch
   } = useQuery({
-    queryKey: ['admin-orders'],
-    queryFn: orderService.getOrders
+    queryKey: ['admin-orders', customerId],
+    queryFn: () => orderService.getOrders(customerId)
   });
   
   const formatDate = (dateString: string) => {
@@ -69,10 +73,12 @@ const OrdersPage = () => {
   
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'completed':
+      case 'delivered':
         return 'text-green-600 bg-green-100 border-green-300';
-      case 'processing':
+      case 'shipped':
         return 'text-blue-600 bg-blue-100 border-blue-300';
+      case 'paid':
+        return 'text-yellow-600 bg-yellow-100 border-yellow-300';
       case 'pending':
         return 'text-yellow-600 bg-yellow-100 border-yellow-300';
       case 'cancelled':
@@ -84,10 +90,12 @@ const OrdersPage = () => {
   
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'completed':
+      case 'delivered':
         return <Check className="h-4 w-4 text-green-600" />;
-      case 'processing':
-        return <Clock className="h-4 w-4 text-blue-600" />;
+      case 'shipped':
+        return <Truck className="h-4 w-4 text-blue-600" />;
+      case 'paid':
+        return <Clock className="h-4 w-4 text-yellow-600" />;
       case 'pending':
         return <Clock className="h-4 w-4 text-yellow-600" />;
       case 'cancelled':
@@ -99,9 +107,11 @@ const OrdersPage = () => {
   
   const translateStatus = (status: string) => {
     switch (status) {
-      case 'completed':
+      case 'delivered':
         return 'مكتمل';
-      case 'processing':
+      case 'shipped':
+        return 'تم الشحن';
+      case 'paid':
         return 'قيد المعالجة';
       case 'pending':
         return 'قيد الانتظار';
@@ -157,8 +167,9 @@ const OrdersPage = () => {
             <SelectContent>
               <SelectItem value="all">جميع الحالات</SelectItem>
               <SelectItem value="pending">قيد الانتظار</SelectItem>
-              <SelectItem value="processing">قيد المعالجة</SelectItem>
-              <SelectItem value="completed">مكتمل</SelectItem>
+              <SelectItem value="paid">قيد المعالجة</SelectItem>
+              <SelectItem value="shipped">تم الشحن</SelectItem>
+              <SelectItem value="delivered">مكتمل</SelectItem>
               <SelectItem value="cancelled">ملغي</SelectItem>
             </SelectContent>
           </Select>
@@ -192,7 +203,7 @@ const OrdersPage = () => {
                   <TableCell>{order.customer?.name || 'غير متاح'}</TableCell>
                   <TableCell>{order.customer?.email || 'غير متاح'}</TableCell>
                   <TableCell>{formatDate(order.created_at)}</TableCell>
-                  <TableCell>{order.total_amount.toLocaleString('en-US')} ر.س</TableCell>
+                  <TableCell>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'EGP' }).format(order.total_amount)}</TableCell>
                   <TableCell>{order.payment_method}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
@@ -230,8 +241,9 @@ const OrdersPage = () => {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="pending">قيد الانتظار</SelectItem>
-                          <SelectItem value="processing">قيد المعالجة</SelectItem>
-                          <SelectItem value="completed">مكتمل</SelectItem>
+                          <SelectItem value="paid">قيد المعالجة</SelectItem>
+                          <SelectItem value="shipped">تم الشحن</SelectItem>
+                          <SelectItem value="delivered">مكتمل</SelectItem>
                           <SelectItem value="cancelled">ملغي</SelectItem>
                         </SelectContent>
                       </Select>

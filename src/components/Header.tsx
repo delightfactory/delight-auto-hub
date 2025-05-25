@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ShoppingCart, User, Menu, X } from 'lucide-react';
@@ -39,7 +38,6 @@ const Header = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
             <img src="/lovable-uploads/7bb28241-5759-4c8e-8fd4-83cedb7bea1e.png" alt="Delight Logo" className="h-10 w-auto" />
-            <span className="font-bold text-xl text-gray-900 hidden sm:block">ديلايت</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -69,26 +67,23 @@ const Header = () => {
             
             {/* User Menu */}
             {user ? (
-              <div className="flex items-center space-x-2 space-x-reverse">
+              <div className="flex items-center space-x-4">
                 <Link
                   to="/profile"
-                  className="hidden sm:flex items-center space-x-2 space-x-reverse text-sm text-gray-700 hover:text-red-600"
+                  className="hidden sm:flex items-center space-x-2 text-sm text-gray-700 hover:text-red-600"
                 >
                   <User className="w-4 h-4" />
                   <span>{user.name}</span>
                 </Link>
+                <AdminSidebarLink />
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={handleLogout}
-                  className="hidden sm:block text-sm"
+                  className="hidden sm:block text-sm text-gray-700 hover:text-red-600"
                 >
                   تسجيل الخروج
                 </Button>
-                {/* Admin Link - إضافة رابط لوحة التحكم */}
-                <AdminSidebarLink>
-                  <span>لوحة التحكم</span>
-                </AdminSidebarLink>
               </div>
             ) : (
               <Link to="/auth">
@@ -139,6 +134,7 @@ const Header = () => {
                     <User className="w-4 h-4" />
                     <span>{user.name}</span>
                   </Link>
+                  <AdminSidebarLink />
                   <Button
                     variant="ghost"
                     size="sm"
@@ -147,10 +143,6 @@ const Header = () => {
                   >
                     تسجيل الخروج
                   </Button>
-                  {/* Admin Link for Mobile */}
-                  <AdminSidebarLink>
-                    <span>لوحة التحكم</span>
-                  </AdminSidebarLink>
                 </div>
               ) : (
                 <div className="pt-4 border-t">

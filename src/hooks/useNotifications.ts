@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { notificationService, Notification, BroadcastNotification } from '@/services/notificationService';
@@ -87,43 +86,40 @@ export const useNotifications = () => {
   useEffect(() => {
     if (!user) return;
 
+    // قناة إشعارات المستخدم
     const channel = supabase
       .channel('user-notifications')
       .on(
         'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${user.id}`
-        },
+        { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
         (payload) => {
           fetchNotifications();
-          
-          // عرض توست للإشعار الجديد
-          toast({
-            title: payload.new.title,
-            description: payload.new.message,
-            variant: 'info'
-          });
+          toast({ title: payload.new.title, description: payload.new.message, variant: 'info' });
         }
       )
       .on(
         'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${user.id}`
-        },
-        () => {
+        { event: 'UPDATE', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
+        () => fetchNotifications()
+      )
+      .subscribe();
+
+    // قناة إشعارات البث
+    const broadcastChannel = supabase
+      .channel('broadcast-notifications')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'broadcast_notifications', filter: `target_role=eq.${user.role}` },
+        (payload) => {
           fetchNotifications();
+          toast({ title: payload.new.title, description: payload.new.message, variant: 'info' });
         }
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
+      supabase.removeChannel(broadcastChannel);
     };
   }, [user, toast]);
 

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
@@ -7,6 +6,7 @@ import { MainLayout } from './components/MainLayout';
 import AdminLayout from './layouts/AdminLayout';
 import HomePage from './pages/Index';
 import ProductsPage from './pages/ProductsPage';
+import BestDealsPage from './pages/BestDealsPage';
 import ProductDetailsPage from './pages/ProductPage';
 import LoginPage from './pages/AuthPage';
 import RegisterPage from './pages/AuthPage';
@@ -30,6 +30,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from "@/components/ui/toaster"
 import NotificationsPage from './pages/admin/NotificationsPage';
 import NotificationSettingsPage from './pages/NotificationSettingsPage';
+import AdminCategoriesPage from './pages/admin/CategoriesPage';
+import AdminAppearancePage from './pages/admin/AppearancePage';
+import AdminBackupsPage from './pages/admin/BackupsPage';
 
 const queryClient = new QueryClient();
 
@@ -55,6 +58,7 @@ function App() {
                   <Route path="/profile" element={<MainLayout><ProfilePage /></MainLayout>} />
                   <Route path="/checkout" element={<MainLayout><CheckoutPage /></MainLayout>} />
                   <Route path="/orders" element={<MainLayout><OrdersPage /></MainLayout>} />
+                  <Route path="/best-deals" element={<MainLayout><BestDealsPage /></MainLayout>} />
 
                   <Route path="/admin" element={<AdminLayout />}>
                     <Route index element={<AdminDashboardPage />} />
@@ -65,6 +69,9 @@ function App() {
                     <Route path="articles" element={<AdminArticlesPage />} />
                     <Route path="settings" element={<AdminSettingsPage />} />
                     <Route path="notifications" element={<NotificationsPage />} />
+                    <Route path="categories" element={<AdminCategoriesPage />} />
+                    <Route path="appearance" element={<AdminAppearancePage />} />
+                    <Route path="backups" element={<AdminBackupsPage />} />
                   </Route>
                   
                   {/* Add notification settings route */}

@@ -4,11 +4,13 @@ import { Search, Loader2, Filter } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import ProductCard from '@/components/ProductCard';
+// import CategoryCarousel from '@/components/CategoryCarousel'; // مؤقتًا معطل لحل مشاكل العرض
 import PageHeader from '@/components/PageHeader';
 import { ProductDataService } from '@/services/productDataService';
 
 const ProductsPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   
   // جلب جميع المنتجات من Supabase
   const { data: products = [], isLoading, error } = useQuery({
@@ -18,12 +20,16 @@ const ProductsPage: React.FC = () => {
 
   // احسب الفلترة ديناميكياً دون حلقة لا نهائية
   const filteredProducts = useMemo(() => {
-    if (!searchTerm.trim()) return products;
-    return products.filter(product =>
+    let result = products;
+    if (selectedCategory) {
+      result = result.filter(p => p.category === selectedCategory);
+    }
+    if (!searchTerm.trim()) return result;
+    return result.filter(product =>
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.description.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [searchTerm, products]);
+  }, [searchTerm, products, selectedCategory]);
 
   if (error) {
     return (
@@ -48,6 +54,7 @@ const ProductsPage: React.FC = () => {
       
       <section className="py-16">
         <div className="container-custom">
+          {/* CategoryCarousel معطل مؤقتًا لإصلاح تجاوز العرض */}
           {/* شريط البحث والفلاتر */}
           <div className="flex flex-col md:flex-row gap-4 mb-12">
             <div className="relative flex-1">
@@ -80,7 +87,7 @@ const ProductsPage: React.FC = () => {
                 </p>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {filteredProducts.map((product) => (
                   <ProductCard 
                     key={product.id} 
@@ -114,7 +121,7 @@ const ProductsPage: React.FC = () => {
               </Button>
             </div>
           )}
-        </div>
+        </div> {/* إغلاق container-custom بعد عرض المنتجات */}
       </section>
     </div>
   );

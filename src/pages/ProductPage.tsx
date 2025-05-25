@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion, useAnimation } from 'framer-motion';
 import { ArrowLeft, ShoppingCart, Star, Check, AlertTriangle, Loader2, Share2, Shield, RefreshCw } from 'lucide-react';
@@ -13,12 +13,14 @@ import ProductCard from '@/components/ProductCard';
 
 const ProductPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'features'|'reviews'|'usage'>('features');
-  const { productId } = useParams<{ productId: string }>();
+  const { id: productId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const controls = useAnimation();
   const { addItem } = useCart();
   const [canHover, setCanHover] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const location = useLocation();
+  const searchQuery = (location.state as any)?.searchQuery as string | undefined;
   
   useEffect(() => {
     const mql = window.matchMedia('(hover: hover)');
@@ -44,15 +46,28 @@ const ProductPage: React.FC = () => {
 
   // جلب المنتجات ذات الصلة
   const { data: relatedProducts = [] } = useQuery({
-    queryKey: ['related-products', productId, product?.category],
-    queryFn: () => {
-      if (!productId) return [];
-      return ProductDataService.getRelatedProducts(productId, product?.category);
+    queryKey: ['related-products', productId, product?.category, searchQuery],
+    queryFn: async () => {
+      if (searchQuery) {
+        return ProductDataService.searchProducts(searchQuery);
+      } else if (productId && product?.category) {
+        return ProductDataService.getRelatedProducts(productId, product.category);
+      }
+      return [];
     },
-    enabled: !!productId && !!product,
+    enabled: !!product,
     retry: 1
   });
-  
+
+  // جلب منتجات مقترحة (مميزة) عند عدم وجود منتجات مرتبطة
+  const { data: suggestedProducts = [] } = useQuery({
+    queryKey: ['suggested-products'],
+    queryFn: () => ProductDataService.getFeaturedProducts(),
+    enabled: relatedProducts.length === 0,
+    retry: 1
+  });
+  const displayedProducts = relatedProducts.length > 0 ? relatedProducts : suggestedProducts;
+
   useEffect(() => {
     if (product) {
       controls.start('visible');
@@ -150,10 +165,6 @@ const ProductPage: React.FC = () => {
       {/* Breadcrumb + Share */}
       <div className="bg-gray-100 py-4">
         <div className="container-custom flex justify-between items-center">
-          <Link to="/products" className="inline-flex items-center text-delight-600 hover:text-delight-800 transition duration-150">
-            <ArrowLeft className="w-4 h-4 ml-1" />
-            <span>العودة إلى المنتجات</span>
-          </Link>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -190,7 +201,7 @@ const ProductPage: React.FC = () => {
                   )}
                   {product.isFeatured && (
                     <span
-                      className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-yellow-400 to-amber-500 shadow-lg z-10"
+                      className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-yellow-400 to-amber-500 shadow-lg z-10"
                       style={{ clipPath: 'polygon(100% 0, 100% 100%, 0 0)' }}
                     >
                       <span className="absolute bottom-4 right-3 text-lg font-semibold text-white transform rotate-45 origin-bottom-right">مميز</span>
@@ -253,30 +264,45 @@ const ProductPage: React.FC = () => {
                 <span className="text-sm text-gray-700">{rating.toFixed(1)} ({reviews} تقييم)</span>
               </div>
               {/* Pricing & Discount */}
-              <div className="bg-white p-4 rounded-xl shadow-sm mb-6 flex flex-col items-start gap-1">
+              <div className="bg-white p-4 rounded-xl shadow-sm mb-6">
                 <div className="flex items-center gap-3">
                   <span className="text-3xl font-bold text-delight-600">{product.price}</span>
-                  {product.originalPrice && (
-                    (() => {
-                      const parseNum = (str: string) => parseFloat(str.replace(/[^\d.]/g, ''));
-                      const orig = parseNum(product.originalPrice);
-                      const curr = parseNum(product.price);
-                      const percent = orig > curr ? Math.round(((orig - curr) / orig) * 100) : 0;
-                      return percent > 0 ? (
-                        <span className="inline-flex items-center bg-gradient-to-r from-red-600 to-red-800 text-white px-3 py-1.5 rounded-full shadow-lg animate-[bounce_1.5s_infinite] hover:scale-110 transition-transform duration-300">
-                          <span className="text-sm font-medium">خصم</span>
-                          <span className="ml-1 text-xl font-extrabold">{percent}%</span>
-                        </span>
-                      ) : null;
-                    })()
-                  )}
+                  {product.originalPrice && (() => {
+                    const parseNum = (str: string) => parseFloat(str.replace(/[^\d.]/g, ''));
+                    const orig = parseNum(product.originalPrice);
+                    const curr = parseNum(product.price);
+                    const percent = orig > curr ? Math.round(((orig - curr) / orig) * 100) : 0;
+                    return percent > 0 ? (
+                      <span className="inline-flex items-center bg-gradient-to-br from-red-600 to-red-800 text-white px-3 py-1.5 rounded-full shadow-lg animate-[bounce_1.5s_infinite] hover:scale-110 transition-transform duration-300">
+                        <span className="text-sm font-medium">خصم</span>
+                        <span className="ml-1 text-xl font-extrabold">{percent}%</span>
+                      </span>
+                    ) : null;
+                  })()}
                 </div>
-                {product.originalPrice && (
-                  <div className="flex flex-col items-start">
-                    <span className="text-sm text-gray-500 font-medium">بدلاً من</span>
-                    <span className="text-lg text-gray-500 line-through font-semibold">{product.originalPrice}</span>
-                  </div>
-                )}
+                {product.originalPrice && (() => {
+                  const parseNum = (str: string) => parseFloat(str.replace(/[^\d.]/g, ''));
+                  const orig = parseNum(product.originalPrice);
+                  const curr = parseNum(product.price);
+                  const percent = orig > curr ? Math.round(((orig - curr) / orig) * 100) : 0;
+                  if (percent <= 0) return null;
+                  return (
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="text-sm text-gray-500 font-medium">بدلاً من</span>
+                      <span className="text-lg text-gray-500 line-through font-semibold">{product.originalPrice}</span>
+                      <Button
+                        variant="modern-primary"
+                        size="sm"
+                        onClick={handleAddToCart}
+                        disabled={!product.stock || product.stock === 0}
+                        className="inline-flex items-center gap-2"
+                      >
+                        <ShoppingCart className="w-4 h-4 md:w-6 md:h-6" />
+                        <span>إضافة إلى السلة</span>
+                      </Button>
+                    </div>
+                  );
+                })()}
               </div>
               {/* Trust Icons */}
               <div className="flex items-center gap-4 text-sm text-gray-600 mb-6">
@@ -337,35 +363,23 @@ const ProductPage: React.FC = () => {
                   )}
                 </div>
               </div>
-              {/* Add to Cart */}
-              <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }} className="hidden lg:block">
-                <Button 
-                  onClick={handleAddToCart}
-                  className="w-full md:w-auto text-lg py-6"
-                  size="lg"
-                  disabled={!product.stock || product.stock === 0}
-                >
-                  <ShoppingCart className="w-5 h-5 ml-2" />
-                  <span>إضافة إلى السلة</span>
-                </Button>
-              </motion.div>
             </motion.div>
           </div>
         </div>
       </section>
-      {/* Sticky CTA Mobile */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white p-4 shadow-t lg:hidden">
-        <Button onClick={handleAddToCart} disabled={!product.stock} className="w-full flex justify-center items-center gap-2 transition duration-150">
-          <ShoppingCart className="w-5 h-5" /> إضافة للسلة
-        </Button>
-      </div>
       {/* Related Products Carousel */}
-      {relatedProducts.length > 0 && (
+      {displayedProducts.length > 0 && (
         <section className="py-12 bg-gray-50">
           <div className="container-custom">
-            <SectionHeading 
-              title="منتجات ذات صلة" 
-              subtitle="منتجات أخرى قد تهمك من مجموعة ديلايت للعناية بالسيارات"
+            <SectionHeading
+              title={
+                searchQuery
+                  ? `نتائج البحث عن "${searchQuery}"`
+                  : relatedProducts.length > 0
+                    ? 'منتجات مشابهة لك'
+                    : 'منتجات مقترحة لك'
+              }
+              subtitle=""
               center
             />
             <motion.div 
@@ -374,7 +388,7 @@ const ProductPage: React.FC = () => {
               initial="hidden"
               animate={controls}
             >
-              {relatedProducts.map(rp => (
+              {displayedProducts.map(rp => (
                 <motion.div key={rp.id} variants={fadeInVariants} className="w-full">
                   <ProductCard 
                     id={rp.id}

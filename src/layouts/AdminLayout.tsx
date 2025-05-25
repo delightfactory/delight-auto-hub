@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
@@ -24,6 +23,19 @@ const AdminLayout = () => {
   const { theme, toggleTheme } = useTheme();
   const { toast } = useToast();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const sidebarRef = useRef<HTMLDivElement>(null);
+
+  // Load sidebar state from localStorage or default by viewport width
+  useEffect(() => {
+    const stored = localStorage.getItem('adminSidebarOpen');
+    if (stored !== null) setIsSidebarOpen(stored === 'true');
+    else setIsSidebarOpen(window.innerWidth >= 768);
+  }, []);
+
+  // Persist sidebar state
+  useEffect(() => {
+    localStorage.setItem('adminSidebarOpen', JSON.stringify(isSidebarOpen));
+  }, [isSidebarOpen]);
 
   const handleLogout = async () => {
     try {
@@ -49,10 +61,16 @@ const AdminLayout = () => {
     <AdminGuard>
       <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
         {/* Sidebar */}
-        <aside 
-          className={`${
-            isSidebarOpen ? 'w-64' : 'w-16'
-          } bg-white dark:bg-gray-800 shadow-lg transition-all duration-300 z-30 fixed h-full lg:relative`}
+        {/* Overlay for mobile when sidebar open */}
+        {isSidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 md:hidden z-20"
+            onClick={toggleSidebar}
+          />
+        )}
+        <aside
+          ref={sidebarRef}
+          className={`${isSidebarOpen ? 'fixed w-64' : 'hidden md:block md:fixed md:w-16'} bg-white dark:bg-gray-800 shadow-lg transition-all duration-300 h-full lg:relative z-30`}
         >
           <div className="h-full flex flex-col">
             {/* Sidebar Header */}
@@ -76,7 +94,7 @@ const AdminLayout = () => {
             
             {/* Navigation Links */}
             <nav className="flex-1 overflow-y-auto py-4">
-              <AdminNavLinks isSidebarOpen={isSidebarOpen} />
+              <AdminNavLinks isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
             </nav>
             
             {/* Sidebar Footer */}
@@ -169,7 +187,7 @@ const AdminLayout = () => {
         </aside>
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${isSidebarOpen ? 'md:ml-64' : 'md:ml-16'}`}>
           {/* Top Header */}
           <AdminHeader toggleSidebar={toggleSidebar} />
 

@@ -1,6 +1,7 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { fetchDashboardStats } from '@/services/adminService';
 import { 
   BarChart3, 
   Package, 
@@ -25,16 +26,21 @@ type NavItem = {
 
 interface AdminNavLinksProps {
   isSidebarOpen: boolean;
+  toggleSidebar: () => void;
 }
 
-const AdminNavLinks: React.FC<AdminNavLinksProps> = ({ isSidebarOpen }) => {
+const AdminNavLinks: React.FC<AdminNavLinksProps> = ({ isSidebarOpen, toggleSidebar }) => {
   const location = useLocation();
+  const { data: stats } = useQuery({
+    queryKey: ['admin-dashboard-stats'],
+    queryFn: fetchDashboardStats
+  });
   
   const mainNavItems: NavItem[] = [
     { path: '/admin', label: 'لوحة القيادة', icon: BarChart3 },
     { path: '/admin/products', label: 'المنتجات', icon: Package },
-    { path: '/admin/orders', label: 'الطلبات', icon: ShoppingCart, badge: 3 },
-    { path: '/admin/customers', label: 'العملاء', icon: Users },
+    { path: '/admin/orders', label: 'الطلبات', icon: ShoppingCart, badge: stats?.newOrdersCount ?? null },
+    { path: '/admin/users', label: 'العملاء', icon: Users },
     { path: '/admin/articles', label: 'المقالات', icon: FileText },
     { path: '/admin/categories', label: 'الفئات', icon: Tag },
   ];
@@ -45,7 +51,6 @@ const AdminNavLinks: React.FC<AdminNavLinksProps> = ({ isSidebarOpen }) => {
     { path: '/admin/comments', label: 'التعليقات', icon: MessageCircle, badge: 5 },
     { path: '/admin/notifications', label: 'الإشعارات', icon: BellRing },
     { path: '/admin/backups', label: 'النسخ الاحتياطي', icon: Database },
-    { path: '/admin/help', label: 'المساعدة', icon: HelpCircle },
   ];
 
   const renderNavItems = (items: NavItem[]) => {
@@ -57,6 +62,7 @@ const AdminNavLinks: React.FC<AdminNavLinksProps> = ({ isSidebarOpen }) => {
         <li key={item.path} className="px-3">
           <Link
             to={item.path}
+            onClick={() => { if (isSidebarOpen) toggleSidebar(); }}
             className={`flex items-center gap-3 p-2 rounded-lg transition-colors ${
               isActive
                 ? 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400 font-medium'

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getCustomerOrders } from '@/services/orderService';
@@ -54,10 +53,11 @@ const OrdersPage: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'completed':
+      case 'delivered':
         return 'text-green-600 bg-green-100 border-green-300';
-      case 'processing':
+      case 'shipped':
         return 'text-blue-600 bg-blue-100 border-blue-300';
+      case 'paid':
       case 'pending':
         return 'text-yellow-600 bg-yellow-100 border-yellow-300';
       case 'cancelled':
@@ -69,9 +69,11 @@ const OrdersPage: React.FC = () => {
 
   const translateStatus = (status: string) => {
     switch (status) {
-      case 'completed':
+      case 'delivered':
         return 'مكتمل';
-      case 'processing':
+      case 'shipped':
+        return 'تم الشحن';
+      case 'paid':
         return 'قيد المعالجة';
       case 'pending':
         return 'قيد الانتظار';

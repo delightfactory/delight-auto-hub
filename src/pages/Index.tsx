@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
@@ -43,20 +42,20 @@ const Index: React.FC = () => {
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-delight-50 to-white py-20 overflow-hidden">
         <div className="container-custom">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <motion.div
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8 }}
             >
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-gray-900">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-gray-900 text-center md:text-left">
                 منتجات العناية بالسيارات
                 <span className="text-delight-600 block">الأفضل في مصر</span>
               </h1>
-              <p className="text-xl text-gray-600 mb-8 leading-relaxed">
+              <p className="text-xl text-gray-600 mb-8 leading-relaxed text-center md:text-left">
                 اكتشف مجموعتنا الواسعة من منتجات التنظيف والعناية بالسيارات المصنوعة بأعلى معايير الجودة العالمية
               </p>
-              <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex flex-col sm:flex-row gap-4 justify-center sm:justify-start">
                 <Link to="/products">
                   <Button size="lg" className="text-lg w-full sm:w-auto">
                     تسوق الآن
@@ -108,7 +107,7 @@ const Index: React.FC = () => {
           />
           
           {loadingFeatured ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-10">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-10">
               {[...Array(4)].map((_, i) => (
                 <div key={i} className="bg-white rounded-xl p-4 animate-pulse">
                   <div className="aspect-square bg-gray-200 rounded-lg mb-4"></div>
@@ -120,7 +119,7 @@ const Index: React.FC = () => {
             </div>
           ) : featuredProducts.length > 0 ? (
             <motion.div 
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-10"
+              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-10"
               variants={containerVariants}
               initial="hidden"
               whileInView="visible"
@@ -134,7 +133,10 @@ const Index: React.FC = () => {
                     description={product.description}
                     image={product.image}
                     price={product.price}
+                    originalPrice={product.originalPrice}
                     rating={product.rating}
+                    isFeatured={product.isFeatured}
+                    isNew={product.isNew}
                   />
                 </motion.div>
               ))}
@@ -167,7 +169,7 @@ const Index: React.FC = () => {
             />
             
             {loadingNew ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-10">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-10">
                 {[...Array(4)].map((_, i) => (
                   <div key={i} className="bg-white rounded-xl p-4 animate-pulse">
                     <div className="aspect-square bg-gray-200 rounded-lg mb-4"></div>
@@ -179,7 +181,7 @@ const Index: React.FC = () => {
               </div>
             ) : (
               <motion.div 
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-10"
+                className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-10"
                 variants={containerVariants}
                 initial="hidden"
                 whileInView="visible"
@@ -193,7 +195,10 @@ const Index: React.FC = () => {
                       description={product.description}
                       image={product.image}
                       price={product.price}
+                      originalPrice={product.originalPrice}
                       rating={product.rating}
+                      isFeatured={product.isFeatured}
+                      isNew={product.isNew}
                     />
                   </motion.div>
                 ))}
