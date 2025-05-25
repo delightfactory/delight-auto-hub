@@ -96,7 +96,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         className
       )}
     >
-      <div className="relative aspect-[4/3] w-full overflow-hidden bg-gray-50 border-b border-gray-100">
+      <div className="relative aspect-[3/2] w-full overflow-hidden bg-gray-50 border-b border-gray-100">
         {/* BADGES for Featured/New */}
         {isFeatured && (
           <div className="absolute top-3 left-3 z-20">
@@ -112,16 +112,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
             </span>
           </div>
         )}
-        <motion.button
-          onClick={toggleLike}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          className="absolute top-3 right-3 z-10 bg-white/80 backdrop-blur-sm p-2 rounded-full shadow-sm"
-        >
-          <Heart 
-            className={`w-4 h-4 ${isLiked ? 'fill-amazon-warning text-amazon-warning' : 'text-gray-500'}`} 
-          />
-        </motion.button>
         
         <motion.img
           loading="lazy"
@@ -136,9 +126,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
       </div>
       
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex gap-0.5">
+      <div className="p-4">
+        <div className="flex items-center justify-between mb-1">
+          <div className="flex gap-0.5 items-center">
             {[...Array(5)].map((_, i) => (
               <Star 
                 key={i} 
@@ -146,6 +136,14 @@ const ProductCard: React.FC<ProductCardProps> = ({
               />
             ))}
             <span className="text-xs font-medium text-gray-500 mr-1">({rating})</span>
+            <motion.button
+              onClick={toggleLike}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              className="p-1 ml-2 rounded-full shadow-sm bg-white/80 backdrop-blur-sm"
+            >
+              <Heart className={`w-4 h-4 ${isLiked ? 'fill-amazon-warning text-amazon-warning' : 'text-gray-500'}`} />
+            </motion.button>
           </div>
           
           <AnimatePresence>
@@ -162,21 +160,21 @@ const ProductCard: React.FC<ProductCardProps> = ({
           </AnimatePresence>
         </div>
         
-        <h3 className="text-xl font-bold mb-1 text-amazon-dark sm:line-clamp-1 group-hover:text-amazon-link transition-colors">
+        <h3 className="text-lg font-bold mb-1 text-amazon-dark sm:line-clamp-1 group-hover:text-amazon-link transition-colors">
           {name}
         </h3>
         
-        <p className="text-gray-600 mb-2 text-sm line-clamp-2">
+        <p className="text-gray-600 mb-1 text-xs line-clamp-2">
           {description}
         </p>
         
         {/* عرض السعر والخصم */}
         {price && originalPrice ? (
-          <div className="mb-2 flex items-center gap-3">
-            <span className="text-lg font-bold text-delight-600 animate-pulse">
+          <div className="mb-1 flex items-center gap-3">
+            <span className="text-base font-bold text-delight-600 animate-pulse">
               {price}
             </span>
-            <span className="text-base text-gray-400 line-through">
+            <span className="text-sm text-gray-400 line-through">
               {originalPrice}
             </span>
             {/* حساب نسبة الخصم */}
@@ -188,7 +186,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
               if (!isNaN(orig) && !isNaN(curr) && orig > curr) {
                 const percent = Math.round(((orig - curr) / orig) * 100);
                 return (
-                  <span className="inline-flex items-center justify-center bg-gradient-to-r from-red-400 to-red-700 text-white text-sm font-semibold px-3 py-1.5 rounded-full shadow-md animate-bounce">
+                  <span className="inline-flex items-center justify-center bg-gradient-to-r from-red-400 to-red-700 text-white text-sm font-semibold px-2 py-1 rounded-full shadow-md animate-bounce">
                     خصم {percent}%
                   </span>
                 );
@@ -197,7 +195,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
             })()}
           </div>
         ) : price && (
-          <div className="amazon-price mb-4 text-lg">{price}</div>
+          <div className="amazon-price mb-2 text-lg">{price}</div>
         )}
         
         <div className="flex flex-col sm:flex-row justify-between gap-2">
