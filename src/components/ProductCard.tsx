@@ -98,19 +98,25 @@ const ProductCard: React.FC<ProductCardProps> = ({
     >
       <div className="relative aspect-[3/2] w-full overflow-hidden bg-gray-50 border-b border-gray-100">
         {/* BADGES for Featured/New */}
-        {isFeatured && (
-          <div className="absolute top-3 left-3 z-20">
-            <span className="px-3 py-1 rounded-full bg-gradient-to-r from-yellow-400 to-amber-500 text-xs font-bold text-white shadow-lg animate-pulse border-2 border-yellow-300">
-              مميز
-            </span>
-          </div>
-        )}
         {isNew && (
-          <div className={`absolute ${isFeatured ? 'top-12' : 'top-3'} left-3 z-20`}>
-            <span className="px-3 py-1 rounded-full bg-gradient-to-r from-green-400 to-emerald-500 text-xs font-bold text-white shadow-lg border-2 border-green-300">
+          <span
+            className="absolute top-0 left-0 w-12 h-12 bg-red-500 shadow-lg z-20"
+            style={{ clipPath: 'polygon(0 0, 100% 0, 0 100%)' }}
+          >
+            <span className="absolute bottom-3 left-2 text-xs font-semibold text-white transform -rotate-45 origin-bottom-left">
               جديد
             </span>
-          </div>
+          </span>
+        )}
+        {isFeatured && (
+          <span
+            className="absolute top-0 right-0 w-12 h-12 bg-gradient-to-br from-yellow-400 to-amber-500 shadow-lg z-20"
+            style={{ clipPath: 'polygon(100% 0, 100% 100%, 0 0)' }}
+          >
+            <span className="absolute bottom-3 right-2 text-xs font-semibold text-white transform rotate-45 origin-bottom-right">
+              مميز
+            </span>
+          </span>
         )}
         
         <motion.img
