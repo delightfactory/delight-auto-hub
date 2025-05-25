@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import ProductCard from '@/components/ProductCard';
 // import CategoryCarousel from '@/components/CategoryCarousel'; // مؤقتًا معطل لحل مشاكل العرض
-import PageHeader from '@/components/PageHeader';
+// تمت إزالة PageHeader لتوفير مساحة عرض فعلية
 import { ProductDataService } from '@/services/productDataService';
 
 const ProductsPage: React.FC = () => {
@@ -47,10 +47,7 @@ const ProductsPage: React.FC = () => {
 
   return (
     <div>
-      <PageHeader 
-        title="منتجاتنا" 
-        subtitle="اكتشف مجموعتنا الواسعة من منتجات العناية بالسيارات عالية الجودة"
-      />
+      {/* PageHeader تمت إزالته */}
       
       <section className="py-16">
         <div className="container-custom">

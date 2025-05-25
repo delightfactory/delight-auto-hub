@@ -14,7 +14,8 @@ import {
   MessageCircle,
   BellRing,
   Database,
-  HelpCircle
+  HelpCircle,
+  Image
 } from 'lucide-react';
 
 type NavItem = {
@@ -43,6 +44,7 @@ const AdminNavLinks: React.FC<AdminNavLinksProps> = ({ isSidebarOpen, toggleSide
     { path: '/admin/users', label: 'العملاء', icon: Users },
     { path: '/admin/articles', label: 'المقالات', icon: FileText },
     { path: '/admin/categories', label: 'الفئات', icon: Tag },
+    { path: '/admin/banners', label: 'البنرات', icon: Image },
   ];
   
   const settingsNavItems: NavItem[] = [

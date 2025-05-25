@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
@@ -17,13 +16,14 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
-import PageHeader from '@/components/PageHeader';
 import Checkout from '@/components/Checkout';
 import {
   Dialog,
   DialogContent,
   DialogTrigger,
 } from "@/components/ui/dialog";
+
+// PageHeader تمت إزالته لتوفير مساحة عرض
 
 const CartPage: React.FC = () => {
   const { items, total, updateQuantity, removeItem, itemCount } = useCart();
@@ -57,10 +57,7 @@ const CartPage: React.FC = () => {
   if (items.length === 0) {
     return (
       <div>
-        <PageHeader 
-          title="سلة التسوق" 
-          subtitle="مراجعة منتجاتك المختارة"
-        />
+        {/* PageHeader تمت إزالته */}
         
         <section className="py-16">
           <div className="container-custom">
@@ -91,10 +88,7 @@ const CartPage: React.FC = () => {
 
   return (
     <div>
-      <PageHeader 
-        title="سلة التسوق" 
-        subtitle={`لديك ${itemCount} منتج في سلة التسوق`}
-      />
+      {/* PageHeader تمت إزالته */}
       
       <section className="py-12">
         <div className="container-custom">

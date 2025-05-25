@@ -203,6 +203,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         <div className="flex flex-col sm:flex-row justify-between gap-2">
           <motion.div className="w-full sm:w-auto" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Button
+              size="sm"
               variant="outline"
               className="border-gray-200 text-amazon-link hover:bg-gray-50 hover:text-amazon-link hover:border-gray-300 transition duration-150 ease-in-out"
               onClick={() => navigate(`/products/${id}`)}
@@ -220,6 +221,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
             transition={{ duration: 0.5 }}
           >
             <Button 
+              size="sm"
               className={cn(
                 "transition-all duration-300",
                 isAddedToCart

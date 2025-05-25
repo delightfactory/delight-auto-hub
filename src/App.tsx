@@ -33,6 +33,7 @@ import NotificationSettingsPage from './pages/NotificationSettingsPage';
 import AdminCategoriesPage from './pages/admin/CategoriesPage';
 import AdminAppearancePage from './pages/admin/AppearancePage';
 import AdminBackupsPage from './pages/admin/BackupsPage';
+import AdminBannersPage from './pages/admin/BannersPage';
 
 const queryClient = new QueryClient();
 
@@ -72,6 +73,7 @@ function App() {
                     <Route path="categories" element={<AdminCategoriesPage />} />
                     <Route path="appearance" element={<AdminAppearancePage />} />
                     <Route path="backups" element={<AdminBackupsPage />} />
+                    <Route path="banners" element={<AdminBannersPage />} />
                   </Route>
                   
                   {/* Add notification settings route */}

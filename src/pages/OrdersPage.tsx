@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getCustomerOrders } from '@/services/orderService';
-import PageHeader from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,6 +8,8 @@ import { Loader2, Package } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
+
+// تم إزالة PageHeader لتوفير مساحة عرض
 
 const OrdersPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -86,11 +87,6 @@ const OrdersPage: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-screen-xl">
-      <PageHeader 
-        title="تتبع طلباتك" 
-        subtitle="تابع حالة طلباتك وتفاصيلها"
-      />
-
       <div className="my-8">
         <Card>
           <CardHeader>

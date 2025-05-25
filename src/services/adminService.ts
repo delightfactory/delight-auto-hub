@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { Product, Comment } from "@/types/db";
+import { Product, Comment, Banner } from "@/types/db";
 
 // التحقق إذا كان المستخدم مسؤول
 export const checkIfAdmin = async () => {
@@ -553,6 +553,51 @@ export const commentService = {
     }
     return true;
   }
+};
+
+// خدمات إدارة البنرات
+export const bannerService = {
+  getAllBanners: async (): Promise<Banner[]> => {
+    const { data, error } = await supabase
+      .from('banners')
+      .select('*')
+      .order('display_order', { ascending: true });
+    if (error) throw error;
+    return data || [];
+  },
+  getBannerById: async (id: string): Promise<Banner> => {
+    const { data, error } = await supabase
+      .from('banners')
+      .select('*')
+      .eq('id', id)
+      .single();
+    if (error) throw error;
+    return data as Banner;
+  },
+  createBanner: async (banner: Partial<Banner>): Promise<Banner> => {
+    const { data, error } = await supabase
+      .from('banners')
+      .insert([banner])
+      .select();
+    if (error) throw error;
+    return data![0] as Banner;
+  },
+  updateBanner: async (id: string, banner: Partial<Banner>): Promise<Banner> => {
+    const { data, error } = await supabase
+      .from('banners')
+      .update(banner)
+      .eq('id', id)
+      .select();
+    if (error) throw error;
+    return data![0] as Banner;
+  },
+  deleteBanner: async (id: string): Promise<void> => {
+    const { error } = await supabase
+      .from('banners')
+      .delete()
+      .eq('id', id);
+    if (error) throw error;
+  },
 };
 
 // تصدير خدمات الإعدادات من الملف الجديد

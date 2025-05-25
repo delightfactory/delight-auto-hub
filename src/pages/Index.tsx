@@ -57,13 +57,13 @@ const Index: React.FC = () => {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center sm:justify-start">
                 <Link to="/products">
-                  <Button size="lg" className="text-lg w-full sm:w-auto">
+                  <Button className="text-base w-full sm:w-auto">
                     تسوق الآن
                     <ArrowLeft className="mr-2 h-5 w-5" />
                   </Button>
                 </Link>
                 <Link to="/about">
-                  <Button variant="outline" size="lg" className="text-lg w-full sm:w-auto">
+                  <Button variant="outline" className="text-base w-full sm:w-auto">
                     تعرف علينا
                   </Button>
                 </Link>

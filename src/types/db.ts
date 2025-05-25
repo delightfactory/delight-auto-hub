@@ -93,3 +93,20 @@ export interface Comment {
   status: 'approved' | 'pending' | 'spam';
   created_at: string;
 }
+
+export interface Banner {
+  id: string;
+  title: string;
+  subtitle?: string;
+  image_url: string;
+  link_url?: string;
+  button_text?: string;
+  is_active: boolean;
+  display_order: number;
+  pages: string[];
+  display_interval: number;
+  start_at?: string;
+  end_at?: string;
+  created_at: string;
+  updated_at: string;
+}

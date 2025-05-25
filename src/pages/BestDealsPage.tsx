@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
-import PageHeader from '@/components/PageHeader';
 import ProductCard from '@/components/ProductCard';
 import { ProductDataService } from '@/services/productDataService';
 import { Button } from '@/components/ui/button';
+
+// تم إزالة PageHeader لتوفير مساحة عرض
 
 const BestDealsPage: React.FC = () => {
   const { data: products = [], isLoading, error } = useQuery({
@@ -42,7 +43,7 @@ const BestDealsPage: React.FC = () => {
 
   return (
     <>
-      <PageHeader title="احسن صفقة" subtitle="اكتشف المنتجات بنسبة خصم أكبر من 25%" />
+      {/* PageHeader تمت إزالته */}
       <section className="py-16">
         <div className="container-custom">
           {isLoading ? (

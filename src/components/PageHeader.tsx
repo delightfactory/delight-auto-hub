@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { cn } from '@/lib/utils';
 
@@ -18,7 +17,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
   return (
     <div 
       className={cn(
-        'relative py-24 md:py-32 overflow-hidden bg-slate-900',
+        'relative overflow-hidden bg-slate-900',
         className
       )}
     >
@@ -28,7 +27,6 @@ const PageHeader: React.FC<PageHeaderProps> = ({
           style={{ backgroundImage: `url(${backgroundImage})` }}
         />
       )}
-      <div className="absolute inset-0 bg-gradient-to-b from-slate-900/70 to-slate-900/90 z-10" />
       <div className="container-custom relative z-20">
         <div className="max-w-3xl mx-auto text-center">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
