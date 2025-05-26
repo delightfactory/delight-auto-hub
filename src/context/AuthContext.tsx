@@ -13,6 +13,8 @@ type User = {
   city?: string;
   avatar_url?: string;
   location_coordinates?: { lat: number; lng: number } | null;
+  location_description?: string;
+  governorate?: string | null;
   preferences?: {
     notifications?: boolean;
     marketing?: boolean;
@@ -127,6 +129,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           city: data.city,
           avatar_url: data.avatar_url,
           location_coordinates: locationCoordinates,
+          location_description: data.location_description,
+          governorate: data.governorate,
           preferences: preferences as User['preferences'],
         });
       } else {
@@ -336,8 +340,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (data.phone !== undefined) updateData.phone = data.phone;
       if (data.address !== undefined) updateData.address = data.address;
       if (data.city !== undefined) updateData.city = data.city;
+      if (data.governorate !== undefined) updateData.governorate = data.governorate;
       if (data.avatar_url !== undefined) updateData.avatar_url = data.avatar_url;
       if (data.location_coordinates !== undefined) updateData.location_coordinates = data.location_coordinates;
+      if (data.location_description !== undefined) updateData.location_description = data.location_description;
       
       // Handle preferences - merge with existing preferences
       if (data.preferences) {

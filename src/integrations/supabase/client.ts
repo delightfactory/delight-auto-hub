@@ -2,7 +2,10 @@
 import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = "https://ejvlxufsooygxjsrxofc.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVqdmx4dWZzb295Z3hqc3J4b2ZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2Njk1ODAsImV4cCI6MjA2MzI0NTU4MH0.y-A-rDOt8eHlnotLbgZRBlkcDN3rwAFODKYKwso69gk";
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+if (!SUPABASE_PUBLISHABLE_KEY) {
+  throw new Error("VITE_SUPABASE_PUBLISHABLE_KEY is not defined. Please check your .env file.");
+}
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";

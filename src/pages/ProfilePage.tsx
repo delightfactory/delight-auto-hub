@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
 import { getCustomerOrders } from '@/services/orderService';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
+import { egyptianGovernorates, City } from '@/lib/egyptian-locations';
 
 // Import refactored components
 import ProfileSidebar from '@/components/profile/ProfileSidebar';
@@ -29,8 +31,10 @@ interface FormData {
   email: string;
   phone: string;
   address: string;
+  governorate?: string;
   city: string;
   location_coordinates: { lat: number; lng: number } | null;
+  location_description?: string;
   preferences: Preferences;
 }
 
@@ -44,7 +48,6 @@ const ProfilePage = () => {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [orders, setOrders] = useState<any[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
-  const [showLocationPicker, setShowLocationPicker] = useState(false);
   
   // Form state
   const [formData, setFormData] = useState<FormData>({
@@ -52,8 +55,10 @@ const ProfilePage = () => {
     email: '',
     phone: '',
     address: '',
+    governorate: '',
     city: '',
     location_coordinates: null,
+    location_description: '',
     preferences: {
       notifications: true,
       marketing: false,
@@ -61,6 +66,8 @@ const ProfilePage = () => {
       language: 'ar'
     }
   });
+  
+  const [availableCities, setAvailableCities] = useState<City[]>([]);
   
   // Redirect if not logged in
   useEffect(() => {
@@ -77,8 +84,10 @@ const ProfilePage = () => {
         email: user.email || '',
         phone: user.phone || '',
         address: user.address || '',
+        governorate: user.governorate || '',
         city: user.city || '',
         location_coordinates: user.location_coordinates || null,
+        location_description: user.location_description || '',
         preferences: {
           notifications: user.preferences?.notifications ?? true,
           marketing: user.preferences?.marketing ?? false,
@@ -94,12 +103,19 @@ const ProfilePage = () => {
     }
   }, [user]);
 
-  // Reset location picker when changing tabs
+  // تحديث قائمة المدن عند تغيير المحافظة
   useEffect(() => {
-    if (activeTab !== "profile" && showLocationPicker) {
-      setShowLocationPicker(false);
+    if (formData.governorate) {
+      const selected = egyptianGovernorates.find(g => g.id === formData.governorate);
+      setAvailableCities(selected ? selected.cities : []);
+      if (selected && !selected.cities.find(c => c.name_en === formData.city)) {
+        setFormData(prev => ({ ...prev, city: '' }));
+      }
+    } else {
+      setAvailableCities([]);
+      setFormData(prev => ({ ...prev, city: '' }));
     }
-  }, [activeTab]);
+  }, [formData.governorate]);
   
   const fetchOrders = async () => {
     if (!user) return;
@@ -138,10 +154,30 @@ const ProfilePage = () => {
     }));
   };
 
-  const handleLocationSelected = (location: { lat: number; lng: number } | null) => {
+  // معالجات تغيير المحافظة والمدينة
+  const handleGovernorateChange = (gov: string) => {
+    setFormData(prev => ({ ...prev, governorate: gov }));
+  };
+
+  const handleCityChange = (city: string) => {
+    setFormData(prev => ({ ...prev, city }));
+  };
+
+  // معالجة تغيير الموقع
+  const handleLocationChange = (location: { lat: number; lng: number; address?: string }) => {
     setFormData(prev => ({
       ...prev,
-      location_coordinates: location
+      location_coordinates: location.lat !== 0 ? { lat: location.lat, lng: location.lng } : null,
+      location_description: location.address || ''
+    }));
+  };
+
+  // معالجة مسح الموقع
+  const handleLocationClear = () => {
+    setFormData(prev => ({
+      ...prev,
+      location_coordinates: null,
+      location_description: ''
     }));
   };
   
@@ -155,7 +191,9 @@ const ProfilePage = () => {
         phone: formData.phone,
         address: formData.address,
         city: formData.city,
+        governorate: formData.governorate,
         location_coordinates: formData.location_coordinates,
+        location_description: formData.location_description,
         preferences: formData.preferences
       });
       
@@ -167,11 +205,6 @@ const ProfilePage = () => {
         title: "تم تحديث الملف الشخصي",
         description: "تم حفظ التغييرات بنجاح",
       });
-
-      // Close location picker after successful update
-      if (showLocationPicker) {
-        setShowLocationPicker(false);
-      }
     } catch (error) {
       console.error("Error updating profile:", error);
       toast({
@@ -264,16 +297,21 @@ const ProfilePage = () => {
   return (
     <div className="container mx-auto py-8 px-4 mb-16">
       <div className="max-w-6xl mx-auto">
-        <div className="mb-6">
+        <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">حسابي</h1>
           <p className="text-gray-600 dark:text-gray-400">إدارة حسابك الشخصي ومتابعة طلباتك وتفضيلاتك</p>
         </div>
         
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <Tabs 
+          value={activeTab} 
+          onValueChange={setActiveTab} 
+          className="flex flex-col lg:flex-row gap-6"
+          orientation="vertical"
+        >
           {/* Profile sidebar */}
-          <div className="lg:col-span-1">
+          <div className="w-full lg:w-64 flex-shrink-0">
             <ProfileSidebar 
-              user={user}
+              user={user} 
               activeTab={activeTab}
               setActiveTab={setActiveTab}
               avatarUrl={avatarUrl}
@@ -283,44 +321,49 @@ const ProfilePage = () => {
             />
           </div>
           
-          {/* Main content area */}
-          <div className="lg:col-span-3">
-            <TabsContent value="profile" className="mt-0">
-              <ProfileTab 
-                formData={formData}
-                handleInputChange={handleInputChange}
-                handleLocationSelected={handleLocationSelected}
-                handleSubmit={handleSubmit}
-                isUpdating={isUpdating}
-                showLocationPicker={showLocationPicker}
-                setShowLocationPicker={setShowLocationPicker}
-              />
-            </TabsContent>
-            
-            {/* Orders Tab */}
-            <TabsContent value="orders" className="mt-0">
-              <OrdersTab orders={orders} loadingOrders={loadingOrders} refreshOrders={fetchOrders} />
-            </TabsContent>
-            
-            {/* Notifications Tab */}
-            <TabsContent value="notifications" className="mt-0">
-              <PreferencesTab 
-                preferences={formData.preferences}
-                handlePreferenceChange={handlePreferenceChange}
-                handleSubmit={handleSubmit}
-                isUpdating={isUpdating}
-              />
-            </TabsContent>
-            
-            {/* Settings Tab */}
-            <TabsContent value="settings" className="mt-0">
-              <SettingsTab 
-                preferences={formData.preferences}
-                handlePreferenceChange={handlePreferenceChange}
-                handleSubmit={handleSubmit}
-                isUpdating={isUpdating}
-              />
-            </TabsContent>
+          {/* Main content */}
+          <div className="flex-1">
+            <Card className="min-h-[500px] transition-all duration-300 hover:shadow-lg">
+              <CardContent className="p-6">
+                <TabsContent value="profile" className="m-0 animate-fade-in">
+                  <ProfileTab 
+                    formData={formData}
+                    handleInputChange={handleInputChange}
+                    onGovernorateChange={handleGovernorateChange}
+                    onCityChange={handleCityChange}
+                    availableCities={availableCities}
+                    handleSubmit={handleSubmit}
+                    setFormData={setFormData}
+                    isUpdating={isUpdating}
+                    egyptianGovernorates={egyptianGovernorates}
+                    onLocationChange={handleLocationChange}
+                    onLocationClear={handleLocationClear}
+                  />
+                </TabsContent>
+                
+                <TabsContent value="orders" className="m-0 animate-fade-in">
+                  <OrdersTab orders={orders} loadingOrders={loadingOrders} refreshOrders={fetchOrders} />
+                </TabsContent>
+                
+                <TabsContent value="notifications" className="m-0 animate-fade-in">
+                  <PreferencesTab 
+                    preferences={formData.preferences}
+                    handlePreferenceChange={handlePreferenceChange}
+                    handleSubmit={handleSubmit}
+                    isUpdating={isUpdating}
+                  />
+                </TabsContent>
+                
+                <TabsContent value="settings" className="m-0 animate-fade-in">
+                  <SettingsTab 
+                    preferences={formData.preferences}
+                    handlePreferenceChange={handlePreferenceChange}
+                    handleSubmit={handleSubmit}
+                    isUpdating={isUpdating}
+                  />
+                </TabsContent>
+              </CardContent>
+            </Card>
           </div>
         </Tabs>
       </div>

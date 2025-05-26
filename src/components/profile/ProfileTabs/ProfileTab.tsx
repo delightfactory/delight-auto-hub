@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { User, MapPin, Phone, Mail } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -7,7 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import LocationPicker from '@/components/map/LocationPicker';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import LocationFetcher from '@/components/map/LocationFetcher';
+import type { Governorate, City } from '@/lib/egyptian-locations';
 
 interface ProfileTabProps {
   formData: {
@@ -17,24 +18,36 @@ interface ProfileTabProps {
     address: string;
     city: string;
     location_coordinates: { lat: number; lng: number } | null;
+    location_description?: string;
+    governorate?: string;
   };
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-  handleLocationSelected: (location: { lat: number; lng: number } | null) => void;
+  onLocationChange: (location: { lat: number; lng: number; address?: string }) => void;
+  onLocationClear: () => void;
+  egyptianGovernorates: Governorate[];
+  availableCities: City[];
+  onGovernorateChange: (gov: string) => void;
+  onCityChange: (city: string) => void;
   handleSubmit: (e: React.FormEvent) => void;
   isUpdating: boolean;
-  showLocationPicker: boolean;
-  setShowLocationPicker: (show: boolean) => void;
+  setFormData: (data: any) => void;
 }
 
-const ProfileTab: React.FC<ProfileTabProps> = ({
-  formData,
-  handleInputChange,
-  handleLocationSelected,
-  handleSubmit,
-  isUpdating,
-  showLocationPicker,
-  setShowLocationPicker
+const ProfileTab: React.FC<ProfileTabProps> = ({ 
+  formData, 
+  handleInputChange, 
+  egyptianGovernorates, 
+  availableCities, 
+  onGovernorateChange, 
+  onCityChange, 
+  handleSubmit, 
+  isUpdating, 
+  setFormData,
+  onLocationChange,
+  onLocationClear 
 }) => {
+
+
   return (
     <motion.div
       key="profile"
@@ -96,19 +109,37 @@ const ProfileTab: React.FC<ProfileTabProps> = ({
                 </div>
               </div>
               
+              {/* Governorate Select */}
+              <div className="space-y-2">
+                <Label htmlFor="governorate">المحافظة</Label>
+                <Select value={formData.governorate || ''} onValueChange={onGovernorateChange}>
+                  <SelectTrigger id="governorate">
+                    <SelectValue placeholder="اختر المحافظة" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {egyptianGovernorates.map(gov => (
+                      <SelectItem key={gov.id} value={gov.id}>
+                        {gov.name_ar}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {/* City Select */}
               <div className="space-y-2">
                 <Label htmlFor="city">المدينة</Label>
-                <div className="relative">
-                  <MapPin className="absolute right-3 top-2.5 h-5 w-5 text-gray-400" />
-                  <Input
-                    id="city"
-                    name="city"
-                    value={formData.city}
-                    onChange={handleInputChange}
-                    className="pr-10"
-                    placeholder="المدينة"
-                  />
-                </div>
+                <Select value={formData.city || ''} onValueChange={onCityChange}>
+                  <SelectTrigger id="city">
+                    <SelectValue placeholder="اختر المدينة" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableCities.map(city => (
+                      <SelectItem key={city.name_en} value={city.name_en}>
+                        {city.name_ar}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               
               <div className="space-y-2 md:col-span-2">
@@ -123,54 +154,32 @@ const ProfileTab: React.FC<ProfileTabProps> = ({
                 />
               </div>
 
-              {/* Location picker section - improved for reliable cleanup */}
+              {/* Location selection via Geolocation */}
               <div className="space-y-2 md:col-span-2">
-                <div className="flex justify-between items-center">
-                  <Label htmlFor="location">الموقع على الخريطة</Label>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => setShowLocationPicker(!showLocationPicker)}
-                  >
-                    {showLocationPicker ? 'إخفاء الخريطة' : 'إظهار الخريطة'}
-                  </Button>
-                </div>
-                
-                {formData.location_coordinates && !showLocationPicker && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <MapPin className="h-4 w-4 text-red-500" />
-                    <span>تم تحديد الموقع</span>
-                    <Button
-                      type="button"
-                      variant="link"
-                      size="sm"
-                      className="text-red-600 p-0 h-auto"
-                      onClick={() => handleLocationSelected(null)}
-                    >
-                      إزالة
-                    </Button>
-                  </div>
-                )}
-                
-                {/* Only render LocationPicker when visible */}
-                {showLocationPicker && (
-                  <div className="location-picker-container">
-                    {/* Mounting a new instance with a unique key */}
-                    <LocationPicker 
-                      initialLocation={formData.location_coordinates}
-                      onLocationSelected={handleLocationSelected}
-                      key={`location-picker-${Date.now()}`}
-                    />
-                  </div>
-                )}
+                <Label htmlFor="location">الموقع</Label>
+                <LocationFetcher
+                  initialLocation={formData.location_coordinates}
+                  onLocationChange={onLocationChange}
+                  onLocationClear={onLocationClear}
+                />
+              </div>
+              {/* Location description input */}
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="location_description">وصف الموقع</Label>
+                <Input
+                  id="location_description"
+                  name="location_description"
+                  value={formData.location_description || ''}
+                  onChange={handleInputChange}
+                  placeholder="مثال: المنزل أو العمل"
+                />
               </div>
             </div>
             
             <div className="mt-6">
-              <Button 
-                type="submit" 
-                className="bg-red-600 hover:bg-red-700 text-white"
+              <Button
+                type="submit"
+                className="h-10 px-4 py-2 text-sm font-medium bg-red-600 hover:bg-red-700 text-white transition-colors duration-200 rounded-lg"
                 disabled={isUpdating}
               >
                 {isUpdating ? (

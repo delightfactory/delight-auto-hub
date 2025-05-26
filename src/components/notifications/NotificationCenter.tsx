@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Bell, X, Check, Trash2, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -34,12 +33,8 @@ const NotificationCenter: React.FC = () => {
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="relative p-2 hover:bg-gray-100 dark:hover:bg-gray-800"
-        >
-          <Bell className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+        <button className="p-2 relative hover:bg-gray-100 dark:hover:bg-gray-800">
+          <Bell className="w-6 h-6 text-gray-600 dark:text-gray-300" />
           {unreadCount > 0 && (
             <Badge
               variant="destructive"
@@ -48,7 +43,7 @@ const NotificationCenter: React.FC = () => {
               {unreadCount > 99 ? '99+' : unreadCount}
             </Badge>
           )}
-        </Button>
+        </button>
       </PopoverTrigger>
       
       <PopoverContent className="w-80 p-0" align="end">
