@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { ar } from 'date-fns/locale';
@@ -10,11 +9,13 @@ import NotificationIcon from './NotificationIcon';
 interface BroadcastNotificationItemProps {
   notification: BroadcastNotification;
   onClose?: () => void;
+  onViewDetail?: (notification: BroadcastNotification) => void;
 }
 
 const BroadcastNotificationItem: React.FC<BroadcastNotificationItemProps> = ({
   notification,
-  onClose
+  onClose,
+  onViewDetail
 }) => {
   const timeAgo = formatDistanceToNow(new Date(notification.created_at), {
     addSuffix: true,
@@ -41,7 +42,10 @@ const BroadcastNotificationItem: React.FC<BroadcastNotificationItemProps> = ({
   };
 
   return (
-    <div className="p-3 rounded-lg bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border border-purple-200 dark:border-purple-800">
+    <div
+      className="p-3 rounded-lg bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border border-purple-200 dark:border-purple-800 cursor-pointer"
+      onClick={() => { onClose?.(); onViewDetail?.(notification); }}
+    >
       <div className="flex items-start gap-3">
         <div className="flex-shrink-0">
           <div className="p-2 rounded-full bg-purple-100 dark:bg-purple-900">

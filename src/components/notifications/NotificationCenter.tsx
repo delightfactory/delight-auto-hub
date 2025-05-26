@@ -8,6 +8,8 @@ import { Separator } from '@/components/ui/separator';
 import { useNotifications } from '@/hooks/useNotifications';
 import NotificationItem from './NotificationItem';
 import BroadcastNotificationItem from './BroadcastNotificationItem';
+import NotificationDetailDialog from './NotificationDetailDialog';
+import { Notification as UserNotification, BroadcastNotification } from '@/services/notificationService';
 
 const NotificationCenter: React.FC = () => {
   const {
@@ -20,6 +22,8 @@ const NotificationCenter: React.FC = () => {
   } = useNotifications();
   
   const [isOpen, setIsOpen] = useState(false);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [selectedNotification, setSelectedNotification] = useState<UserNotification | BroadcastNotification | null>(null);
 
   const handleMarkAllAsRead = async () => {
     await markAllAsRead();
@@ -84,11 +88,13 @@ const NotificationCenter: React.FC = () => {
                     <BroadcastNotificationItem
                       notification={notification}
                       onClose={() => setIsOpen(false)}
+                      onViewDetail={(n) => { setSelectedNotification(n); setDetailOpen(true); setIsOpen(false); }}
                     />
                   ) : (
                     <NotificationItem
                       notification={notification}
                       onClose={() => setIsOpen(false)}
+                      onViewDetail={(n) => { setSelectedNotification(n); setDetailOpen(true); setIsOpen(false); }}
                     />
                   )}
                   {index < allNotifications.length - 1 && (
@@ -119,6 +125,11 @@ const NotificationCenter: React.FC = () => {
           </Button>
         </div>
       </PopoverContent>
+      <NotificationDetailDialog
+        open={detailOpen}
+        notification={selectedNotification!}
+        onClose={() => setDetailOpen(false)}
+      />
     </Popover>
   );
 };

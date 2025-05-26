@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { ar } from 'date-fns/locale';
@@ -12,11 +11,13 @@ import NotificationIcon from './NotificationIcon';
 interface NotificationItemProps {
   notification: Notification;
   onClose?: () => void;
+  onViewDetail?: (notification: Notification) => void;
 }
 
 const NotificationItem: React.FC<NotificationItemProps> = ({
   notification,
-  onClose
+  onClose,
+  onViewDetail
 }) => {
   const { markAsRead, deleteNotification } = useNotifications();
 
@@ -25,6 +26,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
       await markAsRead(notification.id);
     }
     onClose?.();
+    onViewDetail?.(notification);
   };
 
   const handleDelete = async (e: React.MouseEvent) => {
