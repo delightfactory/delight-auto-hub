@@ -1,16 +1,16 @@
-
 import React from 'react';
 import {
   Bell,
+  Clock,
+  CreditCard,
+  RefreshCw,
   Package,
-  Star,
-  CheckCircle,
+  MapPin,
   Truck,
-  CheckCircle2,
+  Send,
+  CheckCircle,
   XCircle,
-  AlertTriangle,
-  Smile,
-  Tag
+  AlertTriangle
 } from 'lucide-react';
 
 interface NotificationIconProps {
@@ -24,32 +24,33 @@ interface NotificationIconProps {
 
 const NotificationIcon: React.FC<NotificationIconProps> = ({ type, isRead = false }) => {
   const getIcon = (iconName: string) => {
-    const iconMap = {
-      'package': Package,
-      'star': Star,
-      'check-circle': CheckCircle,
-      'truck': Truck,
-      'check-circle-2': CheckCircle2,
-      'x-circle': XCircle,
-      'alert-triangle': AlertTriangle,
-      'smile': Smile,
-      'tag': Tag,
-      'bell': Bell
+    const iconMap: Record<string, React.ComponentType<any>> = {
+      pending: Clock,
+      paid: CreditCard,
+      processing: RefreshCw,
+      ready_for_shipping: Package,
+      ready_for_pickup: MapPin,
+      shipped: Truck,
+      out_for_delivery: Send,
+      delivered: CheckCircle,
+      cancelled: XCircle,
+      failed_delivery: AlertTriangle
     };
     
     return iconMap[iconName as keyof typeof iconMap] || Bell;
   };
 
-  const IconComponent = getIcon(type.icon);
+  const iconName = type?.icon ?? 'bell';
+  const IconComponent = getIcon(iconName);
   
   return (
     <div 
       className={`p-2 rounded-full ${isRead ? 'opacity-60' : ''}`}
-      style={{ backgroundColor: `${type.color}20` }}
+      style={{ backgroundColor: `${type?.color ?? '#3B82F6'}20` }}
     >
       <IconComponent 
         className="h-4 w-4" 
-        style={{ color: type.color }}
+        style={{ color: type?.color ?? '#3B82F6' }}
       />
     </div>
   );

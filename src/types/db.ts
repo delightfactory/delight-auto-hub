@@ -16,7 +16,17 @@ export interface Product {
   product_code: string;
 }
 
-export type OrderStatus = 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled';
+export type OrderStatus =
+  | 'pending'
+  | 'paid'
+  | 'processing'
+  | 'ready_for_shipping'
+  | 'ready_for_pickup'
+  | 'shipped'
+  | 'out_for_delivery'
+  | 'delivered'
+  | 'cancelled'
+  | 'failed_delivery';
 
 export interface OrderItem {
   id: string;

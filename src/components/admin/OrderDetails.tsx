@@ -131,10 +131,15 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onStatusUpdate }) 
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="pending">قيد الانتظار</SelectItem>
-            <SelectItem value="paid">قيد المعالجة</SelectItem>
+            <SelectItem value="paid">تم الدفع</SelectItem>
+            <SelectItem value="processing">قيد المعالجة</SelectItem>
+            <SelectItem value="ready_for_shipping">جاهز للشحن</SelectItem>
+            <SelectItem value="ready_for_pickup">جاهز للاستلام</SelectItem>
             <SelectItem value="shipped">تم الشحن</SelectItem>
-            <SelectItem value="delivered">مكتمل</SelectItem>
+            <SelectItem value="out_for_delivery">في الطريق للتسليم</SelectItem>
+            <SelectItem value="delivered">تم التسليم</SelectItem>
             <SelectItem value="cancelled">ملغي</SelectItem>
+            <SelectItem value="failed_delivery">فشل التسليم</SelectItem>
           </SelectContent>
         </Select>
       </div>
