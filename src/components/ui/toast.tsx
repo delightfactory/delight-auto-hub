@@ -15,7 +15,7 @@ const ToastViewport = React.forwardRef<
   <ToastPrimitives.Viewport
     ref={ref}
     className={cn(
-      "fixed top-0 z-[100] flex max-h-screen w-full flex-col-reverse p-4 sm:bottom-0 sm:right-0 sm:top-auto sm:flex-col md:max-w-[320px]", // Made notifications narrower
+      "fixed top-0 z-[100] flex max-h-screen w-full flex-col-reverse p-2 sm:bottom-0 sm:right-0 sm:top-auto sm:flex-col md:max-w-[280px]", // Reduced padding and max-width
       className
     )}
     {...props}
@@ -24,19 +24,19 @@ const ToastViewport = React.forwardRef<
 ToastViewport.displayName = ToastPrimitives.Viewport.displayName
 
 const toastVariants = cva(
-  "group pointer-events-auto relative flex w-full items-center justify-between space-x-2 overflow-hidden rounded-md border p-3 pr-5 shadow-sm transition-all data-[swipe=cancel]:translate-x-0 data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)] data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[swipe=move]:transition-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=end]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-top-full data-[state=open]:sm:slide-in-from-bottom-full", // Made padding smaller
+  "group pointer-events-auto relative flex w-full items-center justify-between space-x-2 overflow-hidden rounded-md border p-2 pr-4 shadow-md transition-all data-[swipe=cancel]:translate-x-0 data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)] data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[swipe=move]:transition-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=end]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-top-full data-[state=open]:sm:slide-in-from-bottom-full", // Reduced padding and increased shadow
   {
     variants: {
       variant: {
-        default: "border bg-white text-gray-950 dark:bg-gray-900 dark:text-gray-50 border-gray-200 dark:border-gray-800",
+        default: "border-l-4 border-l-gray-400 bg-white text-gray-950 dark:bg-gray-800 dark:text-gray-50 border-t border-r border-b border-gray-100 dark:border-t dark:border-r dark:border-b dark:border-gray-700",
         destructive:
-          "destructive group border-red-500 bg-red-500 text-white dark:border-red-900 dark:bg-red-900 dark:text-gray-50",
+          "destructive group border-l-4 border-l-red-600 bg-red-50 text-red-800 dark:bg-red-900/30 dark:text-red-200 border-t border-r border-b border-red-100 dark:border-t dark:border-r dark:border-b dark:border-red-900/30",
         success: 
-          "border-green-500 bg-green-50 text-green-800 dark:bg-green-900 dark:text-green-50",
+          "border-l-4 border-l-green-600 bg-green-50 text-green-800 dark:bg-green-900/30 dark:text-green-200 border-t border-r border-b border-green-100 dark:border-t dark:border-r dark:border-b dark:border-green-900/30",
         warning: 
-          "border-yellow-500 bg-yellow-50 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-50",
+          "border-l-4 border-l-yellow-600 bg-yellow-50 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 border-t border-r border-b border-yellow-100 dark:border-t dark:border-r dark:border-b dark:border-yellow-900/30",
         info: 
-          "border-amazon-primary bg-amazon-light text-amazon-dark dark:bg-amazon-secondary dark:text-amazon-light border-amazon-orange", // Amazon-styled info toast
+          "border-l-4 border-l-blue-600 bg-blue-50 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200 border-t border-r border-b border-blue-100 dark:border-t dark:border-r dark:border-b dark:border-blue-900/30",
       },
     },
     defaultVariants: {

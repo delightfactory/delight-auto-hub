@@ -11,6 +11,13 @@ const config = {
     './src/**/*.{ts,tsx}',
   ],
   prefix: "",
+  // تحسين الأداء عن طريق تقليل حجم CSS
+  future: {
+    hoverOnlyWhenSupported: true, // تفعيل :hover فقط على الأجهزة التي تدعمه
+    respectDefaultRingColorOpacity: true,
+    disableColorOpacityUtilitiesByDefault: true,
+  },
+  // تقليل حجم CSS في وضع الإنتاج
   theme: {
     container: {
       center: true,

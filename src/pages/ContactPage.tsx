@@ -3,10 +3,9 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Send, Phone, Mail, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import SectionHeading from '@/components/SectionHeading';
 import { toast } from '@/components/ui/use-toast';
+import { OptimizedForm } from '@/components/performance/OptimizedForm';
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
@@ -14,14 +13,52 @@ const fadeIn = {
 };
 
 const ContactPage: React.FC = () => {
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (values: Record<string, string>) => {
     // Here would be the logic to handle form submission
+    console.log('Form values:', values);
     toast({
       title: "تم إرسال رسالتك بنجاح",
       description: "سنقوم بالرد عليك في أقرب وقت ممكن. شكراً لتواصلك معنا!",
     });
   };
+  
+  // تعريف حقول النموذج
+  const contactFormFields = [
+    {
+      name: 'name',
+      label: 'الاسم',
+      type: 'text' as const,
+      placeholder: 'أدخل اسمك',
+      required: true
+    },
+    {
+      name: 'email',
+      label: 'البريد الإلكتروني',
+      type: 'email' as const,
+      placeholder: 'example@domain.com',
+      required: true,
+      validation: (value: string) => {
+        if (!/\S+@\S+\.\S+/.test(value)) {
+          return 'يرجى إدخال بريد إلكتروني صحيح';
+        }
+        return null;
+      }
+    },
+    {
+      name: 'subject',
+      label: 'الموضوع',
+      type: 'text' as const,
+      placeholder: 'موضوع الرسالة',
+      required: true
+    },
+    {
+      name: 'message',
+      label: 'الرسالة',
+      type: 'textarea' as const,
+      placeholder: 'اكتب رسالتك هنا...',
+      required: true
+    }
+  ];
 
   return (
     <div className="pb-20">
@@ -56,38 +93,12 @@ const ContactPage: React.FC = () => {
               className="glass-card p-8 rounded-xl"
             >
               <h3 className="text-2xl font-semibold mb-6">أرسل لنا رسالة</h3>
-              <form onSubmit={handleSubmit} className="space-y-5">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                      الاسم
-                    </label>
-                    <Input id="name" placeholder="أدخل اسمك" required />
-                  </div>
-                  <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                      البريد الإلكتروني
-                    </label>
-                    <Input id="email" type="email" placeholder="example@domain.com" required />
-                  </div>
-                </div>
-                <div>
-                  <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">
-                    الموضوع
-                  </label>
-                  <Input id="subject" placeholder="موضوع الرسالة" required />
-                </div>
-                <div>
-                  <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
-                    الرسالة
-                  </label>
-                  <Textarea id="message" placeholder="اكتب رسالتك هنا..." rows={5} required />
-                </div>
-                <Button type="submit" className="btn-primary w-full">
-                  <Send className="ml-2 h-4 w-4" />
-                  <span>إرسال الرسالة</span>
-                </Button>
-              </form>
+              <OptimizedForm 
+                fields={contactFormFields}
+                onSubmit={handleSubmit}
+                submitLabel="إرسال الرسالة"
+                className="space-y-5"
+              />
             </motion.div>
 
             {/* Contact Information */}

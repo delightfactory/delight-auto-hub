@@ -1,9 +1,12 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
 import ProductCard from '@/components/ProductCard';
 import { ProductDataService } from '@/services/productDataService';
 import { Button } from '@/components/ui/button';
+import { VirtualizedProductGrid } from '@/components/performance/VirtualizedProductGrid';
+import { SmoothPageTransition } from '@/components/performance/SmoothPageTransition';
+import { useNavigate } from 'react-router-dom';
 
 // تم إزالة PageHeader لتوفير مساحة عرض
 
@@ -41,22 +44,41 @@ const BestDealsPage: React.FC = () => {
     );
   }
 
+  const navigate = useNavigate();
+  
+  // استخدام useCallback لتحسين الأداء
+  const handleProductClick = useCallback((product) => {
+    navigate(`/products/${product.id}`);
+  }, [navigate]);
+
   return (
-    <>
-      {/* PageHeader تمت إزالته */}
+    <SmoothPageTransition transitionType="fade" duration={0.3}> {/* تقليل مدة الانتقال لتحسين الأداء */}
       <section className="py-16">
-        <div className="container-custom">
+        <div className="container-custom" style={{ overflowX: 'hidden' }}> {/* منع التمرير الأفقي */}
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-20">
               <Loader2 className="h-12 w-12 animate-spin text-delight-600 mb-4" />
               <p className="text-lg font-medium">جارِ تحميل العروض...</p>
             </div>
           ) : bestDeals.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {bestDeals.map(product => (
-                <ProductCard key={product.id} {...product} />
-              ))}
-            </div>
+            <VirtualizedProductGrid 
+              products={bestDeals.map(product => ({
+                ...product,
+                // التأكد من أن السعر رقم لتجنب أخطاء التحويل
+                price: typeof product.price === 'string' ? parseFloat(product.price.replace(/[^\d.]/g, '')) : product.price
+              }))} 
+              columns={{
+                default: 2, // عرض 2 منتجين في الصف على الأجهزة الصغيرة
+                sm: 2,
+                md: 3,
+                lg: 4
+              }}
+              gap={4} // زيادة المسافة بين العناصر قليلاً لتحسين المظهر
+              estimateSize={320} // تعديل الحجم التقديري للعناصر
+              onProductClick={handleProductClick}
+              className="mb-8"
+              useWindowScroll={true} // استخدام تمرير النافذة بدلاً من التمرير الداخلي
+            />
           ) : (
             <div className="text-center py-20">
               <p className="text-xl font-semibold mb-4">لا توجد صفقات متاحة</p>
@@ -65,7 +87,7 @@ const BestDealsPage: React.FC = () => {
           )}
         </div>
       </section>
-    </>
+    </SmoothPageTransition>
   );
 };
 

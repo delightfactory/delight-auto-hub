@@ -5,8 +5,8 @@ import type {
   ToastProps,
 } from "@/components/ui/toast"
 
-const TOAST_LIMIT = 5
-const TOAST_REMOVE_DELAY = 5000
+const TOAST_LIMIT = 3 // Reducir el límite de notificaciones simultáneas
+const TOAST_REMOVE_DELAY = 3000 // Reducir el tiempo de visualización
 
 type ToastType = "default" | "destructive" | "success" | "warning" | "info"
 

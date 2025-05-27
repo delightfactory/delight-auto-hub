@@ -26,6 +26,7 @@ import AdminSettingsPage from './pages/admin/SettingsPage';
 import AdminCommentsPage from './pages/admin/CommentsPage';
 import AdminArticlesPage from './pages/admin/ArticlesPage';
 import { ThemeProvider } from "@/context/ThemeContext"
+import { SmoothPageTransition } from "@/components/performance/SmoothPageTransition";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from "@/components/ui/toaster"
 import NotificationsPage from './pages/admin/NotificationsPage';
@@ -46,20 +47,20 @@ function App() {
             <QueryClientProvider client={queryClient}>
               <div className="min-h-screen bg-background font-sans antialiased">
                 <Routes>
-                  <Route path="/" element={<MainLayout><HomePage /></MainLayout>} />
+                  <Route path="/" element={<MainLayout><SmoothPageTransition><HomePage /></SmoothPageTransition></MainLayout>} />
                   <Route path="/products" element={<MainLayout><ProductsPage /></MainLayout>} />
-                  <Route path="/products/:id" element={<MainLayout><ProductDetailsPage /></MainLayout>} />
-                  <Route path="/articles" element={<MainLayout><ArticlesPage /></MainLayout>} />
-                  <Route path="/articles/:slug" element={<MainLayout><ArticleDetailsPage /></MainLayout>} />
-                  <Route path="/factory" element={<MainLayout><FactoryPage /></MainLayout>} />
-                  <Route path="/about" element={<MainLayout><AboutPage /></MainLayout>} />
-                  <Route path="/contact" element={<MainLayout><ContactPage /></MainLayout>} />
-                  <Route path="/auth" element={<LoginPage />} />
-                  <Route path="/register" element={<RegisterPage />} />
-                  <Route path="/profile" element={<MainLayout><ProfilePage /></MainLayout>} />
-                  <Route path="/checkout" element={<MainLayout><CheckoutPage /></MainLayout>} />
-                  <Route path="/orders" element={<MainLayout><OrdersPage /></MainLayout>} />
-                  <Route path="/best-deals" element={<MainLayout><BestDealsPage /></MainLayout>} />
+                  <Route path="/products/:id" element={<MainLayout><SmoothPageTransition><ProductDetailsPage /></SmoothPageTransition></MainLayout>} />
+                  <Route path="/articles" element={<MainLayout><SmoothPageTransition><ArticlesPage /></SmoothPageTransition></MainLayout>} />
+                  <Route path="/articles/:slug" element={<MainLayout><SmoothPageTransition><ArticleDetailsPage /></SmoothPageTransition></MainLayout>} />
+                  <Route path="/factory" element={<MainLayout><SmoothPageTransition><FactoryPage /></SmoothPageTransition></MainLayout>} />
+                  <Route path="/about" element={<MainLayout><SmoothPageTransition><AboutPage /></SmoothPageTransition></MainLayout>} />
+                  <Route path="/contact" element={<MainLayout><SmoothPageTransition><ContactPage /></SmoothPageTransition></MainLayout>} />
+                  <Route path="/auth" element={<SmoothPageTransition><LoginPage /></SmoothPageTransition>} />
+                  <Route path="/register" element={<SmoothPageTransition><RegisterPage /></SmoothPageTransition>} />
+                  <Route path="/profile" element={<MainLayout><SmoothPageTransition><ProfilePage /></SmoothPageTransition></MainLayout>} />
+                  <Route path="/checkout" element={<MainLayout><SmoothPageTransition><CheckoutPage /></SmoothPageTransition></MainLayout>} />
+                  <Route path="/orders" element={<MainLayout><SmoothPageTransition><OrdersPage /></SmoothPageTransition></MainLayout>} />
+                  <Route path="/best-deals" element={<MainLayout><SmoothPageTransition><BestDealsPage /></SmoothPageTransition></MainLayout>} />
 
                   <Route path="/admin" element={<AdminLayout />}>
                     <Route index element={<AdminDashboardPage />} />
@@ -81,7 +82,9 @@ function App() {
                     path="/settings/notifications" 
                     element={
                       <MainLayout>
-                        <NotificationSettingsPage />
+                        <SmoothPageTransition>
+                          <NotificationSettingsPage />
+                        </SmoothPageTransition>
                       </MainLayout>
                     } 
                   />

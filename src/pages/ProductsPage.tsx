@@ -7,6 +7,9 @@ import ProductCard from '@/components/ProductCard';
 // import CategoryCarousel from '@/components/CategoryCarousel'; // مؤقتًا معطل لحل مشاكل العرض
 // تمت إزالة PageHeader لتوفير مساحة عرض فعلية
 import { ProductDataService } from '@/services/productDataService';
+import { VirtualizedProductGrid } from '@/components/performance/VirtualizedProductGrid';
+import { SmoothPageTransition } from '@/components/performance/SmoothPageTransition';
+import { useNavigate } from 'react-router-dom';
 
 const ProductsPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -45,12 +48,19 @@ const ProductsPage: React.FC = () => {
     );
   }
 
+  const navigate = useNavigate();
+  
+  const handleProductClick = (product) => {
+    navigate(`/products/${product.id}`);
+  };
+
   return (
-    <div>
-      {/* PageHeader تمت إزالته */}
-      
-      <section className="py-16">
-        <div className="container-custom">
+    <SmoothPageTransition transitionType="fade" duration={0.4}>
+      <div>
+        {/* PageHeader تمت إزالته */}
+        
+        <section className="py-16">
+          <div className="container-custom">
           {/* CategoryCarousel معطل مؤقتًا لإصلاح تجاوز العرض */}
           {/* شريط البحث والفلاتر */}
           <div className="flex flex-col md:flex-row gap-4 mb-12">
@@ -84,22 +94,26 @@ const ProductsPage: React.FC = () => {
                 </p>
               </div>
               
-              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {filteredProducts.map((product) => (
-                  <ProductCard 
-                    key={product.id} 
-                    id={product.id}
-                    name={product.name}
-                    description={product.description}
-                    image={product.image}
-                    price={product.price}
-                    rating={product.rating}
-                    isFeatured={product.isFeatured}
-                    isNew={product.isNew}
-                    originalPrice={product.originalPrice}
-                  />
-                ))}
-              </div>
+              {/* استخدام VirtualizedProductGrid لتحسين الأداء */}
+              <VirtualizedProductGrid 
+                products={filteredProducts.map(product => ({
+                  ...product,
+                  price: typeof product.price === 'string'
+                    ? parseFloat(product.price.replace(/[^0-9.]/g, ''))
+                    : product.price
+                }))}
+                onProductClick={handleProductClick}
+                className="mb-8"
+                useWindowScroll={true} // استخدام تمرير النافذة بدلاً من التمرير الداخلي
+                columns={{
+                  default: 2,
+                  sm: 2,
+                  md: 3,
+                  lg: 4
+                }}
+                gap={4} // مطابق لصفحة العروض الخاصة
+                estimateSize={320} // تقدير حجم أفضل للعناصر
+              />
             </>
           ) : (
             <div className="text-center py-20">
@@ -121,6 +135,7 @@ const ProductsPage: React.FC = () => {
         </div> {/* إغلاق container-custom بعد عرض المنتجات */}
       </section>
     </div>
+    </SmoothPageTransition>
   );
 };
 

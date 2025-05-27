@@ -87,13 +87,33 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
               </div>
             </div>
             
-            <Button 
-              className="mt-4 bg-red-600 hover:bg-red-700 text-white"
-              onClick={handleSubmit}
-              disabled={isUpdating}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3, delay: 0.5 }}
+              className="mt-4 flex justify-end"
             >
-              {isUpdating ? 'جاري الحفظ...' : 'حفظ الإعدادات'}
-            </Button>
+              <Button 
+                className="bg-blue-500 hover:bg-blue-600 text-white transition-all duration-200 rounded-md shadow-sm hover:shadow text-sm py-1 px-3 flex items-center gap-1.5"
+                onClick={handleSubmit}
+                disabled={isUpdating}
+                size="sm"
+              >
+                {isUpdating ? (
+                  <>
+                    <span className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
+                    <span className="text-xs">جاري الحفظ...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span className="text-xs">حفظ الإعدادات</span>
+                  </>
+                )}
+              </Button>
+            </motion.div>
           </div>
         </CardContent>
       </Card>

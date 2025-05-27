@@ -20,6 +20,7 @@ const Header = () => {
   const navItems = [
     { name: 'الرئيسية', path: '/' },
     { name: 'المنتجات', path: '/products' },
+    { name: 'العروض الخاصة', path: '/best-deals' },
     { name: 'المصنع', path: '/factory' },
     { name: 'المقالات', path: '/articles' },
     { name: 'من نحن', path: '/about' },

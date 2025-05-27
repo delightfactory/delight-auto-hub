@@ -39,9 +39,14 @@ const BannerCarousel: React.FC<BannerCarouselProps> = ({ pageName }) => {
 
   useEffect(() => {
     if (!filteredBanners.length) return;
+    
+    // استخدام قيمة افتراضية 5 ثوانٍ إذا كانت display_interval غير محددة
+    const interval = (filteredBanners[current]?.display_interval || 5) * 1000;
+    
     const timer = setTimeout(() => {
       setCurrent((prev) => (prev + 1) % filteredBanners.length);
-    }, filteredBanners[current].display_interval * 1000);
+    }, interval);
+    
     return () => clearTimeout(timer);
   }, [current, filteredBanners]);
 

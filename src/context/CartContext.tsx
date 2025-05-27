@@ -4,6 +4,7 @@ export interface CartItem {
   id: string;
   name: string;
   price: string;
+  originalPrice?: string; // Precio original antes del descuento (opcional)
   image: string;
   quantity: number;
 }

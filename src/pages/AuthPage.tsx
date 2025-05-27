@@ -4,16 +4,12 @@ import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Mail, Lock, User } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { OptimizedForm } from '@/components/performance/OptimizedForm';
 
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const { user, signIn, signUp } = useAuth();
@@ -24,17 +20,12 @@ const AuthPage = () => {
     return <Navigate to="/" replace />;
   }
   
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (values: Record<string, string>) => {
     setIsSubmitting(true);
 
     try {
-      if (!isLogin && !name.trim()) {
-        alert("الرجاء إدخال الاسم");
-        setIsSubmitting(false);
-        return;
-      }
-
+      const { email, password, name } = values;
+      
       const result = isLogin
         ? await signIn(email, password)
         : await signUp(email, password, name);
@@ -73,86 +64,82 @@ const AuthPage = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {!isLogin && (
-                <div className="space-y-2">
-                  <Label htmlFor="name" className="font-medium">الاسم</Label>
-                  <div className="relative">
-                    <User className="absolute right-3 top-2.5 h-5 w-5 text-gray-400" />
-                    <Input 
-                      id="name"
-                      placeholder="أدخل اسمك الكامل" 
-                      className="pr-10"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-              )}
-              
-              <div className="space-y-2">
-                <Label htmlFor="email" className="font-medium">البريد الإلكتروني</Label>
-                <div className="relative">
-                  <Mail className="absolute right-3 top-2.5 h-5 w-5 text-gray-400" />
-                  <Input 
-                    id="email"
-                    type="email"
-                    placeholder="أدخل بريدك الإلكتروني" 
-                    className="pr-10"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password" className="font-medium">كلمة المرور</Label>
-                  {isLogin && (
-                    <button 
-                      type="button" 
-                      className="text-sm text-red-600 hover:text-red-500"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        alert('سيتم تفعيل هذه الخاصية قريباً');
-                      }}
-                    >
-                      نسيت كلمة المرور؟
-                    </button>
-                  )}
-                </div>
-                <div className="relative">
-                  <Lock className="absolute right-3 top-2.5 h-5 w-5 text-gray-400" />
-                  <Input 
-                    id="password"
-                    type="password"
-                    placeholder="••••••••" 
-                    className="pr-10"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    minLength={6}
-                  />
-                </div>
-              </div>
-              
-              <Button 
-                type="submit" 
-                className="w-full bg-red-600 hover:bg-red-700 text-white"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? (
-                  <span className="flex items-center gap-2">
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                    {isLogin ? 'جاري تسجيل الدخول...' : 'جاري إنشاء الحساب...'}
-                  </span>
-                ) : (
-                  isLogin ? 'تسجيل الدخول' : 'إنشاء حساب'
-                )}
-              </Button>
-            </form>
+            {isLogin ? (
+              <OptimizedForm
+                fields={[
+                  {
+                    name: 'email',
+                    label: 'البريد الإلكتروني',
+                    type: 'email' as const,
+                    placeholder: 'أدخل بريدك الإلكتروني',
+                    required: true,
+                    validation: (value) => {
+                      if (!/\S+@\S+\.\S+/.test(value)) {
+                        return 'يرجى إدخال بريد إلكتروني صحيح';
+                      }
+                      return null;
+                    }
+                  },
+                  {
+                    name: 'password',
+                    label: 'كلمة المرور',
+                    type: 'password' as const,
+                    placeholder: '••••••••',
+                    required: true,
+                    validation: (value) => {
+                      if (value.length < 6) {
+                        return 'يجب أن تكون كلمة المرور 6 أحرف على الأقل';
+                      }
+                      return null;
+                    }
+                  }
+                ]}
+                onSubmit={handleSubmit}
+                submitLabel={isSubmitting ? 'جاري تسجيل الدخول...' : 'تسجيل الدخول'}
+                className="space-y-4"
+              />
+            ) : (
+              <OptimizedForm
+                fields={[
+                  {
+                    name: 'name',
+                    label: 'الاسم',
+                    type: 'text' as const,
+                    placeholder: 'أدخل اسمك الكامل',
+                    required: true
+                  },
+                  {
+                    name: 'email',
+                    label: 'البريد الإلكتروني',
+                    type: 'email' as const,
+                    placeholder: 'أدخل بريدك الإلكتروني',
+                    required: true,
+                    validation: (value) => {
+                      if (!/\S+@\S+\.\S+/.test(value)) {
+                        return 'يرجى إدخال بريد إلكتروني صحيح';
+                      }
+                      return null;
+                    }
+                  },
+                  {
+                    name: 'password',
+                    label: 'كلمة المرور',
+                    type: 'password' as const,
+                    placeholder: '••••••••',
+                    required: true,
+                    validation: (value) => {
+                      if (value.length < 6) {
+                        return 'يجب أن تكون كلمة المرور 6 أحرف على الأقل';
+                      }
+                      return null;
+                    }
+                  }
+                ]}
+                onSubmit={handleSubmit}
+                submitLabel={isSubmitting ? 'جاري إنشاء الحساب...' : 'إنشاء حساب'}
+                className="space-y-4"
+              />
+            )}
           </CardContent>
           <CardFooter className="flex justify-center">
             <Button 

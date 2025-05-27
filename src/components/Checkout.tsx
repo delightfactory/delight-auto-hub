@@ -1,6 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Check, CreditCard, MapPin, Truck, ChevronRight, Mail, Phone, User } from 'lucide-react';
+import { 
+  Check, 
+  CreditCard, 
+  MapPin, 
+  Truck, 
+  ChevronRight, 
+  Mail, 
+  Phone, 
+  User, 
+  ShieldCheck, 
+  Clock, 
+  Calendar, 
+  Percent, 
+  ArrowLeft,
+  Package
+} from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -12,6 +27,7 @@ import { toast } from '@/components/ui/use-toast';
 import { placeOrder } from '@/services/orderService';
 import { Textarea } from '@/components/ui/textarea';
 import { useNavigate } from 'react-router-dom';
+import { Badge } from '@/components/ui/badge';
 
 interface CheckoutProps {
   onClose: () => void;
@@ -33,6 +49,10 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose }) => {
     paymentMethod: 'cod',
     notes: ''
   });
+  
+  // حساب إجمالي التوفير
+  const [totalSavings, setTotalSavings] = useState<string>('0');
+  const [savingsPercentage, setSavingsPercentage] = useState<number>(0);
   
   // Calculate total including shipping
   const [totalWithShipping, setTotalWithShipping] = useState('0');
@@ -61,11 +81,29 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose }) => {
   }, [user, navigate, onClose]);
   
   useEffect(() => {
+    // حساب إجمالي التوفير
+    let savings = 0;
+    let originalTotal = 0;
+    
+    items.forEach(item => {
+      const currentPrice = parseFloat(item.price.replace(/[^\d.]/g, ''));
+      const originalPrice = item.originalPrice ? parseFloat(item.originalPrice.replace(/[^\d.]/g, '')) : currentPrice;
+      
+      if (originalPrice > currentPrice) {
+        savings += (originalPrice - currentPrice) * item.quantity;
+      }
+      
+      originalTotal += originalPrice * item.quantity;
+    });
+    
+    setTotalSavings(`${savings.toFixed(2)} جنيه`);
+    setSavingsPercentage(originalTotal > 0 ? (savings / originalTotal) * 100 : 0);
+
     // Parse the total price from string format (e.g., "120 جنيه") to number
-    const numericTotal = parseInt(total.replace(/\D/g, '')) || 0;
+    const numericTotal = parseFloat(total.replace(/[^\d.]/g, '')) || 0;
     const shipping = 15; // Shipping cost
-    setTotalWithShipping(`${numericTotal + shipping} جنيه`);
-  }, [total]);
+    setTotalWithShipping(`${(numericTotal + shipping).toFixed(2)} جنيه`);
+  }, [items, total]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -193,8 +231,43 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose }) => {
     }, 1000);
   };
 
+  // مكون مؤشر التقدم
+  const StepIndicator = ({ currentStep }: { currentStep: 'shipping' | 'payment' | 'confirmation' }) => {
+    return (
+      <div className="mb-8">
+        <div className="flex justify-between items-center mb-2">
+          <div className="flex flex-col items-center">
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${currentStep === 'shipping' ? 'bg-delight-600 text-white' : currentStep === 'payment' || currentStep === 'confirmation' ? 'bg-green-500 text-white' : 'bg-gray-200'}`}>
+              {currentStep === 'payment' || currentStep === 'confirmation' ? <Check className="h-5 w-5" /> : <MapPin className="h-5 w-5" />}
+            </div>
+            <span className={`text-xs mt-1 font-medium ${currentStep === 'shipping' ? 'text-delight-600' : currentStep === 'payment' || currentStep === 'confirmation' ? 'text-green-500' : 'text-gray-500'}`}>الشحن</span>
+          </div>
+          
+          <div className={`flex-1 h-1 mx-2 ${currentStep === 'shipping' ? 'bg-gray-200' : 'bg-green-500'}`}></div>
+          
+          <div className="flex flex-col items-center">
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${currentStep === 'payment' ? 'bg-delight-600 text-white' : currentStep === 'confirmation' ? 'bg-green-500 text-white' : 'bg-gray-200'}`}>
+              {currentStep === 'confirmation' ? <Check className="h-5 w-5" /> : <CreditCard className="h-5 w-5" />}
+            </div>
+            <span className={`text-xs mt-1 font-medium ${currentStep === 'payment' ? 'text-delight-600' : currentStep === 'confirmation' ? 'text-green-500' : 'text-gray-500'}`}>الدفع</span>
+          </div>
+          
+          <div className={`flex-1 h-1 mx-2 ${currentStep === 'confirmation' ? 'bg-green-500' : 'bg-gray-200'}`}></div>
+          
+          <div className="flex flex-col items-center">
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${currentStep === 'confirmation' ? 'bg-delight-600 text-white' : 'bg-gray-200'}`}>
+              <Check className="h-5 w-5" />
+            </div>
+            <span className={`text-xs mt-1 font-medium ${currentStep === 'confirmation' ? 'text-delight-600' : 'text-gray-500'}`}>التأكيد</span>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="bg-white rounded-lg overflow-hidden max-h-[90vh] overflow-y-auto">
+      <StepIndicator currentStep={step} />
       {/* Checkout Steps */}
       <div className="bg-delight-50 p-4 sticky top-0 z-10">
         <div className="flex items-center justify-between max-w-md mx-auto">
@@ -385,19 +458,40 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose }) => {
               
               <Separator className="my-4" />
               
-              <div className="space-y-2 bg-gray-50 p-4 rounded-lg">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">المجموع الفرعي:</span>
-                  <span>{total}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">الشحن:</span>
-                  <span>15 جنيه</span>
-                </div>
-                <Separator className="my-2" />
-                <div className="flex justify-between font-bold text-lg">
-                  <span>الإجمالي:</span>
-                  <span className="text-delight-700">{totalWithShipping}</span>
+              <div className="bg-gray-50 p-4 rounded-lg mb-6">
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">المجموع الفرعي:</span>
+                    <span className="font-medium">{total}</span>
+                  </div>
+                  
+                  {savingsPercentage > 0 && (
+                    <div className="flex justify-between text-red-600">
+                      <span className="flex items-center gap-1">
+                        <Percent className="h-3.5 w-3.5" />
+                        التوفير:
+                      </span>
+                      <span className="font-medium">- {totalSavings}</span>
+                    </div>
+                  )}
+                  
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">الشحن:</span>
+                    <span className="font-medium">15 جنيه</span>
+                  </div>
+                  
+                  <Separator className="my-2" />
+                  
+                  <div className="flex justify-between font-bold text-lg">
+                    <span>الإجمالي:</span>
+                    <span className="text-delight-700">{totalWithShipping}</span>
+                  </div>
+                  
+                  {savingsPercentage > 0 && (
+                    <div className="bg-red-50 p-2 rounded-md text-center text-sm text-red-600 mt-2">
+                      لقد وفرت {savingsPercentage.toFixed(1)}% من قيمة مشترياتك!
+                    </div>
+                  )}
                 </div>
               </div>
               
@@ -434,22 +528,61 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose }) => {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: "spring", stiffness: 500, damping: 30 }}
-              className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6"
+              className="relative"
             >
-              <Check className="h-10 w-10 text-green-600" />
+              <div className="w-24 h-24 bg-gradient-to-br from-green-50 to-green-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-md">
+                <Check className="h-12 w-12 text-green-600" />
+              </div>
+              
+              {/* تأثيرات احتفالية */}
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.3, duration: 0.5 }}
+                className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full"
+              >
+                <div className="absolute top-0 left-1/4 w-2 h-2 rounded-full bg-yellow-400 animate-ping" style={{ animationDuration: '1.5s' }}></div>
+                <div className="absolute top-1/4 right-1/4 w-3 h-3 rounded-full bg-delight-400 animate-ping" style={{ animationDuration: '2s' }}></div>
+                <div className="absolute bottom-1/4 left-1/3 w-2 h-2 rounded-full bg-green-400 animate-ping" style={{ animationDuration: '1.8s' }}></div>
+              </motion.div>
             </motion.div>
+            
             <h2 className="text-2xl font-bold mb-3 text-green-600">تم استلام طلبك بنجاح!</h2>
             <p className="text-gray-600 mb-6 leading-relaxed">
               شكراً لك على طلبك من ديلايت. تم إرسال تفاصيل الطلب إلى بريدك الإلكتروني.
               <br />
               سيتم التواصل معك خلال 24 ساعة لتأكيد موعد التوصيل.
             </p>
-            <div className="bg-gray-50 p-6 rounded-lg mb-6 text-right">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-gray-600 block">رقم الطلب:</span>
-                  <span className="font-mono font-bold">{orderId.substring(0, 8)}</span>
+            
+            {savingsPercentage > 0 && (
+              <div className="bg-red-50 border border-red-100 p-4 rounded-lg mb-6 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                    <Percent className="h-5 w-5 text-red-600" />
+                  </div>
+                  <span className="font-medium text-red-700">إجمالي التوفير</span>
                 </div>
+                <div className="text-right">
+                  <div className="font-bold text-red-600 text-lg">{totalSavings}</div>
+                  <div className="text-sm text-red-500">{savingsPercentage.toFixed(1)}% من قيمة مشترياتك</div>
+                </div>
+              </div>
+            )}
+            
+            <div className="bg-white border shadow-sm p-6 rounded-lg mb-6 text-right">
+              <div className="flex justify-between items-center mb-4 pb-2 border-b">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-delight-100 flex items-center justify-center">
+                    <Package className="h-4 w-4 text-delight-600" />
+                  </div>
+                  <span className="font-bold text-delight-900">تفاصيل الطلب</span>
+                </div>
+                <div className="bg-delight-100 text-delight-700 px-3 py-1 rounded-full text-sm font-medium">
+                  رقم الطلب: {orderId.substring(0, 8)}
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-gray-600 block">الاسم:</span>
                   <span className="font-medium">{formData.name}</span>
@@ -457,6 +590,10 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose }) => {
                 <div>
                   <span className="text-gray-600 block">الهاتف:</span>
                   <span className="font-medium">{formData.phone}</span>
+                </div>
+                <div>
+                  <span className="text-gray-600 block">البريد الإلكتروني:</span>
+                  <span className="font-medium">{formData.email}</span>
                 </div>
                 <div>
                   <span className="text-gray-600 block">المدينة:</span>
@@ -468,7 +605,19 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose }) => {
                 </div>
                 <div>
                   <span className="text-gray-600 block">طريقة الدفع:</span>
-                  <span className="font-medium">{formData.paymentMethod === 'card' ? 'بطاقة ائتمانية' : 'الدفع عند الاستلام'}</span>
+                  <span className="font-medium flex items-center gap-1">
+                    {formData.paymentMethod === 'card' ? (
+                      <>
+                        <CreditCard className="h-4 w-4 text-blue-500" />
+                        <span>بطاقة ائتمانية</span>
+                      </>
+                    ) : (
+                      <>
+                        <Package className="h-4 w-4 text-green-500" />
+                        <span>الدفع عند الاستلام</span>
+                      </>
+                    )}
+                  </span>
                 </div>
                 <div>
                   <span className="text-gray-600 block">المجموع:</span>
@@ -476,9 +625,12 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose }) => {
                 </div>
               </div>
             </div>
-            <Button onClick={handleCompleteCheckout} size="lg" className="w-full">
-              العودة للتسوق
-            </Button>
+            
+            <div className="flex gap-3">
+              <Button onClick={handleCompleteCheckout} size="lg" className="w-full py-6">
+                العودة للتسوق
+              </Button>
+            </div>
           </motion.div>
         )}
       </div>

@@ -8,6 +8,7 @@ import ProductCard from '@/components/ProductCard';
 import SectionHeading from '@/components/SectionHeading';
 import FactoryTour from '@/components/FactoryTour';
 import { ProductDataService } from '@/services/productDataService';
+import { ProgressiveImage } from '@/components/performance/ProgressiveImage';
 
 const Index: React.FC = () => {
   // جلب المنتجات المميزة
@@ -76,10 +77,12 @@ const Index: React.FC = () => {
               transition={{ duration: 0.8, delay: 0.2 }}
               className="relative"
             >
-              <img
+              <ProgressiveImage
                 src="https://images.unsplash.com/photo-1559827260-dc66d52bef19?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
                 alt="منتجات العناية بالسيارات"
                 className="rounded-2xl shadow-2xl"
+                placeholderColor="#f3f4f6"
+                blur={true}
               />
               <div className="absolute -bottom-6 -left-6 bg-white p-6 rounded-xl shadow-lg">
                 <div className="flex items-center gap-3">

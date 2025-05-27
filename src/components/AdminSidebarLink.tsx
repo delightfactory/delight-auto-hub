@@ -5,7 +5,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronLeft } from 'lucide-react';
 
-const AdminSidebarLink: React.FC = () => {
+interface AdminSidebarLinkProps {
+  onLinkClick?: () => void;
+}
+
+const AdminSidebarLink: React.FC<AdminSidebarLinkProps> = ({ onLinkClick }) => {
   const { user } = useAuth();
   
   const { data: isAdmin = false, isLoading } = useQuery({
@@ -41,6 +45,7 @@ const AdminSidebarLink: React.FC = () => {
       <Link
         to="/admin"
         className="text-red-600 hover:underline"
+        onClick={() => onLinkClick?.()}
       >
         لوحة التحكم
       </Link>
