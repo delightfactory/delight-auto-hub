@@ -61,7 +61,10 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           
           <SidebarInset>
             <main className="flex-grow transition-all duration-300 pb-14 sm:pb-0">
-              <BannerCarousel pageName={pageSection} />
+              {/* تم تعديل موضع البنرات وإضافة فئة mt لإضافة مسافة علوية */}
+              <div className="mt-4 sm:mt-6 relative z-10">
+                <BannerCarousel pageName={pageSection} />
+              </div>
               {children}
             </main>
             <Footer />

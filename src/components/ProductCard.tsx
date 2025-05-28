@@ -52,8 +52,12 @@ const ProductCard: React.FC<ProductCardProps> = ({
       id,
       name,
       price: price || '0 ريال',
+      originalPrice: originalPrice, // إضافة السعر الأصلي لحساب التوفير
       image,
     });
+    
+    // طباعة معلومات المنتج للتصحيح
+    console.log(`Added to cart: ${name}, Price: ${price}, Original Price: ${originalPrice}`);
     
     setIsAddedToCart(true);
     

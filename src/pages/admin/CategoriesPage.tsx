@@ -48,6 +48,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
+import { useCallback } from 'react';  // إضافة useCallback لتحسين الأداء
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -76,7 +77,11 @@ type CategoryFormValues = z.infer<typeof categorySchema>;
 const CategoriesPage = () => {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  // إزالة متغير حالة الحوار واستخدام نمط التحكم المعلن بدلاً من ذلك
+  const [dialogOpen, setDialogOpen] = useState(false);  // فقط للتحكم في حالة فتح الحوار برمجياً وليس لإظهار المكون نفسه
+  const [categoryToDelete, setCategoryToDelete] = useState<string>("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [confirmationShown, setConfirmationShown] = useState(false);
   const [editingCategory, setEditingCategory] = useState<any>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadingIcon, setUploadingIcon] = useState(false);
@@ -112,7 +117,7 @@ const CategoriesPage = () => {
       parent_id: category.parent_id,
       icon: category.icon,
     });
-    setIsDialogOpen(true);
+    setDialogOpen(true);  // تعيين حالة الحوار للفتح
   };
   
   // إضافة فئة جديدة
@@ -125,17 +130,20 @@ const CategoriesPage = () => {
       parent_id: null,
       icon: null,
     });
-    setIsDialogOpen(true);
+    setDialogOpen(true);  // تعيين حالة الحوار للفتح
   };
   
   // حذف فئة
   const handleDeleteCategory = async (id: string) => {
+    if (!id) return;
+    
     try {
       await categoryService.deleteCategory(id);
       toast({
         title: "تم حذف الفئة",
         description: "تم حذف الفئة بنجاح"
       });
+      setCategoryToDelete("");
       refetch();
     } catch (error) {
       console.error("خطأ في حذف الفئة:", error);
@@ -145,6 +153,13 @@ const CategoriesPage = () => {
         variant: "destructive"
       });
     }
+  };
+  
+  // تأكيد الحذف
+  const confirmDelete = (id: string) => {
+    setCategoryToDelete(id);
+    setDeleteDialogOpen(true);
+    setConfirmationShown(false); // إعادة تعيين حالة التأكيد عند فتح حوار جديد
   };
   
   // حفظ الفئة
@@ -159,17 +174,16 @@ const CategoriesPage = () => {
       } else {
         await categoryService.createCategory(data);
         toast({
-          title: "تم إضافة الفئة",
-          description: "تم إضافة الفئة الجديدة بنجاح"
+          title: "تم إنشاء الفئة",
+          description: "تم إنشاء الفئة بنجاح"
         });
       }
-      setIsDialogOpen(false);
+      setDialogOpen(false);  // إغلاق الحوار باستخدام الحالة
+      setEditingCategory(null);
       refetch();
     } catch (error) {
-      console.error("خطأ في حفظ الفئة:", error);
       toast({
-        title: "خطأ في الحفظ",
-        description: "حدث خطأ أثناء محاولة حفظ الفئة",
+        title: "خطأ في العملية", 
         variant: "destructive"
       });
     }
@@ -332,24 +346,29 @@ const CategoriesPage = () => {
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="sm">
+                        <Button variant="ghost" size="sm" onClick={() => {
+                          confirmDelete(category.id);
+                        }}>
                           <Trash2 className="h-4 w-4 text-red-600" />
                         </Button>
                       </AlertDialogTrigger>
-                      <AlertDialogContent>
+                      <AlertDialogContent className="z-[100]">
                         <AlertDialogHeader>
                           <AlertDialogTitle>هل أنت متأكد من حذف الفئة؟</AlertDialogTitle>
                           <AlertDialogDescription>
-                            هذا الإجراء لا يمكن التراجع عنه. سيتم حذف الفئة نهائياً من قاعدة البيانات.
+                            سيتم حذف الفئة وجميع المنتجات المرتبطة بها
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                          <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                          <AlertDialogCancel onClick={() => setDeleteDialogOpen(false)}>إلغاء</AlertDialogCancel>
                           <AlertDialogAction
                             className="bg-red-600 hover:bg-red-700"
-                            onClick={() => handleDeleteCategory(category.id)}
+                            onClick={() => {
+                              handleDeleteCategory(categoryToDelete);
+                              setDeleteDialogOpen(false);
+                            }}
                           >
-                            حذف
+                            تأكيد الحذف
                           </AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
@@ -379,7 +398,7 @@ const CategoriesPage = () => {
       )}
       
       {/* نافذة إضافة/تعديل الفئة */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>  {/* استخدام نمط التحكم المعلن */}
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{editingCategory ? 'تعديل الفئة' : 'إضافة فئة جديدة'}</DialogTitle>
@@ -556,7 +575,7 @@ const CategoriesPage = () => {
               />
               
               <DialogFooter className="mt-6">
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>  {/* استخدام متغير الحالة الجديد */}
                   إلغاء
                 </Button>
                 <Button type="submit">

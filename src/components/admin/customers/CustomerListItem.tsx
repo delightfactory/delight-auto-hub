@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Shield, ShoppingBag, Crown, User, Mail, Phone } from 'lucide-react';
 import { TableRow, TableCell } from "@/components/ui/table";
@@ -25,6 +25,17 @@ interface CustomerListItemProps {
 }
 
 const CustomerListItem: React.FC<CustomerListItemProps> = ({ customer, handleRoleUpdate }) => {
+  // إضافة حالة للتحكم في فتح/إغلاق الحوار
+  const [dialogOpen, setDialogOpen] = useState(false);
+  
+  // معالجة تحديث دور المستخدم مع إغلاق الحوار
+  const handleRoleUpdateAndClose = async () => {
+    await handleRoleUpdate(
+      customer.id, 
+      customer.role === 'admin' ? 'customer' : 'admin'
+    );
+    setDialogOpen(false);
+  };
   return (
     <TableRow>
       <TableCell>
@@ -90,12 +101,13 @@ const CustomerListItem: React.FC<CustomerListItemProps> = ({ customer, handleRol
             </Button>
           </Link>
           
-          <AlertDialog>
+          <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <AlertDialogTrigger asChild>
               <Button 
                 variant="outline" 
                 size="sm"
                 className={customer.role === 'admin' ? 'text-gray-600' : 'text-red-600 border-red-200'}
+                onClick={() => setDialogOpen(true)}
               >
                 <Shield className="h-4 w-4 ml-1" />
                 <span>
@@ -103,7 +115,7 @@ const CustomerListItem: React.FC<CustomerListItemProps> = ({ customer, handleRol
                 </span>
               </Button>
             </AlertDialogTrigger>
-            <AlertDialogContent>
+            <AlertDialogContent className="z-[100]">
               <AlertDialogHeader>
                 <AlertDialogTitle>
                   {customer.role === 'admin' 
@@ -119,13 +131,10 @@ const CustomerListItem: React.FC<CustomerListItemProps> = ({ customer, handleRol
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                <AlertDialogCancel onClick={() => setDialogOpen(false)}>إلغاء</AlertDialogCancel>
                 <AlertDialogAction
                   className={customer.role === 'admin' ? 'bg-gray-600' : 'bg-red-600'}
-                  onClick={() => handleRoleUpdate(
-                    customer.id, 
-                    customer.role === 'admin' ? 'customer' : 'admin'
-                  )}
+                  onClick={handleRoleUpdateAndClose}
                 >
                   {customer.role === 'admin' ? 'إلغاء الإدارة' : 'ترقية'}
                 </AlertDialogAction>

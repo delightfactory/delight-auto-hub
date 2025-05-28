@@ -1,3 +1,7 @@
+/**
+ * سياق السلة - يوفر وظائف إدارة سلة التسوق في التطبيق
+ * يتضمن إضافة وإزالة وتحديث المنتجات وحساب الإجمالي
+ */
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 
 export interface CartItem {
@@ -28,10 +32,17 @@ const initialState: CartState = {
   itemCount: 0,
 };
 
-// Parse price string to number (supports commas and extracts all digits)
+// Parse price string to number (supports commas and decimal points)
 const parsePrice = (priceString: string): number => {
-  const digitsOnly = priceString.replace(/[^\d]/g, '');
-  return parseInt(digitsOnly, 10) || 0;
+  if (!priceString) return 0;
+  // استخراج الأرقام والنقطة العشرية فقط
+  const digitsOnly = priceString.replace(/[^\d.]/g, '');
+  return parseFloat(digitsOnly) || 0;
+};
+
+// طباعة معلومات التصحيح
+const logDebugInfo = (message: string, data: any) => {
+  console.log(`[CartContext Debug] ${message}:`, data);
 };
 
 // Format price number to string (e.g., 75 -> "75 جنيه")
@@ -51,23 +62,34 @@ const calculateItemCount = (items: CartItem[]): number => {
   return items.reduce((count, item) => count + item.quantity, 0);
 };
 
+/**
+ * مخفض السلة - يدير حالة السلة بناءً على الإجراءات المختلفة
+ * يتعامل مع إضافة وإزالة وتحديث المنتجات وتحميل السلة المحفوظة
+ */
 const cartReducer = (state: CartState, action: CartAction): CartState => {
   switch (action.type) {
+    // تحميل السلة من التخزين المحلي
     case 'LOAD_CART':
       return action.payload;
 
     case 'ADD_ITEM': {
+      // طباعة معلومات المنتج المضاف للتصحيح
+      logDebugInfo('Adding item to cart', action.payload);
+      logDebugInfo('Item has originalPrice', !!action.payload.originalPrice);
+      
       const existingItemIndex = state.items.findIndex(
         (item) => item.id === action.payload.id
       );
 
       if (existingItemIndex !== -1) {
-        // Item exists, increase quantity
+        // المنتج موجود بالفعل، زيادة الكمية فقط
         const updatedItems = [...state.items];
         updatedItems[existingItemIndex] = {
           ...updatedItems[existingItemIndex],
           quantity: updatedItems[existingItemIndex].quantity + 1,
         };
+        
+        logDebugInfo('Updated existing item', updatedItems[existingItemIndex]);
 
         return {
           ...state,
@@ -76,8 +98,17 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
           itemCount: calculateItemCount(updatedItems),
         };
       } else {
-        // New item
-        const updatedItems = [...state.items, action.payload];
+        // منتج جديد
+        // التأكد من أن المنتج يحتوي على المعلومات المطلوبة
+        const newItem = {
+          ...action.payload,
+          quantity: action.payload.quantity || 1, // التأكد من وجود كمية
+        };
+        
+        // طباعة معلومات المنتج الجديد
+        logDebugInfo('New item added', newItem);
+        
+        const updatedItems = [...state.items, newItem];
         return {
           ...state,
           items: updatedItems,
@@ -147,6 +178,10 @@ interface CartContextType extends CartState {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+/**
+ * مزود سياق السلة - يوفر الوظائف والبيانات المتعلقة بالسلة لجميع المكونات
+ * يتعامل مع تخزين واسترجاع السلة من التخزين المحلي
+ */
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Initialize state from localStorage if available
   const [state, dispatch] = useReducer(cartReducer, initialState, () => {
@@ -213,6 +248,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 };
 
+/**
+ * خطاف استخدام السلة - يوفر وصولاً سهلاً لسياق السلة من أي مكون
+ * يمكن استخدامه للوصول إلى المنتجات والإجمالي ووظائف إدارة السلة
+ */
 export const useCart = (): CartContextType => {
   const context = useContext(CartContext);
   if (context === undefined) {

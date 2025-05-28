@@ -16,7 +16,7 @@ import AboutPage from './pages/AboutPage';
 import FactoryPage from './pages/FactoryPage';
 import ArticlesPage from './pages/ArticlesPage';
 import ArticleDetailsPage from './pages/ArticleDetailPage';
-import CheckoutPage from './pages/CartPage';
+import CartPage from './pages/CartPage';
 import OrdersPage from './pages/OrdersPage';
 import AdminDashboardPage from './pages/admin/DashboardPage';
 import AdminProductsPage from './pages/admin/ProductsPage';
@@ -58,7 +58,7 @@ function App() {
                   <Route path="/auth" element={<SmoothPageTransition><LoginPage /></SmoothPageTransition>} />
                   <Route path="/register" element={<SmoothPageTransition><RegisterPage /></SmoothPageTransition>} />
                   <Route path="/profile" element={<MainLayout><SmoothPageTransition><ProfilePage /></SmoothPageTransition></MainLayout>} />
-                  <Route path="/checkout" element={<MainLayout><SmoothPageTransition><CheckoutPage /></SmoothPageTransition></MainLayout>} />
+                  <Route path="/checkout" element={<MainLayout><SmoothPageTransition><CartPage /></SmoothPageTransition></MainLayout>} />
                   <Route path="/orders" element={<MainLayout><SmoothPageTransition><OrdersPage /></SmoothPageTransition></MainLayout>} />
                   <Route path="/best-deals" element={<MainLayout><SmoothPageTransition><BestDealsPage /></SmoothPageTransition></MainLayout>} />
 

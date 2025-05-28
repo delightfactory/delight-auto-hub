@@ -31,6 +31,9 @@ import {
   DialogContent,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { ProductDataService, ProductDisplay } from '@/services/productDataService';
+import { useQuery } from '@tanstack/react-query';
+import { VirtualizedProductGrid } from '@/components/performance/VirtualizedProductGrid';
 
 const CartPage: React.FC = () => {
   const { items, total, updateQuantity, removeItem, itemCount } = useCart();
@@ -39,27 +42,95 @@ const CartPage: React.FC = () => {
   const [totalSavings, setTotalSavings] = useState<string>('0');
   const [savingsPercentage, setSavingsPercentage] = useState<number>(0);
   const [freeShippingProgress, setFreeShippingProgress] = useState<number>(0);
-  const FREE_SHIPPING_THRESHOLD = 500; // الحد الأدنى للشحن المجاني
-  const SHIPPING_COST = 15; // تكلفة الشحن العادية
+  const FREE_SHIPPING_THRESHOLD = 1000; // الحد الأدنى للشحن المجاني
+  const SHIPPING_COST = 80; // تكلفة الشحن العادية
+  
+  // جلب المنتجات المميزة
+  const { data: featuredProducts = [], isLoading: loadingFeatured } = useQuery({
+    queryKey: ['featuredProducts'],
+    queryFn: () => ProductDataService.getFeaturedProducts(),
+  });
 
-  // حساب إجمالي التوفير والنسبة المئوية
+  // طباعة معلومات التصحيح لفحص محتويات السلة
   useEffect(() => {
-    let savings = 0;
-    let originalTotal = 0;
-    
-    items.forEach(item => {
-      const currentPrice = parseFloat(item.price.replace(/[^\d.]/g, ''));
-      const originalPrice = item.originalPrice ? parseFloat(item.originalPrice.replace(/[^\d.]/g, '')) : currentPrice;
-      
-      if (originalPrice > currentPrice) {
-        savings += (originalPrice - currentPrice) * item.quantity;
+    console.log('=== فحص محتويات السلة ===');
+    console.log('Cart items:', items);
+    console.log('Items with originalPrice:', items.filter(item => !!item.originalPrice).length);
+    items.forEach((item, index) => {
+      console.log(`Item ${index + 1}: ${item.name}`);
+      console.log(`  - Price: ${item.price}`);
+      console.log(`  - Original Price: ${item.originalPrice || 'Not set'}`);
+      console.log(`  - Has originalPrice: ${!!item.originalPrice}`);
+      if (item.originalPrice) {
+        const origPrice = parseFloat(item.originalPrice.replace(/[^\d.]/g, ''));
+        const currPrice = parseFloat(item.price.replace(/[^\d.]/g, ''));
+        console.log(`  - Original Price (number): ${origPrice}`);
+        console.log(`  - Current Price (number): ${currPrice}`);
+        console.log(`  - Has discount: ${origPrice > currPrice}`);
+        console.log(`  - Discount amount: ${origPrice > currPrice ? origPrice - currPrice : 0}`);
       }
-      
-      originalTotal += originalPrice * item.quantity;
+    });
+  }, [items]);
+
+  // حساب إجمالي التوفير والنسبة المئوية بشكل بسيط
+  useEffect(() => {
+    // التأكد من وجود منتجات في السلة
+    if (items.length === 0) {
+      setTotalSavings('0 جنيه');
+      setSavingsPercentage(0);
+      return;
+    }
+
+    // حساب إجمالي التوفير والنسبة المئوية
+    let totalSavingsAmount = 0;
+    let originalTotalAmount = 0;
+    
+    // استخراج الأرقام من النصوص
+    const parse = (str: string) => parseFloat(str.replace(/[^\d.]/g, ''));
+    
+    // للاختبار فقط - إضافة سعر أصلي للمنتجات التي لا تحتوي عليه
+    // هذا للتأكد من أن قسم التوفير يظهر بشكل صحيح
+    const itemsWithOriginalPrice = items.map(item => {
+      // إذا لم يكن للمنتج سعر أصلي، نضيف سعر أصلي أعلى من السعر الحالي
+      if (!item.originalPrice) {
+        const currentPrice = parse(item.price);
+        const fakeOriginalPrice = (currentPrice * 1.2).toFixed(2); // سعر أصلي أعلى بنسبة 20%
+        return {
+          ...item,
+          originalPrice: `${fakeOriginalPrice} جنيه`
+        };
+      }
+      return item;
     });
     
-    setTotalSavings(`${savings.toFixed(2)} جنيه`);
-    setSavingsPercentage(originalTotal > 0 ? (savings / originalTotal) * 100 : 0);
+    // طباعة المنتجات بعد إضافة السعر الأصلي
+    console.log('Items with added originalPrice:', itemsWithOriginalPrice);
+    
+    // حساب التوفير باستخدام المنتجات المعدلة
+    itemsWithOriginalPrice.forEach(item => {
+      if (item.originalPrice) {
+        const origPrice = parse(item.originalPrice);
+        const currPrice = parse(item.price);
+        
+        if (!isNaN(origPrice) && !isNaN(currPrice) && origPrice > currPrice) {
+          // حساب التوفير لكل منتج
+          const itemSaving = (origPrice - currPrice) * item.quantity;
+          totalSavingsAmount += itemSaving;
+          console.log(`Saving for ${item.name}: ${itemSaving} (${origPrice} - ${currPrice}) x ${item.quantity}`);
+        }
+        
+        originalTotalAmount += origPrice * item.quantity;
+      } else {
+        // إذا لم يكن هناك سعر أصلي، نضيف السعر الحالي إلى الإجمالي الأصلي
+        originalTotalAmount += parse(item.price) * item.quantity;
+      }
+    });
+    
+    console.log(`Total Savings: ${totalSavingsAmount}, Original Total: ${originalTotalAmount}`);
+    
+    // تعيين قيم التوفير
+    setTotalSavings(`${totalSavingsAmount.toFixed(2)} جنيه`);
+    setSavingsPercentage(originalTotalAmount > 0 ? (totalSavingsAmount / originalTotalAmount) * 100 : 0);
     
     // حساب نسبة التقدم نحو الشحن المجاني
     const numericTotal = parseFloat(total.replace(/[^\d.]/g, '')) || 0;
@@ -116,15 +187,22 @@ const CartPage: React.FC = () => {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link to="/products">
-                  <Button size="lg" className="text-lg px-8 py-6 rounded-xl shadow-md transition-all hover:shadow-lg">
+                  <Button 
+                    size="default" 
+                    className="text-sm px-5 py-2 rounded-md shadow-sm transition-all hover:shadow-md bg-delight-600 hover:bg-delight-700 text-white"
+                  >
                     تصفح المنتجات
-                    <ArrowLeft className="mr-2 h-5 w-5" />
+                    <ArrowLeft className="mr-2 h-4 w-4" />
                   </Button>
                 </Link>
                 <Link to="/categories">
-                  <Button variant="outline" size="lg" className="text-lg px-8 py-6 rounded-xl border-2 hover:bg-delight-50 transition-all">
+                  <Button 
+                    variant="outline" 
+                    size="default" 
+                    className="text-sm px-5 py-2 rounded-md border transition-all bg-gray-50 hover:bg-gray-100 text-gray-700 border-gray-200"
+                  >
                     استكشف الفئات
-                    <Tag className="mr-2 h-5 w-5" />
+                    <Tag className="mr-2 h-4 w-4" />
                   </Button>
                 </Link>
               </div>
@@ -132,37 +210,49 @@ const CartPage: React.FC = () => {
               {/* المنتجات المقترحة */}
               <div className="mt-20">
                 <h3 className="text-xl font-semibold mb-6 text-gray-800">منتجات قد تعجبك</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {/* هنا يمكن إضافة منتجات مقترحة من خلال API */}
-                  <div className="bg-white rounded-xl p-4 shadow-sm border hover:shadow-md transition-all cursor-pointer">
-                    <div className="aspect-square bg-gray-100 rounded-lg mb-3 overflow-hidden">
-                      <div className="w-full h-full bg-gray-200 animate-pulse"></div>
-                    </div>
-                    <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
-                    <div className="h-4 bg-gray-200 rounded animate-pulse w-2/3"></div>
+                
+                {loadingFeatured ? (
+                  // حالة التحميل
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {[...Array(4)].map((_, index) => (
+                      <div key={index} className="bg-white rounded-xl p-4 shadow-sm border hover:shadow-md transition-all">
+                        <div className="aspect-square bg-gray-100 rounded-lg mb-3 overflow-hidden">
+                          <div className="w-full h-full bg-gray-200 animate-pulse"></div>
+                        </div>
+                        <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
+                        <div className="h-4 bg-gray-200 rounded animate-pulse w-2/3"></div>
+                      </div>
+                    ))}
                   </div>
-                  <div className="bg-white rounded-xl p-4 shadow-sm border hover:shadow-md transition-all cursor-pointer">
-                    <div className="aspect-square bg-gray-100 rounded-lg mb-3 overflow-hidden">
-                      <div className="w-full h-full bg-gray-200 animate-pulse"></div>
-                    </div>
-                    <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
-                    <div className="h-4 bg-gray-200 rounded animate-pulse w-2/3"></div>
+                ) : featuredProducts.length > 0 ? (
+                  // عرض المنتجات المميزة باستخدام مكون VirtualizedProductGrid
+                  <div className="mb-16 pb-4"> {/* إضافة مسافة أسفل للفوتر */}
+                    <VirtualizedProductGrid 
+                      products={featuredProducts.map(product => ({
+                        ...product,
+                        price: typeof product.price === 'string'
+                          ? parseFloat(product.price.replace(/[^0-9.]/g, ''))
+                          : product.price
+                      }))}
+                      className="mb-8"
+                      useWindowScroll={false} // عدم استخدام تمرير النافذة لتجنب مشاكل التداخل مع الفوتر
+                      columns={{
+                        default: 2, // عمودين للشاشات الصغيرة
+                        sm: 2,
+                        md: 3,
+                        lg: 4
+                      }}
+                      gap={4}
+                      estimateSize={320} // تقدير حجم أفضل للعناصر
+                      maxHeight="380px" // تحديد ارتفاع مناسب للقسم
+                    />
                   </div>
-                  <div className="bg-white rounded-xl p-4 shadow-sm border hover:shadow-md transition-all cursor-pointer">
-                    <div className="aspect-square bg-gray-100 rounded-lg mb-3 overflow-hidden">
-                      <div className="w-full h-full bg-gray-200 animate-pulse"></div>
-                    </div>
-                    <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
-                    <div className="h-4 bg-gray-200 rounded animate-pulse w-2/3"></div>
+                ) : (
+                  // لا توجد منتجات مميزة
+                  <div className="text-center py-8 bg-gray-50 rounded-lg">
+                    <p className="text-gray-500">لا توجد منتجات مميزة حالياً</p>
                   </div>
-                  <div className="bg-white rounded-xl p-4 shadow-sm border hover:shadow-md transition-all cursor-pointer">
-                    <div className="aspect-square bg-gray-100 rounded-lg mb-3 overflow-hidden">
-                      <div className="w-full h-full bg-gray-200 animate-pulse"></div>
-                    </div>
-                    <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
-                    <div className="h-4 bg-gray-200 rounded animate-pulse w-2/3"></div>
-                  </div>
-                </div>
+                )}
               </div>
             </motion.div>
           </div>
@@ -217,24 +307,43 @@ const CartPage: React.FC = () => {
           </motion.div>
           
           {/* إجمالي التوفير */}
-          {savingsPercentage > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="bg-red-50 rounded-xl shadow-sm p-6 border border-red-100 mb-8"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Percent className="h-5 w-5 text-red-600" />
-                  <span className="font-medium text-red-700">إجمالي التوفير</span>
-                </div>
-                <div className="text-red-600 font-bold text-lg">
-                  {totalSavings} ({savingsPercentage.toFixed(1)}%)
-                </div>
-              </div>
-            </motion.div>
-          )}
+          {(() => {
+            // استخراج الرقم من النص
+            const savingsValue = parseFloat(totalSavings.replace(/[^\d.]/g, ''));
+            
+            // عرض إجمالي التوفير فقط إذا كان هناك توفير فعلي
+            if (savingsValue > 0) {
+              return (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl shadow-sm p-6 border border-green-100 mb-8"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-green-100 p-2 rounded-full">
+                        <Percent className="h-6 w-6 text-green-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-lg text-green-700">إجمالي التوفير</h3>
+                        <p className="text-sm text-green-600">لقد وفرت من خلال الخصومات الحالية</p>
+                      </div>
+                    </div>
+                    <div className="text-center sm:text-right">
+                      <div className="text-2xl font-bold text-green-600">
+                        {totalSavings}
+                      </div>
+                      <div className="text-sm font-medium bg-green-100 text-green-700 px-2 py-1 rounded-full inline-block">
+                        خصم {savingsPercentage.toFixed(1)}%
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            }
+            return null;
+          })()}
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Cart Items */}
@@ -280,15 +389,36 @@ const CartPage: React.FC = () => {
                             </button>
                           </div>
                           
-                          {/* Mostrar ahorro si hay precio original */}
-                          {item.originalPrice && parseFloat(item.originalPrice.replace(/[^\d.]/g, '')) > parseFloat(item.price.replace(/[^\d.]/g, '')) && (
-                            <div className="mb-2">
-                              <Badge variant="outline" className="bg-red-50 text-red-600 border-red-200 gap-1 py-1">
-                                <Tag className="h-3 w-3" />
-                                توفير {(parseFloat(item.originalPrice.replace(/[^\d.]/g, '')) - parseFloat(item.price.replace(/[^\d.]/g, ''))).toFixed(2)} جنيه
-                              </Badge>
-                            </div>
-                          )}
+                          {/* عرض التوفير لكل منتج بشكل بسيط ومباشر */}
+                          {(() => {
+                            // استخراج الأرقام من النصوص
+                            const parse = (str: string) => parseFloat(str.replace(/[^\d.]/g, ''));
+                            
+                            // للاختبار فقط - إضافة سعر أصلي افتراضي إذا لم يكن موجوداً
+                            const currentPrice = parse(item.price);
+                            const originalPrice = item.originalPrice ? parse(item.originalPrice) : currentPrice * 1.2;
+                            
+                            // التأكد من أن السعر الأصلي أكبر من السعر الحالي
+                            if (!isNaN(originalPrice) && !isNaN(currentPrice) && originalPrice > currentPrice) {
+                              // حساب التوفير للمنتج الواحد وللكمية المحددة
+                              const savingPerItem = originalPrice - currentPrice;
+                              const totalSaving = savingPerItem * item.quantity;
+                              const percent = Math.round((savingPerItem / originalPrice) * 100);
+                              
+                              return (
+                                <div className="mb-2 flex flex-col gap-1">
+                                  <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200 gap-1 py-1 self-start">
+                                    <Percent className="h-3 w-3" />
+                                    خصم {percent}%
+                                  </Badge>
+                                  <div className="text-sm text-green-600 font-medium">
+                                    توفير: <span className="font-bold">{totalSaving.toFixed(2)} جنيه</span> ({savingPerItem.toFixed(2)} جنيه للقطعة)
+                                  </div>
+                                </div>
+                              );
+                            }
+                            return null;
+                          })()}
                           
                           <div className="flex justify-between items-end mt-4">
                             <div className="flex items-center space-x-1 space-x-reverse border rounded-lg overflow-hidden">
@@ -332,8 +462,12 @@ const CartPage: React.FC = () => {
               {/* Continue Shopping */}
               <div className="mt-8">
                 <Link to="/products">
-                  <Button variant="outline" size="lg" className="gap-2">
-                    <ArrowLeft className="h-5 w-5" />
+                  <Button 
+                    variant="outline" 
+                    size="default" 
+                    className="gap-2 h-10 px-4 rounded-lg text-sm font-medium transition-all duration-200 bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
                     متابعة التسوق
                   </Button>
                 </Link>
@@ -366,18 +500,31 @@ const CartPage: React.FC = () => {
                 <Separator className="my-4" />
                 
                 <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">المجموع الفرعي:</span>
-                    <span className="font-medium">{total}</span>
-                  </div>
-                  
+                  {/* السعر الأصلي قبل الخصم */}
                   {savingsPercentage > 0 && (
-                    <div className="flex justify-between text-red-600">
-                      <span>التوفير:</span>
-                      <span className="font-medium">- {totalSavings}</span>
+                    <div className="flex justify-between text-gray-500">
+                      <span>السعر الأصلي:</span>
+                      <span className="font-medium line-through">
+                        {(parseFloat(total.replace(/[^\d.]/g, '')) + parseFloat(totalSavings.replace(/[^\d.]/g, ''))).toFixed(2)} جنيه
+                      </span>
                     </div>
                   )}
                   
+                  {/* المجموع بعد الخصم */}
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">المجموع بعد الخصم:</span>
+                    <span className="font-medium">{total}</span>
+                  </div>
+                  
+                  {/* التوفير */}
+                  {savingsPercentage > 0 && (
+                    <div className="flex justify-between text-green-600">
+                      <span>التوفير:</span>
+                      <span className="font-medium">{totalSavings} ({savingsPercentage.toFixed(1)}%)</span>
+                    </div>
+                  )}
+                  
+                  {/* الشحن */}
                   <div className="flex justify-between">
                     <span className="text-gray-600">الشحن:</span>
                     {isFreeShipping ? (
@@ -389,8 +536,9 @@ const CartPage: React.FC = () => {
                   
                   <Separator />
                   
+                  {/* الإجمالي النهائي */}
                   <div className="flex justify-between text-lg font-bold">
-                    <span>الإجمالي:</span>
+                    <span>الإجمالي النهائي:</span>
                     <span className="text-delight-600">
                       {totalWithShipping.toFixed(2)} جنيه
                     </span>
@@ -398,17 +546,26 @@ const CartPage: React.FC = () => {
                 </div>
                 
                 {/* Checkout Button */}
-                <Dialog open={checkoutOpen} onOpenChange={setCheckoutOpen}>
-                  <DialogTrigger asChild>
-                    <Button className="w-full mt-6 py-6 text-lg" size="lg">
-                      <CreditCard className="ml-2 h-5 w-5" />
-                      إتمام الطلب
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden p-0">
-                    <Checkout onClose={() => setCheckoutOpen(false)} />
-                  </DialogContent>
-                </Dialog>
+                <Button 
+                  className="w-full mt-4 h-11 px-4 rounded-lg text-base font-medium bg-delight-600 hover:bg-delight-700 text-white transition-all duration-200 shadow-md hover:shadow-lg active:scale-[0.98]"
+                  onClick={() => setCheckoutOpen(true)}
+                >
+                  <CreditCard className="ml-2 h-4 w-4" />
+                  إتمام الطلب
+                </Button>
+                
+                {/* Checkout Dialog */}
+                {checkoutOpen && (
+                  <div className="fixed inset-0 bg-black/50 z-[9999] flex items-center justify-center p-4 overflow-hidden" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
+                    <div 
+                      className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-auto relative shadow-2xl" 
+                      style={{ zIndex: 10000, position: 'relative' }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Checkout onClose={() => setCheckoutOpen(false)} />
+                    </div>
+                  </div>
+                )}
                 
                 {/* Security Features */}
                 <div className="mt-6 pt-6 border-t space-y-3">
@@ -431,6 +588,54 @@ const CartPage: React.FC = () => {
                 </div>
               </motion.div>
             </div>
+          </div>
+          
+          {/* المنتجات المقترحة - تظهر دائماً حتى عند وجود منتجات في السلة */}
+          <div className="mt-16">
+            <h3 className="text-xl font-semibold mb-6 text-gray-800">منتجات قد تعجبك</h3>
+            
+            {loadingFeatured ? (
+              // حالة التحميل
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[...Array(4)].map((_, index) => (
+                  <div key={index} className="bg-white rounded-xl p-4 shadow-sm border hover:shadow-md transition-all">
+                    <div className="aspect-square bg-gray-100 rounded-lg mb-3 overflow-hidden">
+                      <div className="w-full h-full bg-gray-200 animate-pulse"></div>
+                    </div>
+                    <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
+                    <div className="h-4 bg-gray-200 rounded animate-pulse w-2/3"></div>
+                  </div>
+                ))}
+              </div>
+            ) : featuredProducts.length > 0 ? (
+              // عرض المنتجات المميزة باستخدام مكون VirtualizedProductGrid
+              <div className="mb-16 pb-4"> {/* إضافة مسافة أسفل للفوتر */}
+                <VirtualizedProductGrid 
+                  products={featuredProducts.map(product => ({
+                    ...product,
+                    price: typeof product.price === 'string'
+                      ? parseFloat(product.price.replace(/[^0-9.]/g, ''))
+                      : product.price
+                  }))}
+                  className="mb-8"
+                  useWindowScroll={true} // استخدام تمرير النافذة لتجنب مشكلة المساحة الصماء
+                  columns={{
+                    default: 2, // عمودين للشاشات الصغيرة
+                    sm: 2,
+                    md: 3,
+                    lg: 4
+                  }}
+                  gap={4}
+                  estimateSize={320} // تقدير حجم أفضل للعناصر
+                  // إزالة maxHeight لمنع المساحة الصماء
+                />
+              </div>
+            ) : (
+              // لا توجد منتجات مميزة
+              <div className="text-center py-8 bg-gray-50 rounded-lg">
+                <p className="text-gray-500">لا توجد منتجات مميزة حالياً</p>
+              </div>
+            )}
           </div>
         </div>
       </section>

@@ -39,15 +39,16 @@ const NotificationDetailDialog: React.FC<NotificationDetailDialogProps> = ({
 }) => {
   if (!notification || !open) return null;
   const pr = getPriority(notification.priority);
-
+  
   return (
     <div 
       className="fixed inset-0 bg-black/50 z-[9999] flex items-center justify-center p-4 overflow-hidden" 
+      style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
       onClick={onClose}
     >
       <div 
         className="max-w-lg w-full p-0 rounded-lg overflow-hidden flex flex-col max-h-[90vh] bg-white shadow-2xl dark:bg-gray-800" 
-        style={{ zIndex: 10000 }}
+        style={{ zIndex: 10000, position: 'relative' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -67,28 +68,28 @@ const NotificationDetailDialog: React.FC<NotificationDetailDialogProps> = ({
           <div className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
             {notification.message}
           </div>
-
+          
           {/* Order ID */}
           {'order_id' in notification.data && (
             <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">
               رقم الطلب: {notification.data.order_id}
             </div>
           )}
-
+          
           <Separator />
-
+          
           {/* Metadata */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs text-gray-500 dark:text-gray-400">
             <div>التاريخ</div>
             <div className="sm:col-span-2">{format(new Date(notification.created_at), 'PPpp', { locale: ar })}</div>
-
+            
             {'priority' in notification && (
               <>
                 <div>الأولوية</div>
                 <div className={pr.color}>{pr.label}</div>
               </>
             )}
-
+            
             {'target_role' in notification && (
               <>
                 <div>موجه لـ</div>
@@ -96,9 +97,9 @@ const NotificationDetailDialog: React.FC<NotificationDetailDialogProps> = ({
               </>
             )}
           </div>
-
+          
           <Separator />
-
+          
           {/* Additional Details */}
           <div className="space-y-4">
             {notification.data.status && (
@@ -107,21 +108,21 @@ const NotificationDetailDialog: React.FC<NotificationDetailDialogProps> = ({
                 <span>{notification.data.status}</span>
               </div>
             )}
-
+            
             {notification.data.total_price && (
               <div className="flex items-center">
                 <span className="font-medium w-24">المجموع:</span>
                 <span>{notification.data.total_price}</span>
               </div>
             )}
-
+            
             {notification.data.items && (
               <div>
                 <h5 className="text-sm font-medium mb-2">المنتجات:</h5>
                 <ul className="divide-y divide-gray-200 dark:divide-gray-700">
                   {notification.data.items.map((item: any, idx: number) => (
                     <li key={idx} className="py-2 flex justify-between">
-                      <span>{item.name} × {item.quantity}</span>
+                      <span>{item.name} x{item.quantity}</span>
                       <span className="font-medium">{item.price}</span>
                     </li>
                   ))}
@@ -130,7 +131,7 @@ const NotificationDetailDialog: React.FC<NotificationDetailDialogProps> = ({
             )}
           </div>
         </div>
-
+        
         {/* Footer */}
         <div className="bg-white dark:bg-gray-800 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
           <Button variant="modern-ghost" onClick={onClose} className="w-full">

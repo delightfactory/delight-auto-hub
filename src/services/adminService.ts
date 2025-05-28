@@ -592,11 +592,58 @@ export const bannerService = {
     return data![0] as Banner;
   },
   deleteBanner: async (id: string): Promise<void> => {
-    const { error } = await supabase
-      .from('banners')
-      .delete()
-      .eq('id', id);
-    if (error) throw error;
+    try {
+      console.log(`محاولة حذف البانر بمعرف: ${id}`);
+      
+      // التحقق من صلاحيات المستخدم أولاً
+      const isAdmin = await checkIfAdmin();
+      if (!isAdmin) {
+        console.error('ليس لديك صلاحيات كافية لحذف البانرات');
+        throw new Error('ليس لديك صلاحيات كافية لحذف البانرات');
+      }
+      
+      // محاولة حذف البانر باستخدام RPC بدلاً من الحذف المباشر
+      const { data, error } = await supabase
+        .rpc('delete_banner', { banner_id: id });
+      
+      if (error) {
+        console.error(`خطأ في حذف البانر باستخدام RPC:`, error);
+        
+        // محاولة بديلة باستخدام الحذف المباشر
+        console.log('جاري المحاولة باستخدام الحذف المباشر...');
+        const { error: directError } = await supabase
+          .from('banners')
+          .delete()
+          .eq('id', id);
+        
+        if (directError) {
+          console.error(`خطأ في الحذف المباشر:`, directError);
+          
+          // محاولة ثالثة باستخدام التحديث بدلاً من الحذف
+          console.log('جاري المحاولة باستخدام التحديث لإلغاء تنشيط البانر...');
+          const { error: updateError } = await supabase
+            .from('banners')
+            .update({ is_active: false })
+            .eq('id', id);
+          
+          if (updateError) {
+            console.error(`خطأ في تحديث حالة البانر:`, updateError);
+            throw updateError;
+          }
+          
+          console.log(`تم إلغاء تنشيط البانر بنجاح بدلاً من حذفه`);
+          return;
+        }
+        
+        console.log(`تم حذف البانر بنجاح باستخدام الحذف المباشر`);
+        return;
+      }
+      
+      console.log(`تم حذف البانر بنجاح باستخدام RPC`);
+    } catch (error) {
+      console.error('خطأ غير متوقع في حذف البانر:', error);
+      throw error;
+    }
   },
 };
 

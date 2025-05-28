@@ -14,6 +14,24 @@ import {
   TableCell,
 } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 const AdminBannersPage: React.FC = () => {
   const { data: banners = [], isLoading, refetch } = useQuery<Banner[], Error>({
@@ -21,7 +39,9 @@ const AdminBannersPage: React.FC = () => {
     queryFn: bannerService.getAllBanners,
   });
   const { toast } = useToast();
-  const [showForm, setShowForm] = useState(false);
+  const [formDialogOpen, setFormDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [bannerToDelete, setBannerToDelete] = useState<string>("");
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
 
   // خريطة لعرض تسميات الصفحات
@@ -42,16 +62,25 @@ const AdminBannersPage: React.FC = () => {
 
   const handleEdit = (banner: Banner) => {
     setEditingBanner(banner);
-    setShowForm(true);
+    setFormDialogOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
+  const confirmDeleteBanner = (id: string) => {
+    setBannerToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!bannerToDelete) return;
+
     try {
-      await bannerService.deleteBanner(id);
-      toast({ title: 'تم حذف البنر' });
+      await bannerService.deleteBanner(bannerToDelete);
+      toast({ title: 'تم حذف البنر بنجاح' });
       refetch();
+      setDeleteDialogOpen(false);
+      setBannerToDelete("");
     } catch (error) {
-      toast({ title: 'خطأ في الحذف', variant: 'destructive' });
+      toast({ title: 'خطأ في الحذف', description: 'حدث خطأ أثناء محاولة حذف البنر', variant: 'destructive' });
     }
   };
 
@@ -59,16 +88,16 @@ const AdminBannersPage: React.FC = () => {
     try {
       if (editingBanner) {
         await bannerService.updateBanner(editingBanner.id, data);
-        toast({ title: 'تم تحديث البنر' });
+        toast({ title: 'تم تحديث البنر', description: 'تم تحديث البنر بنجاح' });
       } else {
         await bannerService.createBanner(data);
-        toast({ title: 'تم إنشاء البنر' });
+        toast({ title: 'تم إنشاء البنر', description: 'تم إنشاء البنر بنجاح' });
       }
-      setShowForm(false);
+      setFormDialogOpen(false);
       setEditingBanner(null);
       refetch();
     } catch (error) {
-      toast({ title: 'خطأ في العملية', variant: 'destructive' });
+      toast({ title: 'خطأ في العملية', description: 'حدث خطأ أثناء محاولة حفظ البنر', variant: 'destructive' });
     }
   };
 
@@ -82,15 +111,13 @@ const AdminBannersPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {!showForm ? (
-        <>
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold">إدارة البنرات</h1>
-            <Button onClick={() => { setEditingBanner(null); setShowForm(true); }}>
-              <PlusCircle className="h-5 w-5 ml-1" />
-              <span>إضافة بنر</span>
-            </Button>
-          </div>
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">إدارة البنرات</h1>
+        <Button onClick={() => { setEditingBanner(null); setFormDialogOpen(true); }}>
+          <PlusCircle className="h-5 w-5 ml-1" />
+          <span>إضافة بنر</span>
+        </Button>
+      </div>
           {banners.length > 0 ? (
             <div className="overflow-auto bg-white shadow rounded-lg">
               <Table>
@@ -124,9 +151,11 @@ const AdminBannersPage: React.FC = () => {
                         <Button variant="ghost" size="sm" onClick={() => handleEdit(b)}>
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleDelete(b.id)}>
-                          <Trash2 className="h-4 w-4 text-red-600" />
-                        </Button>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="sm" onClick={() => confirmDeleteBanner(b.id)}>
+                            <Trash2 className="h-4 w-4 text-red-600" />
+                          </Button>
+                        </AlertDialogTrigger>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -136,19 +165,41 @@ const AdminBannersPage: React.FC = () => {
           ) : (
             <p>لا توجد بنرات بعد</p>
           )}
-        </>
-      ) : (
-        <div>
-          <Button variant="ghost" onClick={() => { setShowForm(false); setEditingBanner(null); }}>
-            العودة إلى القائمة
-          </Button>
-          <BannerForm
-            initialData={editingBanner}
-            onSubmit={onSubmit}
-            onCancel={() => { setShowForm(false); setEditingBanner(null); }}
-          />
-        </div>
-      )}
+
+      {/* حوار إضافة/تعديل البنر */}
+      <Dialog open={formDialogOpen} onOpenChange={setFormDialogOpen}>
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editingBanner ? 'تعديل البنر' : 'إضافة بنر جديد'}</DialogTitle>
+            <DialogDescription>
+              {editingBanner ? 'قم بتعديل بيانات البنر هنا' : 'قم بإدخال بيانات البنر الجديد هنا'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-4">
+            <BannerForm
+              initialData={editingBanner}
+              onSubmit={onSubmit}
+              onCancel={() => { setFormDialogOpen(false); setEditingBanner(null); }}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* حوار تأكيد الحذف */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent className="z-[100]">
+          <AlertDialogHeader>
+            <AlertDialogTitle>هل أنت متأكد من حذف البنر؟</AlertDialogTitle>
+            <AlertDialogDescription>
+              لا يمكن التراجع عن هذا الإجراء بعد التأكيد.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setBannerToDelete("")}>إلغاء</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>تأكيد الحذف</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

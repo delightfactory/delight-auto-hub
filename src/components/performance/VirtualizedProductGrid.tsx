@@ -353,12 +353,14 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
                         className="flex-1 bg-delight-600 hover:bg-delight-700 text-white py-1.5 px-2 rounded-md text-xs font-medium transition-colors flex items-center justify-center gap-1 transform hover:scale-105 active:scale-95 min-w-[100px]"
                         onClick={(e) => {
                           e.stopPropagation();
+                          e.preventDefault(); // منع السلوك الافتراضي للزر
                           // إضافة للسلة
                           try {
                             cart.addItem({
                               id: product.id,
                               name: product.name,
                               price: typeof product.price === 'number' ? `${product.price} ج.م` : product.price,
+                              originalPrice: product.originalPrice ? `${product.originalPrice} ج.م` : undefined,
                               image: product.image
                             });
                             // إظهار إشعار بدلاً من alert
@@ -367,6 +369,18 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
                               description: `تم إضافة ${product.name} إلى سلة التسوق`,
                               variant: "success",
                             });
+                            
+                            // منع التمرير لأعلى الصفحة عند إضافة منتج من المنتجات المقترحة
+                            // الحفاظ على موضع التمرير الحالي
+                            setTimeout(() => {
+                              // استخدام setTimeout لضمان تنفيذ هذا الكود بعد أي تحديثات DOM
+                              if (window.scrollY) {
+                                window.scrollTo({
+                                  top: window.scrollY,
+                                  behavior: 'auto'
+                                });
+                              }
+                            }, 0);
                           } catch (error) {
                             console.error('خطأ في إضافة المنتج للسلة:', error);
                             toast({
