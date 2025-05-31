@@ -154,7 +154,12 @@ const config = {
     require('@tailwindcss/typography'),
     require('@tailwindcss/forms')({
       strategy: 'class',
-    })
+    }),
+    require('@tailwindcss/aspect-ratio')
+  ],
+  safelist: [
+    'snap-x', 'snap-mandatory', 'hide-scrollbar',
+    'pb-[28%]', 'md:pb-[23.333%]', 'lg:pb-[17.5%]'
   ],
 } satisfies Config;
 

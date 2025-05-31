@@ -141,21 +141,25 @@ const AdminBannersPage: React.FC = () => {
                       <TableCell>{b.is_active ? 'مفعل' : 'معطل'}</TableCell>
                       <TableCell>{b.display_order}</TableCell>
                       <TableCell>
-                        {b.pages.map(p => (
-                          <span key={p} className="inline-block bg-blue-100 text-blue-800 text-xs font-medium mr-1 px-2 py-0.5 rounded-full">
-                            {pageLabels[p] || p}
+                        {Array.isArray(b.pages) ? (
+                          b.pages.map(p => (
+                            <span key={p} className="inline-block bg-blue-100 text-blue-800 text-xs font-medium mr-1 px-2 py-0.5 rounded-full">
+                              {pageLabels[p] || p}
+                            </span>
+                          ))
+                        ) : typeof b.pages === 'string' ? (
+                          <span className="inline-block bg-blue-100 text-blue-800 text-xs font-medium mr-1 px-2 py-0.5 rounded-full">
+                            {pageLabels[b.pages] || b.pages}
                           </span>
-                        ))}
+                        ) : null}
                       </TableCell>
                       <TableCell className="flex gap-2">
                         <Button variant="ghost" size="sm" onClick={() => handleEdit(b)}>
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="sm" onClick={() => confirmDeleteBanner(b.id)}>
-                            <Trash2 className="h-4 w-4 text-red-600" />
-                          </Button>
-                        </AlertDialogTrigger>
+                        <Button variant="ghost" size="sm" onClick={() => confirmDeleteBanner(b.id)}>
+                          <Trash2 className="h-4 w-4 text-red-600" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}

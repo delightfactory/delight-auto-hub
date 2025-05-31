@@ -113,7 +113,7 @@ export interface Banner {
   button_text?: string;
   is_active: boolean;
   display_order: number;
-  pages: string[];
+  pages: string[] | string;
   display_interval: number;
   start_at?: string;
   end_at?: string;

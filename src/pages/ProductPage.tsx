@@ -19,6 +19,45 @@ import ProductCard from '../components/ProductCard';
 import { ProgressiveImage } from '../components/performance/ProgressiveImage';
 import { cn } from '../lib/utils';
 
+// دالة لتنسيق الأسعار مع معالجة الأرقام العشرية بشكل أفضل
+const formatPrice = (price: number | string): React.ReactNode => {
+  const numPrice = typeof price === 'string' ? parseFloat(price) : price;
+  if (isNaN(numPrice)) return '0';
+  
+  // التحقق مما إذا كان الرقم يحتوي على كسور
+  if (numPrice % 1 === 0) {
+    // إذا كان رقماً صحيحاً، نعرضه بدون أرقام عشرية
+    return Math.floor(numPrice).toLocaleString('en-US');
+  } else {
+    // إذا كان يحتوي على كسور، نفصل الجزء الصحيح عن الكسري
+    const wholePart = Math.floor(numPrice);
+    const decimalPart = (numPrice - wholePart).toFixed(2).substring(1); // نأخذ رقمين عشريين فقط
+    
+    return (
+      <>
+        <span>{wholePart.toLocaleString('en-US')}</span>
+        <span className="text-xs align-top">{decimalPart}</span>
+      </>
+    );
+  }
+};
+
+// دالة لتنسيق عرض السعر في واجهة المستخدم
+const formatDisplayPrice = (priceString: string): React.ReactNode => {
+  // استخراج الرقم من النص
+  const numericPart = priceString.replace(/[^\d.]/g, '');
+  const price = parseFloat(numericPart);
+  
+  if (isNaN(price)) return priceString;
+  
+  return (
+    <>
+      {formatPrice(price)}
+      <span className="mr-1 text-sm">ج.م</span>
+    </>
+  );
+};
+
 const ProductPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'features' | 'specs' | 'reviews' | 'usage'>('features');
   const [quantity, setQuantity] = useState<number>(1);
@@ -217,7 +256,7 @@ const ProductPage: React.FC = () => {
           savings: savings.toFixed(2),
           totalOriginal: totalOriginal.toFixed(2),
           totalCurrent: totalCurrent.toFixed(2),
-          currency: product.price.replace(/[\d.]/g, '').trim() || 'ريال'
+          currency: 'ج.م'
         };
       }
     }
@@ -466,8 +505,15 @@ const ProductPage: React.FC = () => {
                     {/* Price and Discount Column */}
                     <div className="flex-1">
                       <div className="flex items-center gap-1">
-                        <span className="text-lg font-bold text-white">
-                          {quantity > 1 ? `${discountInfo?.totalCurrent || parseFloat(product.price.replace(/[^\d.]/g, '')) * quantity} ${discountInfo?.currency || 'ريال'}` : product.price}
+                        <span className="text-lg font-bold text-white flex items-center">
+                          {quantity > 1 ? (
+                            <>
+                              {formatPrice(discountInfo?.totalCurrent || parseFloat(product.price.replace(/[^\d.]/g, '')) * quantity)}
+                              <span className="mr-1 text-sm">ج.م</span>
+                            </>
+                          ) : (
+                            formatDisplayPrice(product.price)
+                          )}
                         </span>
                         
                         {discountInfo && (
@@ -481,8 +527,17 @@ const ProductPage: React.FC = () => {
                         {product.originalPrice && discountPercent && (
                           <>
                             <span className="text-white/90 font-medium relative inline-block">
-                              <span className="relative">{quantity > 1 ? `${discountInfo?.totalOriginal} ${discountInfo?.currency}` : product.originalPrice}</span>
-                              <span className="absolute left-0 right-0 h-[2.5px] bg-red-500 transform rotate-[-7deg] top-[45%] z-20"></span>
+                              <span className="relative">
+                              {quantity > 1 ? (
+                                <>
+                                  {formatPrice(parseFloat(discountInfo?.totalOriginal || '0'))}
+                                  <span className="mr-1 text-xs">ج.م</span>
+                                </>
+                              ) : (
+                                formatDisplayPrice(product.originalPrice || '')
+                              )}
+                            </span>
+                              <span className="absolute left-0 right-0 h-[1.5px] bg-red-500 transform rotate-[-7deg] top-[50%] z-20 opacity-100 border-0 border-red-500"></span>
                             </span>
                           </>
                         )}
@@ -490,7 +545,7 @@ const ProductPage: React.FC = () => {
                         {discountInfo && (
                           <span className="text-green-400 font-medium flex items-center">
                             <Check className="w-3 h-3 mr-0.5" />
-                            وفرت {discountInfo.savings} {discountInfo.currency}
+                            وفر {discountInfo.savings} ج.م
                           </span>
                         )}
                       </div>

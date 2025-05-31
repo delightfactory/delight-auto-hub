@@ -183,8 +183,8 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
                 transform: `translateY(${virtualRow.start}px)`,
                 display: 'grid',
                 gridTemplateColumns: `repeat(${columns}, 1fr)`,
-                gap: `${gap * 0.75}rem`,
-                padding: '1rem 0.5rem'
+                gap: `${gap * 0.4}rem`,
+                padding: '1rem 0.25rem'
               }}
             >
               {Array.from({ length: columns }).map((_, columnIndex) => {

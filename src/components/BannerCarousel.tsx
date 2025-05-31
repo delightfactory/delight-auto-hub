@@ -100,7 +100,7 @@ const BannerCarousel: React.FC<BannerCarouselProps> = ({ pageName }) => {
             pagesMatch = Array.isArray(parsedPages) && parsedPages.includes(pageName);
           } catch (e) {
             // إذا لم يكن JSON صالح، نتحقق من النص مباشرة
-            pagesMatch = b.pages.includes(pageName);
+            pagesMatch = typeof b.pages === 'string' && b.pages.includes(pageName);
           }
         }
       }
@@ -134,7 +134,7 @@ const BannerCarousel: React.FC<BannerCarouselProps> = ({ pageName }) => {
               const parsedPages = JSON.parse(b.pages);
               pagesMatch = Array.isArray(parsedPages) && parsedPages.includes('home');
             } catch (e) {
-              pagesMatch = b.pages.includes('home');
+              pagesMatch = typeof b.pages === 'string' && b.pages.includes('home');
             }
           }
         }
@@ -213,39 +213,7 @@ const BannerCarousel: React.FC<BannerCarouselProps> = ({ pageName }) => {
   // عدم عرض أي شيء إذا لم تكن هناك بانرات
   if (!filteredBanners.length) {
     console.log('لا توجد بانرات للعرض');
-    
-    // إذا كنا في وضع الإنتاج، نعرض بانر افتراضي
-    if (import.meta.env.PROD) {
-      console.log('عرض بانر افتراضي في وضع الإنتاج');
-      const fallbackBanner = {
-        id: 'fallback',
-        title: 'بانر افتراضي',
-        image_url: 'https://images.unsplash.com/photo-1552083375-1447ce886485?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-        link_url: '',
-        display_interval: 5
-      };
-      
-      return (
-        <div className="w-full mt-2 mb-6">
-          <div className="relative">
-            <div className="flex overflow-x-auto gap-4 snap-x snap-mandatory hide-scrollbar">
-              <div className="flex-shrink-0 w-full snap-start">
-                <div className="relative w-full pb-[28%] md:pb-[23.333%] lg:pb-[17.5%] bg-gray-100 rounded-lg overflow-hidden">
-                  <img
-                    src={fallbackBanner.image_url}
-                    alt={fallbackBanner.title}
-                    className="absolute inset-0 w-full h-full object-cover rounded-lg shadow-md"
-                    loading="eager"
-                    crossOrigin="anonymous"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    }
-    
+    // لا نعرض أي بانر افتراضي
     return null;
   }
 
@@ -269,11 +237,11 @@ const BannerCarousel: React.FC<BannerCarouselProps> = ({ pageName }) => {
             console.log(`رابط الصورة النهائي: ${imageUrl}`);
             
             const imageElement = (
-              <div className="relative w-full pb-[28%] md:pb-[23.333%] lg:pb-[17.5%] bg-gray-100 rounded-lg overflow-hidden">
+              <div className="aspect-w-16 aspect-h-5 bg-gray-100 rounded-lg overflow-hidden">
                 <img
                   src={imageUrl}
                   alt={b.title || 'صورة بانر'}
-                  className="absolute inset-0 w-full h-full object-cover rounded-lg shadow-md"
+                  className="w-full h-full object-cover rounded-lg shadow-md"
                   onError={(e) => {
                     console.error(`خطأ في تحميل صورة البانر: ${imageUrl}`);
                     // محاولة أخرى باستخدام مسار مختلف في حالة الفشل
