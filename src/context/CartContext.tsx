@@ -8,9 +8,10 @@ export interface CartItem {
   id: string;
   name: string;
   price: string;
-  originalPrice?: string; // Precio original antes del descuento (opcional)
+  originalPrice?: string; // السعر الأصلي قبل الخصم (اختياري)
   image: string;
   quantity: number;
+  stock?: number; // كمية المخزون المتوفرة (اختياري)
 }
 
 interface CartState {
@@ -77,16 +78,33 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       logDebugInfo('Adding item to cart', action.payload);
       logDebugInfo('Item has originalPrice', !!action.payload.originalPrice);
       
+      // التحقق من توفر المنتج في المخزون إذا كانت معلومات المخزون متوفرة
+      if (action.payload.stock !== undefined && action.payload.stock <= 0) {
+        console.warn(`محاولة إضافة منتج غير متوفر في cartReducer: ${action.payload.name}`);
+        return state; // لا تغيير في الحالة
+      }
+      
       const existingItemIndex = state.items.findIndex(
         (item) => item.id === action.payload.id
       );
 
       if (existingItemIndex !== -1) {
         // المنتج موجود بالفعل، زيادة الكمية فقط
+        
+        // التحقق من أن الكمية المطلوبة لا تتجاوز المخزون المتوفر
+        const currentItem = state.items[existingItemIndex];
+        const newQuantity = currentItem.quantity + 1;
+        
+        // إذا كانت معلومات المخزون متوفرة، تحقق من أن الكمية لا تتجاوز المخزون
+        if (action.payload.stock !== undefined && newQuantity > action.payload.stock) {
+          console.warn(`محاولة إضافة كمية تتجاوز المخزون المتوفر: ${action.payload.name}`);
+          return state; // لا تغيير في الحالة
+        }
+        
         const updatedItems = [...state.items];
         updatedItems[existingItemIndex] = {
           ...updatedItems[existingItemIndex],
-          quantity: updatedItems[existingItemIndex].quantity + 1,
+          quantity: newQuantity,
         };
         
         logDebugInfo('Updated existing item', updatedItems[existingItemIndex]);
@@ -214,6 +232,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [state]);
 
   const addItem = (item: Omit<CartItem, 'quantity'>) => {
+    // التحقق من توفر المنتج في المخزون (إذا كانت معلومات المخزون متوفرة)
+    if (item.stock !== undefined && item.stock <= 0) {
+      // لا نضيف المنتج إذا كان غير متوفر في المخزون
+      console.warn(`محاولة إضافة منتج غير متوفر: ${item.name}`);
+      return;
+    }
+    
     dispatch({
       type: 'ADD_ITEM',
       payload: { ...item, quantity: 1 },
@@ -225,6 +250,18 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const updateQuantity = (id: string, quantity: number) => {
+    // التحقق من أن الكمية الجديدة لا تتجاوز المخزون المتوفر
+    const item = state.items.find(item => item.id === id);
+    
+    if (item && item.stock !== undefined && quantity > item.stock) {
+      // إذا كانت الكمية المطلوبة تتجاوز المخزون المتوفر
+      console.warn(`محاولة تحديث كمية تتجاوز المخزون المتوفر: ${item.name}, المخزون: ${item.stock}, الكمية المطلوبة: ${quantity}`);
+      
+      // تحديث الكمية إلى الحد الأقصى المتوفر
+      dispatch({ type: 'UPDATE_QUANTITY', payload: { id, quantity: item.stock } });
+      return;
+    }
+    
     dispatch({ type: 'UPDATE_QUANTITY', payload: { id, quantity } });
   };
 

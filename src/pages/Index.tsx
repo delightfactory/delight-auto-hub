@@ -138,8 +138,11 @@ const Index: React.FC = () => {
                     price={product.price}
                     originalPrice={product.originalPrice}
                     rating={product.rating}
-                    isFeatured={product.isFeatured}
+                    ratingCount={product.reviews} // reviews من ProductDisplay هو ratingCount
+                    stock={product.stock}
                     isNew={product.isNew}
+                    category={product.category}
+                    quickFeatures={product.features}
                   />
                 </motion.div>
               ))}
@@ -200,8 +203,11 @@ const Index: React.FC = () => {
                       price={product.price}
                       originalPrice={product.originalPrice}
                       rating={product.rating}
-                      isFeatured={product.isFeatured}
+                      ratingCount={product.reviews}
+                      stock={product.stock}
                       isNew={product.isNew}
+                      category={product.category}
+                      quickFeatures={product.features}
                     />
                   </motion.div>
                 ))}

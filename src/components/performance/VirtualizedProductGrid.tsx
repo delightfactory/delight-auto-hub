@@ -3,12 +3,13 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { useDebounceCallback } from '../../utils/reactPerformance';
 import { ProgressiveImage } from './ProgressiveImage';
 import { optimizeScroll, applyPassiveScroll } from '../../utils/scrollOptimizer';
-import { ShoppingCart, Heart, Star, Tag, TrendingUp } from 'lucide-react';
+import { ShoppingCart, Heart, Star, Tag, TrendingUp, AlertTriangle, Check } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { categoryService } from '@/services/adminService';
 import { useToast } from '@/components/ui/use-toast';
 import { useCart } from '@/context/CartContext';
+import { cn } from '@/lib/utils'; // Importar la función cn para combinar clases
 
 // استيراد نوع ProductDisplay من المكان الصحيح في المشروع
 interface Product {
@@ -23,6 +24,7 @@ interface Product {
   isNew?: boolean; // إذا كان المنتج جديد
   isFeatured?: boolean; // إذا كان المنتج مميز
   inStock?: boolean; // توفر المنتج
+  stock?: number; // كمية المخزون المتوفرة
 }
 
 interface VirtualizedProductGridProps {
@@ -148,16 +150,21 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
     return rowVirtualizer.getVirtualItems();
   }, [rowVirtualizer.getVirtualItems()]);
 
+  // Definir clases estáticas para evitar problemas de purga de CSS en producción
+  const containerClasses = 'relative w-full';
+  const gridClasses = 'grid gap-4';
+  const productCardClasses = 'bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden transition-transform hover:shadow-lg hover:-translate-y-1 cursor-pointer';
+
   return (
     <div
       ref={parentRef}
-      className={`w-full ${useWindowScroll ? '' : 'overflow-auto'} ${className}`}
+      className={cn(containerClasses, 'relative', className, useWindowScroll ? '' : 'overflow-auto')}
       style={{
         height: useWindowScroll ? 'auto' : typeof maxHeight === 'number' ? `${maxHeight}px` : maxHeight,
         contain: useWindowScroll ? 'content' : 'strict',
         willChange: 'transform',
         WebkitOverflowScrolling: 'touch',
-        overscrollBehavior: 'contain', // تحسين سلوك التمرير الزائد
+        overscrollBehavior: 'contain' // تحسين سلوك التمرير الزائد
       }}
     >
       <div
@@ -196,16 +203,10 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
                 return (
                   <motion.div
                     key={product.id}
+                    className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden cursor-pointer group relative flex flex-col h-full min-h-[280px] sm:min-h-[320px] mb-3 sm:mb-4"
+                    whileHover={{ y: -5 }}
+                    transition={{ type: "spring", stiffness: 300 }}
                     onClick={() => onProductClick?.(product)}
-                    className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden cursor-pointer group relative flex flex-col h-full min-h-[320px] sm:min-h-[380px] mb-8 sm:mb-10"
-                    style={{
-                      transform: 'translateZ(0)',
-                      backfaceVisibility: 'hidden',
-                      contain: 'content',
-                      marginBottom: '1rem', // تأكيد إضافي على المسافة السفلية
-                    }}
-                    whileHover={{ y: -2, boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)' }}
-                    transition={{ duration: 0.2 }}
                   >
                     {/* شريط المنتج الجديد فقط */}
                     
@@ -217,10 +218,10 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
                       </div>
                     )}
                     
-                    {/* قسم الصورة والمعلومات الرئيسية */}
-                    <div className="flex flex-col sm:flex-row p-2 pt-3">
-                      {/* صورة المنتج - مساحة متوازنة */}
-                      <div className="relative w-[120px] h-[120px] sm:w-1/3 sm:aspect-square overflow-hidden rounded-md flex-shrink-0">
+                    {/* قسم الصورة والمعلومات الرئيسية - تم إعادة هيكلته */}
+                    <div className="grid grid-cols-[auto_1fr] gap-2 p-2">
+                      {/* صورة المنتج على اليمين */}
+                      <div className="order-last relative w-[90px] h-[90px] overflow-hidden rounded-md">
                         <ProgressiveImage
                           src={product.image}
                           alt={product.name}
@@ -229,140 +230,172 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
                           width="100%"
                           height="100%"
                         />
-                        
-                        {/* تم نقل مؤشر التوفر خارج الصورة */}
                       </div>
                       
                       {/* معلومات المنتج الرئيسية */}
-                      <div className="flex-1 pr-2 flex flex-col justify-between">
-                        {/* الفئة */}
-                        <div>
-                          <span className="text-[10px] bg-delight-50 dark:bg-delight-900/30 text-delight-700 dark:text-delight-300 px-1.5 py-0.5 rounded-sm">
+                      <div className="order-first flex flex-col justify-start space-y-0.5 p-1 pr-0">
+                        {/* Row 1: Category, Stock Status, Rating */}
+                        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                          <span className="text-[10px] bg-delight-50 dark:bg-delight-900/30 text-delight-700 dark:text-delight-300 px-1.5 py-0.5 rounded-sm inline-flex items-center">
+                            <Tag className="w-2.5 h-2.5 ml-0.5" />
                             {categoryMap[product.category] || 'منتجات متنوعة'}
                           </span>
-                          {product.inStock !== false ? (
-                            <span className="text-[10px] bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-300 px-1.5 py-0.5 rounded-sm mr-1">
-                              متوفر
-                            </span>
-                          ) : (
-                            <span className="text-[10px] bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-300 px-1.5 py-0.5 rounded-sm mr-1">
+                          {/* Stock Status */}
+                          {product.inStock === false || (typeof product.stock === 'number' && product.stock <= 0) ? (
+                            <span className="text-[10px] bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-300 px-1.5 py-0.5 rounded-sm inline-flex items-center">
+                              <AlertTriangle className="w-2.5 h-2.5 ml-0.5" />
                               غير متوفر
                             </span>
+                          ) : typeof product.stock === 'number' && product.stock < 10 ? (
+                            <span className="text-[10px] bg-amber-100 dark:bg-amber-900/20 text-amber-600 dark:text-amber-300 px-1.5 py-0.5 rounded-sm inline-flex items-center">
+                              <AlertTriangle className="w-2.5 h-2.5 ml-0.5" />
+                              أوشك على النفاذ
+                            </span>
+                          ) : typeof product.stock === 'number' && product.stock < 50 ? (
+                            <span className="text-[10px] bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-300 px-1.5 py-0.5 rounded-sm inline-flex items-center">
+                              <Check className="w-2.5 h-2.5 ml-0.5" />
+                              مخزون منخفض
+                            </span>
+                          ) : (
+                            <span className="text-[10px] bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-300 px-1.5 py-0.5 rounded-sm inline-flex items-center">
+                              <Check className="w-2.5 h-2.5 ml-0.5" />
+                              متوفر
+                            </span>
                           )}
-                        </div>
-                        
-                        {/* التقييم والسعر */}
-                        <div>
+                          {/* Rating */}
                           {product.rating && (
-                            <div className="flex items-center gap-0.5 mb-1">
+                            <div className="flex items-center gap-0.5">
                               {Array.from({ length: 5 }).map((_, i) => (
                                 <Star 
                                   key={i} 
                                   className={`w-3 h-3 ${i < Math.floor(product.rating || 0) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} 
                                 />
                               ))}
-                              <span className="text-[10px] text-gray-500 dark:text-gray-400 ml-1">
+                              <span className="text-[10px] text-gray-500 dark:text-gray-400 ml-0.5">
                                 ({product.rating})
                               </span>
                             </div>
                           )}
-                          
-                          <div className="flex items-baseline gap-1">
-                            <span className="text-base font-bold text-delight-600 dark:text-delight-400">
-                              {typeof product.price === 'number' 
-                                ? `${product.price.toFixed(2)} ج.م` 
-                                : product.price}
+                        </div>
+                        
+                        {/* Product Name */}
+                        <h3 className="font-semibold text-gray-800 dark:text-white text-sm leading-tight line-clamp-2 mt-1 min-h-[calc(2*1.25rem)]">
+                          {product.name}
+                        </h3>
+
+                        {/* Short Description (Moved under Name) */}
+                        <p className="text-xs text-gray-600 dark:text-gray-300 line-clamp-2 mt-0.5 min-h-[calc(2*1rem)]">
+                          {product.description || 'وصف المنتج غير متوفر'}
+                        </p>
+
+                        {/* Price Block (Added vertical margin) */}
+                        <div className="flex items-baseline gap-1 flex-wrap my-1.5">
+                          <span className="text-md font-bold text-delight-600 dark:text-delight-400">
+                            {typeof product.price === 'number' 
+                              ? `${product.price.toFixed(2)} ج.م` 
+                              : product.price}
+                          </span>
+                          {product.originalPrice && (
+                            <span className="text-xs text-red-500 dark:text-red-400 line-through">
+                              {typeof product.originalPrice === 'string' 
+                                ? product.originalPrice.replace('ر.س', 'ج.م') 
+                                : `${product.originalPrice} ج.م`}
                             </span>
-                            
-                            {product.originalPrice && (
-                              <span className="text-xs text-red-500 dark:text-red-400 line-through">
-                                {typeof product.originalPrice === 'string' 
-                                  ? product.originalPrice.replace('ر.س', 'ج.م') 
-                                  : `${product.originalPrice} ج.م`}
-                              </span>
-                            )}
-                          </div>
+                          )}
+                        </div>
+                        
+                        {/* Discount & Savings Block (Corrected text) */}
+                        {product.originalPrice && (() => {
+                          const originalPriceNum = typeof product.originalPrice === 'string' 
+                            ? parseFloat(product.originalPrice.replace(/[^\d.]/g, '')) 
+                            : parseFloat(String(product.originalPrice));
+                          const currentPriceNum = typeof product.price === 'string' 
+                            ? parseFloat(product.price.replace(/[^\d.]/g, '')) 
+                            : parseFloat(String(product.price));
                           
-                          {/* معلومات الخصم ومبلغ التوفير */}
-                          {product.originalPrice && (() => {
-                            const originalPrice = typeof product.originalPrice === 'string' 
-                              ? parseFloat(product.originalPrice.replace(/[^\d.]/g, '')) 
-                              : parseFloat(product.originalPrice);
-                            const currentPrice = typeof product.price === 'string' 
-                              ? parseFloat(product.price.replace(/[^\d.]/g, '')) 
-                              : parseFloat(String(product.price));
-                            const discount = Math.round(((originalPrice - currentPrice) / originalPrice) * 100);
-                            const savings = originalPrice - currentPrice;
-                            
+                          if (!isNaN(originalPriceNum) && !isNaN(currentPriceNum) && originalPriceNum > 0) {
+                            const discount = Math.round(((originalPriceNum - currentPriceNum) / originalPriceNum) * 100);
+                            const savings = originalPriceNum - currentPriceNum;
                             return (
-                              <div className="mt-1 flex items-center gap-1 flex-wrap">
+                              <div className="flex items-center gap-1 flex-wrap mt-0.5">
+                                {discount > 0 && (
                                 <span className="text-[10px] bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-300 px-1 py-0.5 rounded-sm font-bold inline-flex items-center">
                                   <svg xmlns="http://www.w3.org/2000/svg" className="h-2.5 w-2.5 mr-0.5" viewBox="0 0 20 20" fill="currentColor">
                                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clipRule="evenodd" />
                                   </svg>
                                   خصم {discount}%
                                 </span>
+                                )}
+                                {savings > 0 && (
                                 <span className="text-[10px] bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-300 px-1 py-0.5 rounded-sm font-bold inline-flex items-center">
                                   <svg xmlns="http://www.w3.org/2000/svg" className="h-2.5 w-2.5 mr-0.5" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V5a1 1 0 00-1-1z" clipRule="evenodd" />
+                                    <path fillRule="evenodd" d="M10 2a8 8 0 100-16 8 8 0 000-16zm1 11a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V5a1 1 0 00-1-1z" clipRule="evenodd" />
                                   </svg>
-                                  وفرت {savings.toFixed(2)} ج.م
+                                  وفر {savings.toFixed(2)} ج.م
                                 </span>
+                                )}
                               </div>
                             );
-                          })()}
+                          }
+                          return null;
+                        })()}
+
+                        {/* Quick Features */}
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          <span className="text-[10px] bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-300 px-1.5 py-0.5 rounded-sm flex items-center gap-0.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-2.5 w-2.5" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
+                            شحن سريع
+                          </span>
+                          <span className="text-[10px] bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-300 px-1.5 py-0.5 rounded-sm flex items-center gap-0.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-2.5 w-2.5" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
+                            ضمان سنة
+                          </span>
+                          <span className="text-[10px] bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-300 px-1.5 py-0.5 rounded-sm flex items-center gap-0.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-2.5 w-2.5" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
+                            أصلي 100%
+                          </span>
                         </div>
                       </div>
                     </div>
                     
-                    {/* وصف المنتج مختصر */}
-                    <div className="px-3 py-2">
-                      <h3 className="font-bold text-gray-800 dark:text-white truncate text-sm mb-2">
-                        {product.name}
-                      </h3>
-                      <p className="text-xs text-gray-600 dark:text-gray-300 line-clamp-2 min-h-[32px]">
-                        {product.description || 'وصف المنتج غير متوفر'}
-                      </p>
-                    </div>
-                    
-                    {/* ميزات المنتج السريعة */}
-                    <div className="px-3 py-2 flex flex-wrap gap-1.5 mb-2">
-                      <span className="text-[10px] bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-300 px-1.5 py-0.5 rounded-sm flex items-center gap-0.5">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-2.5 w-2.5" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                        </svg>
-                        شحن سريع
-                      </span>
-                      <span className="text-[10px] bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-300 px-1.5 py-0.5 rounded-sm flex items-center gap-0.5">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-2.5 w-2.5" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                        </svg>
-                        ضمان سنة
-                      </span>
-                      <span className="text-[10px] bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-300 px-1.5 py-0.5 rounded-sm flex items-center gap-0.5">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-2.5 w-2.5" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                        </svg>
-                        أصلي 100%
-                      </span>
-                    </div>
-                    
                     {/* شريط الإجراءات */}
-                    <div className="mt-auto p-3 pt-2 flex gap-2 w-full sticky bottom-0 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700">
+                    <div className="mt-auto p-2 flex gap-2 w-full sticky bottom-0 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700">
                       <button 
-                        className="flex-1 bg-delight-600 hover:bg-delight-700 text-white py-1.5 px-2 rounded-md text-xs font-medium transition-colors flex items-center justify-center gap-1 transform hover:scale-105 active:scale-95 min-w-[100px]"
+                        className={`flex-1 py-1 px-2 rounded-md text-xs font-medium transition-colors flex items-center justify-center gap-1 transform ${product.inStock === false || (typeof product.stock === 'number' && product.stock <= 0) ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-delight-600 hover:bg-delight-700 text-white hover:scale-105 active:scale-95'}`}
+                        disabled={product.inStock === false || (typeof product.stock === 'number' && product.stock <= 0)}
+                        title={product.inStock === false || (typeof product.stock === 'number' && product.stock <= 0) ? 'المنتج غير متوفر في المخزون' : 'إضافة إلى سلة التسوق'}
                         onClick={(e) => {
                           e.stopPropagation();
                           e.preventDefault(); // منع السلوك الافتراضي للزر
+                          
+                          // التحقق من توفر المنتج في المخزون
+                          if (product.inStock === false || (typeof product.stock === 'number' && product.stock <= 0)) {
+                            toast({
+                              title: "المنتج غير متوفر",
+                              description: `عذراً، المنتج ${product.name} غير متوفر في المخزون حالياً.`,
+                              variant: "destructive",
+                            });
+                            return;
+                          }
+                          
                           // إضافة للسلة
                           try {
+                            // إضافة المنتج للسلة
                             cart.addItem({
                               id: product.id,
                               name: product.name,
                               price: typeof product.price === 'number' ? `${product.price} ج.م` : product.price,
                               originalPrice: product.originalPrice ? `${product.originalPrice} ج.م` : undefined,
-                              image: product.image
+                              image: product.image,
+                              stock: product.stock // إضافة معلومات المخزون للسلة
                             });
+                            
                             // إظهار إشعار بدلاً من alert
                             toast({
                               title: "تمت الإضافة إلى السلة",
@@ -391,8 +424,17 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
                           }
                         }}
                       >
-                        <ShoppingCart className="w-3 h-3" />
-                        إضافة للسلة
+                        {product.inStock === false || (typeof product.stock === 'number' && product.stock <= 0) ? (
+                          <>
+                            <AlertTriangle className="w-3 h-3 ml-1" />
+                            <span>غير متوفر</span>
+                          </>
+                        ) : (
+                          <>
+                            <ShoppingCart className="w-3 h-3 ml-1" />
+                            <span>إضافة للسلة</span>
+                          </>
+                        )}
                       </button>
                       
                       <button 

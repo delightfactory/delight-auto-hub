@@ -1,14 +1,13 @@
 /** @jsxImportSource react */
 import React, { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   ShoppingCart,
   Plus,
   Minus,
   X,
   ArrowLeft,
-  Truck,
   Badge as LucideBadge,
   Check,
   Home,
@@ -18,16 +17,15 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Progress } from '@/components/ui/progress';
 // Removed Radix Dialog - using built-in Checkout modal
 // import { Dialog, DialogTrigger, DialogContent } from '@/components/ui/dialog';
 import { useCart } from '@/context/CartContext';
-import Checkout from '@/components/Checkout';
 import { useQuery } from '@tanstack/react-query';
 import { ProductDataService, ProductDisplay } from '@/services/productDataService';
+import FreeShippingIndicator from '@/components/shipping/FreeShippingIndicator';
 
 const FREE_SHIPPING_THRESHOLD = 1000;
-const SHIPPING_COST = 80;
+// تم إزالة تكلفة الشحن الثابتة واستبدالها بنظام ديناميكي
 
 // تنسيق العملة مع ضمان ظهور الأرقام باللغة الإنجليزية
 const formatCurrency = (value: number) =>
@@ -36,7 +34,7 @@ const formatCurrency = (value: number) =>
 const CartPage: React.FC = () => {
   const { items, total: totalString, updateQuantity, removeItem } = useCart();
   const total = useMemo(() => parseFloat(totalString.replace(/[^\d.]/g, '')) || 0, [totalString]);
-  const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const navigate = useNavigate();
 
   const { data: featured = [], isLoading: loadingFeatured } = useQuery<ProductDisplay[], Error>({
     queryKey: ['featuredProducts'],
@@ -49,22 +47,50 @@ const CartPage: React.FC = () => {
     [total]
   );
 
-  const { savingsAmount, savingsPercent } = useMemo(() => {
-    let savings = 0;
+  // حساب التوفير والخصم لكل منتج والإجمالي
+  const { savingsAmount, savingsPercent, itemSavings } = useMemo(() => {
+    let totalSavings = 0;
     let originalTotal = 0;
     const parse = (s: string) => parseFloat(s.replace(/[^\d.]/g, '')) || 0;
-    items.forEach(item => {
+    
+    // حساب التوفير لكل منتج
+    const itemSavingsMap = items.map(item => {
       const curr = parse(item.price);
       const orig = item.originalPrice ? parse(item.originalPrice) : curr;
-      originalTotal += orig * item.quantity;
-      if (orig > curr) savings += (orig - curr) * item.quantity;
+      const itemOriginalTotal = orig * item.quantity;
+      originalTotal += itemOriginalTotal;
+      
+      let itemSaving = 0;
+      let itemSavingPercent = 0;
+      
+      if (orig > curr) {
+        itemSaving = (orig - curr) * item.quantity;
+        itemSavingPercent = (orig - curr) / orig * 100;
+        totalSavings += itemSaving;
+      }
+      
+      return {
+        id: item.id,
+        saving: itemSaving,
+        savingPercent: itemSavingPercent,
+        originalPrice: orig,
+        currentPrice: curr,
+        originalTotal: itemOriginalTotal,
+        currentTotal: curr * item.quantity
+      };
     });
-    return { savingsAmount: savings, savingsPercent: originalTotal > 0 ? (savings / originalTotal) * 100 : 0 };
+    
+    return { 
+      savingsAmount: totalSavings, 
+      savingsPercent: originalTotal > 0 ? (totalSavings / originalTotal) * 100 : 0,
+      itemSavings: itemSavingsMap
+    };
   }, [items]);
 
-  const totalWithShipping = useMemo(
-    () => total + (freeShipping ? 0 : SHIPPING_COST),
-    [total, freeShipping]
+  // الإجمالي بدون الشحن - سيتم حساب تكلفة الشحن في مكون الدفع
+  const totalWithoutShipping = useMemo(
+    () => total,
+    [total]
   );
 
   const handleQuantity = useCallback(
@@ -125,15 +151,23 @@ const CartPage: React.FC = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-medium text-sm md:text-base text-delight-900 mb-1 pr-6">{item.name}</h3>
-                    <div>
+                    <div className="flex flex-wrap gap-2 mb-1">
                       {(() => {
-                        if (item.originalPrice) {
-                          const curr = parseFloat(item.price.replace(/[^\d.]/g, '')) || 0;
-                          const orig = parseFloat(item.originalPrice.replace(/[^\d.]/g, '')) || 0;
-                          if (orig <= curr) return null;
-                          const diff = orig - curr;
-                          const percent = Math.round((diff / orig) * 100);
-                          return <Badge variant="outline" className="text-xs md:text-sm mt-1 md:mt-2">خصم {percent}%</Badge>;
+                        // البحث عن معلومات التوفير لهذا المنتج
+                        const itemSaving = itemSavings.find(s => s.id === item.id);
+                        
+                        if (itemSaving && itemSaving.saving > 0) {
+                          const percent = Math.round(itemSaving.savingPercent);
+                          return (
+                            <>
+                              <Badge variant="outline" className="text-xs md:text-sm bg-green-50 text-green-700 border-green-200">
+                                خصم {percent}%
+                              </Badge>
+                              <Badge variant="outline" className="text-xs md:text-sm bg-green-50 text-green-700 border-green-200">
+                                وفرت {formatCurrency(itemSaving.saving)}
+                              </Badge>
+                            </>
+                          );
                         }
                         return null;
                       })()}
@@ -145,10 +179,24 @@ const CartPage: React.FC = () => {
                         <button onClick={() => handleQuantity(item.id, item.quantity + 1)} className="px-1.5 md:px-2 h-full flex items-center justify-center"><Plus className="h-3 w-3 md:h-4 md:w-4" /></button>
                       </div>
                       <div className="text-right">
-                        <div className="font-semibold text-sm md:text-base lg:text-lg text-delight-900">
-                          {formatCurrency((parseFloat(item.price.replace(/[^\d.]/g, '')) || 0) * item.quantity)}
-                        </div>
-                        <div className="text-xs md:text-sm text-gray-500">{formatCurrency(parseFloat(item.price.replace(/[^\d.]/g, '')) || 0)} / قطعة</div>
+                        {(() => {
+                          const itemSaving = itemSavings.find(s => s.id === item.id);
+                          return (
+                            <>
+                              <div className="font-semibold text-sm md:text-base lg:text-lg text-delight-900">
+                                {formatCurrency((parseFloat(item.price.replace(/[^\d.]/g, '')) || 0) * item.quantity)}
+                              </div>
+                              {itemSaving && itemSaving.saving > 0 && (
+                                <div className="text-xs md:text-sm text-gray-500 line-through">
+                                  {formatCurrency(itemSaving.originalTotal)}
+                                </div>
+                              )}
+                              <div className="text-xs md:text-sm text-gray-500">
+                                {formatCurrency(parseFloat(item.price.replace(/[^\d.]/g, '')) || 0)} / قطعة
+                              </div>
+                            </>
+                          );
+                        })()}
                       </div>
                     </div>
                   </div>
@@ -165,48 +213,57 @@ const CartPage: React.FC = () => {
           <div className="bg-white p-4 md:p-5 rounded-lg md:rounded-xl shadow">
             <h2 className="text-lg md:text-xl font-bold mb-3 md:mb-4">ملخص الطلب</h2>
             <div className="space-y-1.5 md:space-y-2 max-h-40 md:max-h-48 overflow-y-auto pr-1 scrollbar-thin">
-              {items.map(item => (
-                <div key={item.id} className="flex justify-between text-xs md:text-sm">
-                  <span className="truncate ml-2">{item.name} × {item.quantity}</span>
-                  <span className="flex-shrink-0">{formatCurrency((parseFloat(item.price.replace(/[^\d.]/g, '')) || 0) * item.quantity)}</span>
-                </div>
-              ))}
+              {items.map(item => {
+                const itemSaving = itemSavings.find(s => s.id === item.id);
+                return (
+                  <div key={item.id} className="flex flex-col text-xs md:text-sm mb-2">
+                    <div className="flex justify-between">
+                      <span className="truncate ml-2">{item.name} × {item.quantity}</span>
+                      <span className="flex-shrink-0">{formatCurrency((parseFloat(item.price.replace(/[^\d.]/g, '')) || 0) * item.quantity)}</span>
+                    </div>
+                    {itemSaving && itemSaving.saving > 0 && (
+                      <div className="flex justify-between text-green-600 text-xs">
+                        <span className="mr-4">وفرت</span>
+                        <span>{formatCurrency(itemSaving.saving)}</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
             <Separator className="my-3 md:my-4" />
-            {savingsAmount > 0 && (
-              <div className="flex justify-between text-xs md:text-sm text-gray-500">
-                <span>السعر قبل الخصم</span>
-                <span className="line-through">{formatCurrency(total + savingsAmount)}</span>
-              </div>
-            )}
-            <div className="flex justify-between text-xs md:text-sm"><span>المجموع بعد الخصم</span><span>{formatCurrency(total)}</span></div>
-            {savingsAmount > 0 && <div className="flex justify-between text-xs md:text-sm text-green-600"><span>التوفير</span><span dir="ltr">{formatCurrency(savingsAmount)} ({savingsPercent.toFixed(1)}%)</span></div>}
-            <div className="flex justify-between text-xs md:text-sm"><span>الشحن</span><span className={freeShipping ? 'text-green-600' : ''}>{freeShipping ? 'مجاني' : formatCurrency(SHIPPING_COST)}</span></div>
+            
+            {/* ملخص الأسعار والتوفير */}
+            <div className="space-y-2">
+              {savingsAmount > 0 && (
+                <div className="flex justify-between text-xs md:text-sm text-gray-500">
+                  <span>السعر قبل الخصم</span>
+                  <span className="line-through">{formatCurrency(total + savingsAmount)}</span>
+                </div>
+              )}
+              <div className="flex justify-between text-xs md:text-sm"><span>المجموع بعد الخصم</span><span>{formatCurrency(total)}</span></div>
+              {savingsAmount > 0 && (
+                <div className="flex justify-between text-xs md:text-sm bg-green-50 p-2 rounded-md text-green-700">
+                  <span className="font-medium">إجمالي التوفير</span>
+                  <span dir="ltr" className="font-medium">{formatCurrency(savingsAmount)} ({Math.round(savingsPercent)}%)</span>
+                </div>
+              )}
+            </div>
+            <div className="flex justify-between text-xs md:text-sm"><span>الشحن</span><span className="text-gray-500">يتم حسابه عند الدفع</span></div>
             <Separator className="my-3 md:my-4" />
-            <div className="flex justify-between font-bold text-sm md:text-base lg:text-lg"><span>الإجمالي النهائي</span><span dir="ltr">{formatCurrency(totalWithShipping)}</span></div>
+            <div className="flex justify-between font-bold text-sm md:text-base lg:text-lg"><span>الإجمالي</span><span dir="ltr">{formatCurrency(totalWithoutShipping)}</span></div>
+            <div className="text-xs text-gray-500 mt-1 text-center">* سيتم إضافة تكلفة الشحن حسب المدينة عند إتمام الطلب</div>
             <Button 
-              onClick={() => setCheckoutOpen(true)} 
+              onClick={() => navigate('/checkout')} 
               size="sm" 
               className="w-full mt-3 md:mt-4 h-9 md:h-10 text-xs md:text-sm flex justify-center items-center gap-1 md:gap-2"
             >
               إتمام الطلب <CreditCardIcon className="h-3.5 w-3.5 md:h-4 md:w-4" />
             </Button>
-            {/* Built-in Checkout modal */}
-            {checkoutOpen && (
-              <Checkout open={checkoutOpen} onClose={() => setCheckoutOpen(false)} />
-            )}
           </div>
 
-          {/* Free Shipping Bar */}
-          <div className="bg-white p-4 md:p-5 rounded-lg md:rounded-xl shadow">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-1.5 md:gap-2 text-xs md:text-sm"><Truck className="h-3.5 w-3.5 md:h-4 md:w-4" /><span>الشحن المجاني</span></div>
-              <span className="text-xs md:text-sm" dir="ltr">
-                {freeShipping ? 'مؤهل للشحن المجاني' : `أضف ${formatCurrency(FREE_SHIPPING_THRESHOLD - total)} للحصول على شحن مجاني`}
-              </span>
-            </div>
-            <Progress value={freeShippingProgress} className="h-1.5 md:h-2" />
-          </div>
+          {/* Free Shipping Bar - استخدام المكون الجديد */}
+          <FreeShippingIndicator currentTotal={total} threshold={FREE_SHIPPING_THRESHOLD} />
         </div>
       </div>
     </section>

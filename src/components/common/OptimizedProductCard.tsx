@@ -47,77 +47,98 @@ const OptimizedProductCard: React.FC<ProductCardProps> = React.memo(({
   const srcSet = generateSrcSet(image);
   const sizes = generateSizes();
 
+  // تعريف الفئات الثابتة لتجنب مشاكل حذف CSS في وضع الإنتاج
+  const cardContainerClasses = "bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg";
+  const linkClasses = "block relative";
+  const imageContainerClasses = "relative aspect-square overflow-hidden";
+  const imageWrapperClasses = "w-full h-full transition-transform duration-500";
+  const imageClasses = "w-full h-full object-cover";
+  const badgesContainerClasses = "absolute top-2 right-2 flex flex-col gap-2";
+  const newBadgeClasses = "bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded";
+  const bestSellerBadgeClasses = "bg-amber-500 text-white text-xs font-bold px-2 py-1 rounded";
+  const discountBadgeClasses = "bg-red-500 text-white text-xs font-bold px-2 py-1 rounded";
+  const contentClasses = "p-4";
+  const categoryClasses = "text-xs text-gray-500 dark:text-gray-400 mb-1 block";
+  const titleClasses = "text-lg font-semibold text-gray-800 dark:text-white mb-2 line-clamp-2";
+  const priceContainerClasses = "flex items-center justify-between";
+  const priceWrapperClasses = "flex items-center gap-2";
+  const currentPriceClasses = "font-bold text-lg text-blue-600 dark:text-blue-400";
+  const originalPriceClasses = "text-sm text-gray-500 dark:text-gray-400 line-through";
+  const ratingContainerClasses = "flex items-center";
+  const ratingStarClasses = "text-amber-500";
+  const ratingValueClasses = "text-sm text-gray-600 dark:text-gray-300 mr-1";
+
   return (
     <div
       ref={cardRef}
-      className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg"
+      className={cardContainerClasses}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <Link to={`/products/${id}`} className="block relative">
-        <div className="relative aspect-square overflow-hidden">
-          <div className="w-full h-full transition-transform duration-500" style={{
+      <Link to={`/products/${id}`} className={linkClasses}>
+        <div className={imageContainerClasses}>
+          <div className={imageWrapperClasses} style={{
               transform: isHovered ? 'scale(1.05)' : 'scale(1)',
           }}>
             <ProgressiveImage
               src={image}
               alt={title}
-              className="w-full h-full object-cover"
+              className={imageClasses}
               placeholderColor="#f3f4f6"
               blur={true}
             />
           </div>
           
           {/* علامات المنتج (جديد، الأكثر مبيعًا، خصم) */}
-          <div className="absolute top-2 right-2 flex flex-col gap-2">
+          <div className={badgesContainerClasses}>
             {isNew && (
-              <span className="bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded">
+              <div className={newBadgeClasses}>
                 جديد
-              </span>
+              </div>
             )}
             
             {isBestSeller && (
-              <span className="bg-amber-500 text-white text-xs font-bold px-2 py-1 rounded">
+              <div className={bestSellerBadgeClasses}>
                 الأكثر مبيعًا
-              </span>
+              </div>
             )}
             
             {discountPercentage > 0 && (
-              <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
+              <div className={discountBadgeClasses}>
                 {discountPercentage}% خصم
-              </span>
+              </div>
             )}
           </div>
         </div>
         
-        <div className="p-4">
+        <div className={contentClasses}>
           {category && (
-            <span className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">
+            <div className={categoryClasses}>
               {category}
-            </span>
+            </div>
           )}
           
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2 line-clamp-2">
+          <h3 className={titleClasses}>
             {title}
           </h3>
           
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-lg text-blue-600 dark:text-blue-400">
+          <div className={priceContainerClasses}>
+            <div className={priceWrapperClasses}>
+              <span className={currentPriceClasses}>
                 {price.toLocaleString('ar-EG')} ج.م
               </span>
               
               {originalPrice && originalPrice > price && (
-                <span className="text-sm text-gray-500 dark:text-gray-400 line-through">
+                <span className={originalPriceClasses}>
                   {originalPrice.toLocaleString('ar-EG')} ج.م
                 </span>
               )}
             </div>
             
             {rating > 0 && (
-              <div className="flex items-center">
-                <span className="text-amber-500">★</span>
-                <span className="text-sm text-gray-600 dark:text-gray-300 mr-1">
+              <div className={ratingContainerClasses}>
+                <span className={ratingStarClasses}>★</span>
+                <span className={ratingValueClasses}>
                   {rating.toFixed(1)}
                 </span>
               </div>

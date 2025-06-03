@@ -37,7 +37,7 @@ const transformProductToDisplay = (product: Product): ProductDisplay => {
     image: product.images && product.images.length > 0 ? product.images[0] : '/placeholder.svg',
     images: product.images || ['/placeholder.svg'],
     features: Array.isArray(product.features) ? product.features : [],
-    stock: product.stock || 0,
+    stock: typeof product.stock === 'number' ? product.stock : 0,
     isNew: product.is_new || false,
     isFeatured: product.is_featured || false,
     category: product.category || undefined,

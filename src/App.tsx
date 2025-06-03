@@ -17,6 +17,7 @@ import FactoryPage from './pages/FactoryPage';
 import ArticlesPage from './pages/ArticlesPage';
 import ArticleDetailsPage from './pages/ArticleDetailPage';
 import CartPage from './pages/CartPage';
+import CheckoutPage from './pages/CheckoutPage';
 import OrdersPage from './pages/OrdersPage';
 import AdminDashboardPage from './pages/admin/DashboardPage';
 import AdminProductsPage from './pages/admin/ProductsPage';
@@ -35,6 +36,7 @@ import AdminCategoriesPage from './pages/admin/CategoriesPage';
 import AdminAppearancePage from './pages/admin/AppearancePage';
 import AdminBackupsPage from './pages/admin/BackupsPage';
 import AdminBannersPage from './pages/admin/BannersPage';
+import AdminShippingPage from './pages/admin/ShippingPage';
 
 const queryClient = new QueryClient();
 
@@ -58,7 +60,8 @@ function App() {
                   <Route path="/auth" element={<SmoothPageTransition><LoginPage /></SmoothPageTransition>} />
                   <Route path="/register" element={<SmoothPageTransition><RegisterPage /></SmoothPageTransition>} />
                   <Route path="/profile" element={<MainLayout><SmoothPageTransition><ProfilePage /></SmoothPageTransition></MainLayout>} />
-                  <Route path="/checkout" element={<MainLayout><SmoothPageTransition><CartPage /></SmoothPageTransition></MainLayout>} />
+                  <Route path="/cart" element={<MainLayout><SmoothPageTransition><CartPage /></SmoothPageTransition></MainLayout>} />
+                  <Route path="/checkout" element={<MainLayout><SmoothPageTransition><CheckoutPage /></SmoothPageTransition></MainLayout>} />
                   <Route path="/orders" element={<MainLayout><SmoothPageTransition><OrdersPage /></SmoothPageTransition></MainLayout>} />
                   <Route path="/best-deals" element={<MainLayout><SmoothPageTransition><BestDealsPage /></SmoothPageTransition></MainLayout>} />
 
@@ -75,6 +78,7 @@ function App() {
                     <Route path="appearance" element={<AdminAppearancePage />} />
                     <Route path="backups" element={<AdminBackupsPage />} />
                     <Route path="banners" element={<AdminBannersPage />} />
+                    <Route path="shipping" element={<AdminShippingPage />} />
                   </Route>
                   
                   {/* Add notification settings route */}

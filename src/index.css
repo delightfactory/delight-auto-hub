@@ -455,3 +455,13 @@
 .nav-link-active {
   @apply text-amazon-orange font-semibold;
 }
+
+/* Ocultar la barra lateral antigua en producción */
+[data-sidebar="sidebar"] {
+  @apply hidden;
+}
+
+/* Ocultar específicamente el div con la clase que causa problemas */
+.duration-200.fixed.inset-y-0.z-10.h-svh.w-\[--sidebar-width\] {
+  @apply hidden !important;
+}

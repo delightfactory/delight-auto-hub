@@ -78,7 +78,7 @@ const MobileNavigation: React.FC = () => {
           
           <li className="flex-1 relative">
             <Link 
-              to="/checkout" 
+              to="/cart" 
               className="flex flex-col items-center justify-center gap-1 h-full w-full text-xs py-1 transition-colors text-gray-500 dark:text-gray-400 hover:text-delight-600 dark:hover:text-delight-400"
             >
               <ShoppingCart className="w-6 h-6" />

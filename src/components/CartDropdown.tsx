@@ -5,7 +5,6 @@ import { ShoppingCart, X, Plus, Minus, Check, ShoppingBag, ShoppingBasket, Arrow
 import { Button } from '@/components/ui/button';
 import { CartItem, useCart } from '@/context/CartContext';
 import { toast } from '@/components/ui/use-toast';
-import Checkout from './Checkout';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -15,16 +14,12 @@ interface CartDropdownProps {
 
 const CartDropdown: React.FC<CartDropdownProps> = ({ inFloatingMode = false }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [showCheckout, setShowCheckout] = useState(false);
   const { items, total, itemCount, removeItem, updateQuantity, clearCart } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
 
   const toggleCart = () => {
     setIsOpen(!isOpen);
-    if (!isOpen) {
-      setShowCheckout(false);
-    }
   };
 
   const handleStartCheckout = () => {
@@ -46,15 +41,16 @@ const CartDropdown: React.FC<CartDropdownProps> = ({ inFloatingMode = false }) =
         navigate('/auth');
       }
     } else {
-      // User is logged in, proceed to checkout
-      setShowCheckout(true);
+      // User is logged in, navigate to checkout page
+      navigate('/checkout');
+      // Close the cart dropdown if in floating mode
+      if (inFloatingMode) {
+        setIsOpen(false);
+      }
     }
   };
 
-  const handleCloseCheckout = () => {
-    setShowCheckout(false);
-    setIsOpen(false);
-  };
+
 
   // Inline cart items view - used in both normal and floating modes
   const renderCartItems = () => (
@@ -128,26 +124,10 @@ const CartDropdown: React.FC<CartDropdownProps> = ({ inFloatingMode = false }) =
   if (inFloatingMode) {
     return (
       <div className="flex flex-col h-full max-h-[calc(100vh-60px)]">
-        {showCheckout ? (
-          <div className="flex flex-col h-full">
-            <div className="p-4 border-b flex items-center justify-between bg-gradient-to-r from-delight-50 to-delight-100">
-              <h2 className="text-lg font-semibold flex items-center gap-2 text-delight-800">
-                <ArrowRight className="h-5 w-5 text-delight-600 cursor-pointer" onClick={() => setShowCheckout(false)} />
-                إتمام الطلب
-              </h2>
-            </div>
-            <div className="flex-grow overflow-auto pb-16">
-              <Checkout onClose={handleCloseCheckout} />
-            </div>
-          </div>
-        ) : (
-          <>
-            <div className="flex-grow overflow-auto p-4 bg-gray-50/50">
-              {renderCartItems()}
-            </div>
-            {renderCartFooter()}
-          </>
-        )}
+        <div className="flex-grow overflow-auto p-4 bg-gray-50/50">
+          {renderCartItems()}
+        </div>
+        {renderCartFooter()}
       </div>
     );
   }
@@ -201,53 +181,31 @@ const CartDropdown: React.FC<CartDropdownProps> = ({ inFloatingMode = false }) =
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
               className="fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-2xl z-50 overflow-hidden flex flex-col"
             >
-              {showCheckout ? (
-                <div className="flex flex-col h-full">
-                  <div className="p-4 border-b flex items-center justify-between bg-gradient-to-r from-delight-50 to-delight-100">
-                    <h2 className="text-lg font-semibold flex items-center gap-2 text-delight-800">
-                      <ArrowRight className="h-5 w-5 text-delight-600 cursor-pointer" onClick={() => setShowCheckout(false)} />
-                      إتمام الطلب
-                    </h2>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={toggleCart}
-                      className="hover:bg-white/50 rounded-full"
-                    >
-                      <X className="h-5 w-5" />
-                    </Button>
-                  </div>
-                  <div className="flex-grow overflow-auto pb-16">
-                    <Checkout onClose={handleCloseCheckout} />
-                  </div>
+              <>
+                {/* Header */}
+                <div className="p-4 border-b flex items-center justify-between bg-gradient-to-r from-delight-50 to-delight-100">
+                  <h2 className="text-lg font-semibold flex items-center gap-2 text-delight-800">
+                    <ShoppingBag className="h-5 w-5 text-delight-600" />
+                    سلة المشتريات
+                  </h2>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={toggleCart}
+                    className="hover:bg-white/50 rounded-full"
+                  >
+                    <X className="h-5 w-5" />
+                  </Button>
                 </div>
-              ) : (
-                <>
-                  {/* Header */}
-                  <div className="p-4 border-b flex items-center justify-between bg-gradient-to-r from-delight-50 to-delight-100">
-                    <h2 className="text-lg font-semibold flex items-center gap-2 text-delight-800">
-                      <ShoppingBag className="h-5 w-5 text-delight-600" />
-                      سلة المشتريات
-                    </h2>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={toggleCart}
-                      className="hover:bg-white/50 rounded-full"
-                    >
-                      <X className="h-5 w-5" />
-                    </Button>
-                  </div>
 
-                  {/* Cart Items */}
-                  <div className="flex-grow overflow-auto p-4 bg-gray-50/50">
-                    {renderCartItems()}
-                  </div>
+                {/* Cart Items */}
+                <div className="flex-grow overflow-auto p-4 bg-gray-50/50">
+                  {renderCartItems()}
+                </div>
 
-                  {/* Footer */}
-                  {renderCartFooter()}
-                </>
-              )}
+                {/* Footer */}
+                {renderCartFooter()}
+              </>
             </motion.div>
           </>
         )}

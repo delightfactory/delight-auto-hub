@@ -175,6 +175,7 @@ const ProductPage: React.FC = () => {
           name: product.name,
           price: product.price || '0 ريال',
           image: product.image || '',
+        originalPrice: product.originalPrice, // إضافة السعر الأصلي هنا
         });
         
         return true;

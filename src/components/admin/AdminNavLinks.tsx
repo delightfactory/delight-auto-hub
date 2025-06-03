@@ -15,7 +15,8 @@ import {
   BellRing,
   Database,
   HelpCircle,
-  Image
+  Image,
+  Truck
 } from 'lucide-react';
 
 type NavItem = {
@@ -42,6 +43,7 @@ const AdminNavLinks: React.FC<AdminNavLinksProps> = ({ isSidebarOpen, toggleSide
     { path: '/admin/products', label: 'المنتجات', icon: Package },
     { path: '/admin/orders', label: 'الطلبات', icon: ShoppingCart, badge: stats?.newOrdersCount ?? null },
     { path: '/admin/users', label: 'العملاء', icon: Users },
+    { path: '/admin/shipping', label: 'الشحن', icon: Truck },
     { path: '/admin/articles', label: 'المقالات', icon: FileText },
     { path: '/admin/categories', label: 'الفئات', icon: Tag },
     { path: '/admin/banners', label: 'البنرات', icon: Image },

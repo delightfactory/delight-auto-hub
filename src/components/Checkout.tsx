@@ -12,6 +12,10 @@ import { MapPin, CreditCard, Check, ArrowLeft, X, Loader2 } from 'lucide-react';
 import { getCurrentUserData, isUserLoggedIn, updateUserData } from '@/services/userService';
 import { placeOrder } from '@/services/orderService';
 import { Badge } from "@/components/ui/badge";
+import ShippingForm from '@/components/shipping/ShippingForm';
+import ShippingSummary from '@/components/shipping/ShippingSummary';
+import FreeShippingIndicator from '@/components/shipping/FreeShippingIndicator';
+import { supabase } from '@/integrations/supabase/client';
 
 interface CheckoutProps {
   open: boolean;
@@ -29,45 +33,12 @@ interface FormData {
   notes: string;
 }
 
-const SHIPPING_COST = 15;
-
 // Formatter for currency with English digits
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat('en-EG', { style: 'currency', currency: 'EGP' }).format(value);
 
-// قائمة المحافظات والمدن في مصر
-const egyptCitiesByGovernorate: Record<string, string[]> = {
-  'القاهرة': ['مدينة نصر', 'المعادي', 'مصر الجديدة', 'وسط البلد', 'المقطم', 'الزمالك', 'شبرا', 'عين شمس', 'المرج', 'حلوان', 'التجمع الخامس', 'الشروق', '15 مايو', 'السلام', 'المطرية'],
-  'الجيزة': ['الدقي', 'المهندسين', 'العجوزة', 'الهرم', 'فيصل', 'أكتوبر', '6 أكتوبر', 'الشيخ زايد', 'حدائق الأهرام', 'البدرشين', 'العياط', 'الواحات البحرية'],
-  'الإسكندرية': ['المنتزه', 'شرق الإسكندرية', 'وسط الإسكندرية', 'الجمرك', 'العامرية', 'العجمي', 'برج العرب', 'سموحة', 'سيدي جابر', 'الأزاريطة', 'محرم بك', 'كفر الدوار'],
-  'الدقهلية': ['المنصورة', 'طلخا', 'ميت غمر', 'دكرنس', 'أجا', 'منية النصر', 'السنبلاوين', 'الجمالية', 'المنزلة', 'بلقاس', 'شربين', 'المطرية'],
-  'البحر الأحمر': ['الغردقة', 'رأس غارب', 'سفاجا', 'القصير', 'مرسى علم', 'شلاتين', 'حلايب'],
-  'البحيرة': ['دمنهور', 'كفر الدوار', 'رشيد', 'إدكو', 'أبو المطامير', 'أبو حمص', 'الدلنجات', 'المحمودية', 'الرحمانية', 'إيتاي البارود', 'حوش عيسى', 'شبراخيت', 'كوم حمادة', 'وادي النطرون'],
-  'الفيوم': ['الفيوم', 'طامية', 'سنورس', 'إطسا', 'إبشواي', 'يوسف الصديق'],
-  'الغربية': ['طنطا', 'المحلة الكبرى', 'كفر الزيات', 'زفتى', 'السنطة', 'قطور', 'بسيون', 'سمنود'],
-  'الإسماعيلية': ['الإسماعيلية', 'فايد', 'القنطرة شرق', 'القنطرة غرب', 'التل الكبير', 'أبو صوير', 'القصاصين'],
-  'المنوفية': ['شبين الكوم', 'منوف', 'أشمون', 'الباجور', 'قويسنا', 'بركة السبع', 'تلا', 'الشهداء', 'سرس الليان'],
-  'المنيا': ['المنيا', 'العدوة', 'مغاغة', 'بني مزار', 'مطاي', 'سمالوط', 'ملوي', 'دير مواس', 'أبو قرقاص'],
-  'القليوبية': ['بنها', 'قليوب', 'شبرا الخيمة', 'القناطر الخيرية', 'الخانكة', 'كفر شكر', 'طوخ', 'شبين القناطر', 'الخصوص', 'العبور'],
-  'الوادي الجديد': ['الخارجة', 'باريس', 'بلاط', 'موط', 'الفرافرة', 'الداخلة'],
-  'السويس': ['السويس', 'الأربعين', 'عتاقة', 'الجناين'],
-  'أسوان': ['أسوان', 'دراو', 'كوم أمبو', 'نصر النوبة', 'إدفو', 'كلابشة', 'أبو سمبل السياحية'],
-  'أسيوط': ['أسيوط', 'ديروط', 'منفلوط', 'القوصية', 'أبنوب', 'الفتح', 'ساحل سليم', 'البداري', 'صدفا', 'الغنايم', 'أبو تيج'],
-  'بني سويف': ['بني سويف', 'الواسطى', 'ناصر', 'إهناسيا', 'ببا', 'سمسطا', 'الفشن'],
-  'بورسعيد': ['بورسعيد', 'بورفؤاد', 'العرب', 'الضواحي', 'المناخ', 'الزهور', 'الجنوب'],
-  'دمياط': ['دمياط', 'دمياط الجديدة', 'رأس البر', 'فارسكور', 'كفر سعد', 'الزرقا', 'السرو', 'الروضة', 'كفر البطيخ'],
-  'الشرقية': ['الزقازيق', 'منيا القمح', 'بلبيس', 'مشتول السوق', 'الإبراهيمية', 'ههيا', 'أبو حماد', 'أبو كبير', 'الحسينية', 'صان الحجر', 'الصالحية الجديدة', 'فاقوس', 'الإسماعيلية', 'كفر صقر', 'أولاد صقر', 'ديرب نجم'],
-  'جنوب سيناء': ['الطور', 'شرم الشيخ', 'دهب', 'نويبع', 'طابا', 'سانت كاترين', 'أبو رديس', 'أبو زنيمة', 'رأس سدر'],
-  'كفر الشيخ': ['كفر الشيخ', 'دسوق', 'فوه', 'مطوبس', 'بيلا', 'الرياض', 'الحامول', 'البرلس', 'قلين', 'سيدي سالم', 'الحامول'],
-  'مطروح': ['مرسى مطروح', 'الحمام', 'العلمين', 'الضبعة', 'النجيلة', 'سيدي براني', 'السلوم', 'سيوة'],
-  'الأقصر': ['الأقصر', 'الأقصر الجديدة', 'طيبة الجديدة', 'الزينية', 'البياضية', 'القرنة', 'أرمنت', 'الطود', 'إسنا'],
-  'قنا': ['قنا', 'قنا الجديدة', 'أبو تشت', 'نجع حمادي', 'دشنا', 'الوقف', 'قفط', 'نقادة', 'فرشوط'],
-  'شمال سيناء': ['العريش', 'الشيخ زويد', 'رفح', 'بئر العبد', 'الحسنة', 'نخل'],
-  'سوهاج': ['سوهاج', 'سوهاج الجديدة', 'أخميم', 'أخميم الجديدة', 'البلينا', 'المراغة', 'المنشاة', 'دار السلام', 'جرجا', 'جهينة', 'ساقلتة', 'طما', 'طهطا']
-};
-
-// قائمة المحافظات
-const egyptGovernorates = Object.keys(egyptCitiesByGovernorate);
+// حد الشحن المجاني
+const FREE_SHIPPING_THRESHOLD = 1000;
 
 const Checkout: React.FC<CheckoutProps> = ({ open, onClose }) => {
   const { items, total: totalString, clearCart } = useCart();
@@ -80,16 +51,16 @@ const Checkout: React.FC<CheckoutProps> = ({ open, onClose }) => {
     name: '', email: '', phone: '', address: '', governorate: '', city: '', paymentMethod: 'cod', notes: ''
   });
   const [loading, setLoading] = useState(false);
-  const [fetchingUserData, setFetchingUserData] = useState(false);
-  const [emailLocked, setEmailLocked] = useState(false);
-  const [availableCities, setAvailableCities] = useState<string[]>([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  
+  const [shippingCost, setShippingCost] = useState(0);
+  const [governorateName, setGovernorateName] = useState('');
+  const [cityName, setCityName] = useState('');
+
   // التحقق من حالة تسجيل دخول المستخدم واسترجاع بياناته عند فتح النافذة
   useEffect(() => {
     if (open) {
       const checkUserStatus = async () => {
-        setFetchingUserData(true);
+        setLoading(true);
         try {
           // التحقق مما إذا كان المستخدم مسجل الدخول
           const loggedIn = await isUserLoggedIn();
@@ -100,25 +71,6 @@ const Checkout: React.FC<CheckoutProps> = ({ open, onClose }) => {
             const userData = await getCurrentUserData();
             
             if (userData) {
-              // التحقق من وجود المحافظة في قائمة المحافظات
-              console.log("المحافظة المسترجعة من قاعدة البيانات:", userData.governorate);
-              
-              // البحث عن المحافظة بغض النظر عن التشكيل والمسافات
-              let matchedGovernorate = userData.governorate || '';
-              
-              // التحقق من وجود المحافظة في القائمة
-              const normalizedGov = userData.governorate?.trim().replace(/\s+/g, ' ');
-              if (normalizedGov && !egyptCitiesByGovernorate[normalizedGov]) {
-                // البحث عن مطابقة بغض النظر عن حالة الأحرف
-                const matchedGov = egyptGovernorates.find(gov => 
-                  gov.trim().toLowerCase() === normalizedGov.toLowerCase());
-                  
-                if (matchedGov) {
-                  matchedGovernorate = matchedGov;
-                  console.log("تم العثور على مطابقة للمحافظة:", matchedGov);
-                }
-              }
-              
               // تعيين بيانات المستخدم المسجل
               setFormData(prev => ({
                 ...prev,
@@ -126,108 +78,26 @@ const Checkout: React.FC<CheckoutProps> = ({ open, onClose }) => {
                 email: userData.email || '',
                 phone: userData.phone || '',
                 address: userData.address || '',
-                governorate: matchedGovernorate,
+                governorate: userData.governorate || '',
                 city: userData.city || ''
               }));
-              
-              // قفل البريد الإلكتروني لأن المستخدم مسجل
-              setEmailLocked(true);
-              
-              // تحديث المدن المتاحة بناءً على المحافظة
-              if (matchedGovernorate && egyptCitiesByGovernorate[matchedGovernorate]) {
-                setAvailableCities(egyptCitiesByGovernorate[matchedGovernorate]);
-                
-                // التحقق من وجود المدينة في قائمة المدن المتاحة
-                if (userData.city && !egyptCitiesByGovernorate[matchedGovernorate].includes(userData.city)) {
-                  console.log("المدينة غير موجودة في قائمة مدن المحافظة:", userData.city);
-                }
-              } else {
-                // إذا لم تكن المحافظة موجودة، نترك قائمة المدن فارغة
-                setAvailableCities([]);
-              }
-              
-              toast({
-                title: "تم تحميل بياناتك",
-                description: "تم استرجاع بيانات الشحن الخاصة بك",
-                variant: "default"
-              });
-              
-              console.log('تم تحميل بيانات العميل من قاعدة البيانات', userData);
-              setFetchingUserData(false);
-              return;
             }
-          }
-          
-          // إذا لم يكن المستخدم مسجلاً أو لم تكن هناك بيانات، نستخدم البيانات المحلية
-          const savedData = localStorage.getItem('userShippingInfo');
-          if (savedData) {
-            try {
-              const parsedData = JSON.parse(savedData);
-              
-              // تعيين البيانات المحفوظة محلياً
-              setFormData(prev => ({
-                ...prev,
-                name: parsedData.name || '',
-                email: parsedData.email || '',
-                phone: parsedData.phone || '',
-                address: parsedData.address || '',
-                governorate: parsedData.governorate || '',
-                city: parsedData.city || ''
-              }));
-              
-              // لا نقفل البريد الإلكتروني لأن المستخدم غير مسجل
-              
-              // تحديث المدن المتاحة بناءً على المحافظة
-              if (parsedData.governorate && egyptCitiesByGovernorate[parsedData.governorate]) {
-                setAvailableCities(egyptCitiesByGovernorate[parsedData.governorate]);
-              }
-              
-              console.log('تم تحميل بيانات العميل من التخزين المحلي', parsedData);
-            } catch (error) {
-              console.error('خطأ في تحليل بيانات الشحن المحفوظة:', error);
-            }
-          } else {
-            console.log('لا توجد بيانات محفوظة للعميل');
           }
         } catch (error) {
           console.error('خطأ في جلب بيانات المستخدم:', error);
         } finally {
-          setFetchingUserData(false);
+          setLoading(false);
         }
       };
       
       checkUserStatus();
     }
   }, [open, toast]);
-  
-  // تحديث المدن المتاحة عند تغيير المحافظة
-  useEffect(() => {
-    if (formData.governorate && egyptCitiesByGovernorate[formData.governorate]) {
-      setAvailableCities(egyptCitiesByGovernorate[formData.governorate]);
-      // إعادة تعيين المدينة إذا لم تكن موجودة في المحافظة الجديدة
-      if (formData.city && !egyptCitiesByGovernorate[formData.governorate].includes(formData.city)) {
-        setFormData(prev => ({ ...prev, city: '' }));
-      }
-    } else {
-      setAvailableCities([]);
-    }
-  }, [formData.governorate]);
 
-  // prevent background scroll & handle Escape
-  useEffect(() => {
-    if (open) {
-      document.body.style.overflow = 'hidden';
-      const onEsc = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
-      window.addEventListener('keydown', onEsc);
-      return () => {
-        document.body.style.overflow = '';
-        window.removeEventListener('keydown', onEsc);
-      };
-    }
-  }, [open, onClose]);
-
-  // total with shipping
-  const totalWithShipping = useMemo(() => total + SHIPPING_COST, [total]);
+  // حساب الإجمالي مع الشحن
+  const totalWithShipping = useMemo(() => {
+    return total + shippingCost;
+  }, [total, shippingCost]);
 
   const handleChange = useCallback(
     (field: keyof FormData) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -236,14 +106,73 @@ const Checkout: React.FC<CheckoutProps> = ({ open, onClose }) => {
     []
   );
 
+  // التعامل مع تغيير المحافظة
+  const handleGovernorateChange = async (governorateId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      governorate: governorateId,
+      city: ''
+    }));
+
+    // جلب اسم المحافظة
+    if (governorateId) {
+      try {
+        const { data, error } = await supabase
+          .from('governorates')
+          .select('name_ar')
+          .eq('id', governorateId)
+          .single();
+        
+        if (error) throw error;
+        if (data) {
+          setGovernorateName(data.name_ar);
+        }
+      } catch (error) {
+        console.error('Error fetching governorate name:', error);
+      }
+    } else {
+      setGovernorateName('');
+    }
+  };
+
+  // التعامل مع تغيير المدينة
+  const handleCityChange = async (cityId: string, fee: number) => {
+    setFormData(prev => ({
+      ...prev,
+      city: cityId
+    }));
+    setShippingCost(fee);
+
+    // جلب اسم المدينة
+    if (cityId) {
+      try {
+        const { data, error } = await supabase
+          .from('cities')
+          .select('name_ar')
+          .eq('id', cityId)
+          .single();
+        
+        if (error) throw error;
+        if (data) {
+          setCityName(data.name_ar);
+        }
+      } catch (error) {
+        console.error('Error fetching city name:', error);
+      }
+    } else {
+      setCityName('');
+    }
+  };
+
   const validateShipping = useCallback(async () => {
     const { name, email, phone, address, governorate, city } = formData;
     if (!name || !email || !phone || !address || !governorate || !city) {
       toast({ title: 'الحقول مطلوبة', description: 'يرجى تعبئة جميع البيانات', variant: 'destructive' });
       return false;
     }
-    if (!/^\+?\d{8,14}$/.test(phone)) {
-      toast({ title: 'رقم هاتف غير صالح', description: 'يجب أن يتكون من أرقام صحيحة', variant: 'destructive' });
+    // تحسين التحقق من رقم الهاتف للتأكد من أنه يحتوي على أرقام إنجليزية فقط
+    if (!/^[0-9+]{8,14}$/.test(phone)) {
+      toast({ title: 'رقم هاتف غير صالح', description: 'يجب أن يتكون من أرقام إنجليزية فقط', variant: 'destructive' });
       return false;
     }
     
@@ -385,38 +314,19 @@ const Checkout: React.FC<CheckoutProps> = ({ open, onClose }) => {
     navigate('/');
   }, [onClose, navigate]);
 
-  // إضافة قيمة z-index عالية جداً وتعليمات CSS لضمان ظهور النافذة فوق جميع العناصر
-  // إضافة أنماط CSS للتأكد من أن النافذة تظهر فوق كل شيء
+  // prevent background scroll & handle Escape
   useEffect(() => {
     if (open) {
-      // إنشاء عنصر أنماط مؤقت للتأكد من أن النافذة تظهر فوق كل شيء
-      const styleEl = document.createElement('style');
-      styleEl.innerHTML = `
-        .checkout-modal-overlay {
-          position: fixed;
-          inset: 0;
-          z-index: 99999 !important;
-          isolation: isolate;
-        }
-        .checkout-modal-content {
-          position: relative;
-          z-index: 100000 !important;
-          isolation: isolate;
-        }
-      `;
-      styleEl.setAttribute('id', 'checkout-modal-styles');
-      document.head.appendChild(styleEl);
-      
+      document.body.style.overflow = 'hidden';
+      const onEsc = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+      window.addEventListener('keydown', onEsc);
       return () => {
-        // إزالة الأنماط عند إغلاق النافذة
-        const existingStyle = document.getElementById('checkout-modal-styles');
-        if (existingStyle) {
-          document.head.removeChild(existingStyle);
-        }
+        document.body.style.overflow = '';
+        window.removeEventListener('keydown', onEsc);
       };
     }
-  }, [open]);
-  
+  }, [open, onClose]);
+
   return (
     <AnimatePresence>
       {open && (
@@ -440,7 +350,7 @@ const Checkout: React.FC<CheckoutProps> = ({ open, onClose }) => {
               onClick={onClose}
               className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition-colors z-[102]"
               aria-label="إغلاق"
-              disabled={loading || fetchingUserData}
+              disabled={loading}
             >
               <X className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
@@ -453,131 +363,128 @@ const Checkout: React.FC<CheckoutProps> = ({ open, onClose }) => {
             )}
             {step === 'shipping' && (
               <motion.form
-                key="ship"
-                onSubmit={onSubmitShipping}
-                initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 20, opacity: 0 }}
-                className="space-y-3 sm:space-y-4 pt-2 p-4 sm:p-5 md:p-6 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100"
+                key="shipping"
+                className="space-y-4 p-4 sm:p-5 md:p-6 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100"
+                initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -20, opacity: 0 }}
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  setStep('payment');
+                }}
               >
                 <h3 className="text-lg sm:text-xl font-semibold flex items-center gap-1.5 sm:gap-2 mb-1 sm:mb-2"><MapPin className="h-4 w-4 sm:h-5 sm:w-5" /> معلومات الشحن</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                
+                <div className="space-y-3">
                   <label className="block">
-                    <span className="text-xs text-gray-600 mb-1 block">الاسم الكامل *</span>
+                    <span className="text-sm font-medium mb-1 block">الاسم</span>
                     <Input 
                       value={formData.name} 
                       onChange={handleChange('name')} 
                       placeholder="الاسم الكامل" 
                       className="h-9 sm:h-10 text-sm" 
-                      required
+                      required 
                     />
                   </label>
+                </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <label className="block">
-                    <span className="text-xs text-gray-600 mb-1 block">البريد الإلكتروني *</span>
+                    <span className="text-sm font-medium mb-1 block">البريد الإلكتروني</span>
                     <Input 
-                      type="email" 
                       value={formData.email} 
                       onChange={handleChange('email')} 
-                      placeholder="البريد الإلكتروني" 
+                      placeholder="example@domain.com" 
+                      className="h-9 sm:h-10 text-sm" 
+                      type="email" 
+                      required 
+                      disabled={isLoggedIn}
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="text-sm font-medium mb-1 block">رقم الهاتف</span>
+                    <Input 
+                      value={formData.phone} 
+                      onChange={(e) => {
+                        // التأكد من أن المدخلات أرقام إنجليزية فقط
+                        const value = e.target.value.replace(/[^0-9+]/g, '');
+                        setFormData(prev => ({ ...prev, phone: value }));
+                      }} 
+                      placeholder="01xxxxxxxxx" 
                       className="h-9 sm:h-10 text-sm" 
                       dir="ltr"
-                      required
-                      disabled={emailLocked}
+                      type="tel"
+                      inputMode="numeric"
+                      required 
                     />
-                    {emailLocked && (
-                      <span className="text-xs text-blue-600 mt-1 block">البريد الإلكتروني مسجل مسبقاً</span>
-                    )}
                   </label>
                 </div>
-                <label className="block">
-                  <span className="text-xs text-gray-600 mb-1 block">رقم الهاتف *</span>
-                  <Input 
-                    type="tel" 
-                    value={formData.phone} 
-                    onChange={handleChange('phone')} 
-                    placeholder="رقم الهاتف" 
-                    className="h-9 sm:h-10 text-sm" 
-                    dir="ltr"
-                    required
-                  />
-                </label>
-                <label className="block">
-                  <span className="text-xs text-gray-600 mb-1 block">العنوان التفصيلي *</span>
-                  <Input 
-                    value={formData.address} 
-                    onChange={handleChange('address')} 
-                    placeholder="العنوان التفصيلي" 
-                    className="h-9 sm:h-10 text-sm" 
-                    required
-                  />
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                
+                <div className="space-y-3">
                   <label className="block">
-                    <span className="text-xs text-gray-600 mb-1 block">المحافظة *</span>
-                    <select
-                      value={formData.governorate}
-                      onChange={(e) => setFormData(prev => ({ ...prev, governorate: e.target.value, city: '' }))}
-                      className="w-full h-9 sm:h-10 text-sm rounded-md border border-input bg-background px-3 py-1"
-                      required
-                    >
-                      <option value="" disabled>اختر المحافظة</option>
-                      {egyptGovernorates.map(gov => (
-                        <option key={gov} value={gov}>{gov}</option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className="block">
-                    <span className="text-xs text-gray-600 mb-1 block">المدينة *</span>
-                    <select
-                      value={formData.city}
-                      onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
-                      className="w-full h-9 sm:h-10 text-sm rounded-md border border-input bg-background px-3 py-1"
-                      required
-                      disabled={!formData.governorate}
-                    >
-                      <option value="" disabled>اختر المدينة</option>
-                      {availableCities.map(city => (
-                        <option key={city} value={city}>{city}</option>
-                      ))}
-                    </select>
-                    {!formData.governorate && (
-                      <span className="text-xs text-gray-500 mt-1 block">اختر المحافظة أولاً</span>
-                    )}
+                    <span className="text-sm font-medium mb-1 block">العنوان</span>
+                    <Input 
+                      value={formData.address} 
+                      onChange={handleChange('address')} 
+                      placeholder="العنوان بالتفصيل" 
+                      className="h-9 sm:h-10 text-sm" 
+                      required 
+                    />
                   </label>
                 </div>
+                
+                {/* استخدام مكون ShippingForm لاختيار المحافظة والمدينة */}
+                <div className="space-y-3">
+                  <ShippingForm 
+                    onShippingCostChange={setShippingCost}
+                    selectedGovernorate={formData.governorate}
+                    selectedCity={formData.city}
+                    onGovernorateChange={handleGovernorateChange}
+                    onCityChange={handleCityChange}
+                  />
+                </div>
+                
                 <Separator className="my-2 sm:my-3" />
-                <div className="space-y-1 text-xs sm:text-sm">
-                  <div className="flex justify-between"><span>المجموع</span><span dir="ltr">{formatCurrency(total)}</span></div>
-                  <div className="flex justify-between"><span>الشحن</span><span dir="ltr">{formatCurrency(SHIPPING_COST)}</span></div>
-                  <div className="flex justify-between font-semibold"><span>الإجمالي</span><span dir="ltr">{formatCurrency(totalWithShipping)}</span></div>
-                </div>
-                <Button 
-                  type="submit" 
-                  className="w-full h-9 sm:h-10 text-xs sm:text-sm mt-2" 
-                  disabled={loading || fetchingUserData}
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" />
-                      جاري التحقق...
-                    </>
-                  ) : (
-                    "التالي"
-                  )}
-                </Button>
-                {fetchingUserData && (
-                  <div className="flex items-center justify-center text-xs text-gray-500 mt-2">
-                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                    جاري جلب بياناتك...
+                
+                {/* إضافة مؤشر الشحن المجاني */}
+                {total < FREE_SHIPPING_THRESHOLD && (
+                  <div className="mb-3">
+                    <FreeShippingIndicator currentTotal={total} threshold={FREE_SHIPPING_THRESHOLD} />
                   </div>
                 )}
+                
+                {/* عرض ملخص الطلب مع تكلفة الشحن */}
+                <ShippingSummary 
+                  subtotal={total} 
+                  shippingCost={shippingCost}
+                  governorateName={governorateName}
+                  cityName={cityName}
+                />
+                
+                <div className="flex gap-2 sm:gap-3 mt-2">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    className="flex-1 h-9 sm:h-10 text-xs sm:text-sm" 
+                    onClick={() => onClose()}
+                  >
+                    <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4 ml-1" /> رجوع
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    className="flex-1 h-9 sm:h-10 text-xs sm:text-sm"
+                    disabled={!formData.city} // تعطيل الزر إذا لم يتم اختيار المدينة
+                  >
+                    متابعة <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1" />
+                  </Button>
+                </div>
               </motion.form>
             )}
-
+            
             {step === 'payment' && (
               <motion.form
-                key="pay"
+                key="payment"
                 onSubmit={onSubmitPayment}
                 initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -20, opacity: 0 }}
-                className="space-y-3 sm:space-y-4 pt-2 p-4 sm:p-5 md:p-6 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100"
+                className="space-y-4 p-4 sm:p-5 md:p-6 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100"
               >
                 <h3 className="text-lg sm:text-xl font-semibold flex items-center gap-1.5 sm:gap-2 mb-1 sm:mb-2"><CreditCard className="h-4 w-4 sm:h-5 sm:w-5" /> الدفع</h3>
                 <div className="bg-gray-50 p-3 rounded-lg">
@@ -616,10 +523,12 @@ const Checkout: React.FC<CheckoutProps> = ({ open, onClose }) => {
                   />
                 </label>
                 <Separator className="my-2 sm:my-3" />
-                <div className="flex justify-between font-semibold text-xs sm:text-sm">
-                  <span>الإجمالي</span>
-                  <span dir="ltr">{formatCurrency(totalWithShipping)}</span>
-                </div>
+                <ShippingSummary 
+                  subtotal={total} 
+                  shippingCost={shippingCost}
+                  governorateName={governorateName}
+                  cityName={cityName}
+                />
                 <div className="flex gap-2 sm:gap-3 mt-2">
                   <Button 
                     type="button" 

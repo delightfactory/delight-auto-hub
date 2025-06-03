@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, Eye, Star, Heart, Check } from 'lucide-react';
+import { ShoppingCart, Eye, Star, Heart, Check, AlertTriangle, Flag, FlaskConical, ShieldCheck, Sparkles, Zap, CheckCircle, Tag, Award, PackageCheck, PackageX, Archive } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '@/context/CartContext';
 import { toast } from '@/components/ui/use-toast';
@@ -13,11 +13,16 @@ interface ProductCardProps {
   description: string;
   image: string;
   className?: string;
+  category?: string; // New: Product category
   rating?: number;
+  ratingCount?: number; // New: Number of ratings
   price?: string;
   originalPrice?: string;
   isFeatured?: boolean;
   isNew?: boolean;
+  stock?: number; // Existing: Stock quantity
+  stockStatusText?: string; // New: Descriptive stock status (e.g., "متوفر", "وشيك النفاذ")
+  quickFeatures?: string[]; // New: Array of quick feature strings
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({
@@ -26,12 +31,27 @@ const ProductCard: React.FC<ProductCardProps> = ({
   description,
   image,
   className,
+  category,
   rating = 4.5,
+  ratingCount,
   price = '',
   originalPrice,
   isFeatured = false,
   isNew = false,
+  stock = 0,
+  stockStatusText,
+  quickFeatures = [],
 }) => {
+  const featureIcons: { [key: string]: React.ElementType } = {
+    "صنع في مصر": Flag,
+    "تركيبة فعالة": FlaskConical,
+    "آمن على الأسطح": ShieldCheck,
+    "لمعان فائق": Sparkles,
+    "حماية طويلة": Zap,
+    "جودة عالية": Award, // Award موجودة بالفعل، يمكن استخدامها
+    "سهل الاستخدام": CheckCircle, // أيقونة عامة
+    // أضف المزيد من الميزات الشائعة وأيقوناتها هنا
+  };
   const { addItem, items } = useCart();
   const [isLiked, setIsLiked] = React.useState(false);
   const [isAddedToCart, setIsAddedToCart] = React.useState(false);
@@ -48,6 +68,17 @@ const ProductCard: React.FC<ProductCardProps> = ({
     e.preventDefault();
     e.stopPropagation();
     
+    // التحقق من توفر المنتج في المخزون
+    if (stock <= 0) {
+      toast({
+        title: "المنتج غير متوفر",
+        description: `عذراً، المنتج ${name} غير متوفر في المخزون حالياً.`,
+        variant: "destructive",
+        duration: 3000,
+      });
+      return;
+    }
+    
     addItem({
       id,
       name,
@@ -57,7 +88,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
     });
     
     // طباعة معلومات المنتج للتصحيح
-    console.log(`Added to cart: ${name}, Price: ${price}, Original Price: ${originalPrice}`);
+    console.log(`Added to cart: ${name}, Price: ${price}, Original Price: ${originalPrice}, Stock Status: ${stock > 0 ? 'متوفر' : 'غير متوفر'}`);
     
     setIsAddedToCart(true);
     
@@ -88,6 +119,30 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   const fallbackImage = 'https://placehold.co/600x400/e2e8f0/1e293b?text=Delight+Car+Products';
 
+  // تعريف الفئات الثابتة لتجنب مشاكل حذف CSS في وضع الإنتاج
+  // استخدام فئات CSS ثابتة بدلاً من الفئات الديناميكية التي قد تُحذف أثناء عملية البناء
+  const cardClasses = "group relative bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-300";
+  const imageContainerClasses = "relative overflow-hidden aspect-square";
+  const imageClasses = "w-full h-full object-cover transition-transform duration-500 group-hover:scale-105";
+  const contentClasses = "p-4 flex flex-col h-[calc(100%-0px)]";
+  const titleClasses = "text-lg font-semibold text-gray-800 dark:text-gray-100 mb-1 line-clamp-2 min-h-[48px]";
+  const categoryClasses = "text-xs text-gray-500 dark:text-gray-400 mb-2";
+  const ratingClasses = "flex items-center mb-2";
+  const starClasses = "text-yellow-500 mr-1";
+  const ratingCountClasses = "text-xs text-gray-500 dark:text-gray-400";
+  const priceClasses = "flex items-center gap-2 mb-2";
+  const originalPriceClasses = "text-sm text-gray-500 dark:text-gray-400 line-through";
+  const currentPriceClasses = "text-lg text-delight-600 dark:text-delight-400 font-bold";
+  const discountClasses = "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 px-1.5 py-0.5 rounded-sm text-xs font-semibold";
+  const savingsClasses = "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-300 px-1.5 py-0.5 rounded-sm font-semibold";
+  const featuresClasses = "flex flex-wrap gap-x-2 gap-y-1 mt-2 mb-3 items-center";
+  const featureItemClasses = "flex items-center text-[10px] text-gray-600 dark:text-gray-300";
+  const featureIconClasses = "w-3 h-3 ml-1 text-delight-500 dark:text-delight-400";
+  const actionsClasses = "flex flex-col sm:flex-row justify-between gap-2 mt-auto pt-2 border-t border-gray-100 dark:border-gray-700/50";
+  const detailsBtnClasses = "border-gray-200 text-amazon-link hover:bg-gray-50 hover:text-amazon-link hover:border-gray-300 transition duration-150 ease-in-out";
+  const cartBtnClasses = "transition-all duration-300";
+  const glowEffectClasses = "absolute -z-10 inset-0 bg-gradient-to-r from-amber-200/20 to-delight-300/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-xl";
+  
   return (
     <motion.div 
       onClick={() => navigate(`/products/${id}`)}
@@ -96,33 +151,37 @@ const ProductCard: React.FC<ProductCardProps> = ({
       transition={{ duration: 0.5 }}
       whileHover={{ y: -8, boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)" }}
       className={cn(
-        'cursor-pointer group overflow-hidden rounded-xl bg-white border border-gray-200 shadow-sm hover:shadow-xl transition-all duration-300',
+        // نستخدم الفئات الثابتة المعرفة أعلاه مع الفئات الديناميكية
+        cardClasses,
+        'cursor-pointer group overflow-hidden rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full',
         className
       )}
     >
-      <div className="relative aspect-[3/2] w-full overflow-hidden bg-gray-50 border-b border-gray-100">
-        {/* BADGES for Featured/New */}
+      {/* صورة المنتج مع الشارات */}
+      <div className="relative w-full overflow-hidden bg-gray-50 border-b border-gray-100" style={{ aspectRatio: '3/2' }}>
+        {/* شارات المنتج (جديد/مميز) */}
         {isNew && (
-          <span
+          <div
             className="absolute top-0 left-0 w-12 h-12 bg-red-500 shadow-lg z-20"
             style={{ clipPath: 'polygon(0 0, 100% 0, 0 100%)' }}
           >
-            <span className="absolute bottom-3 left-2 text-xs font-semibold text-white transform -rotate-45 origin-bottom-left">
+            <div className="absolute bottom-3 left-2 text-xs font-semibold text-white transform -rotate-45 origin-bottom-left">
               جديد
-            </span>
-          </span>
+            </div>
+          </div>
         )}
         {isFeatured && (
-          <span
+          <div
             className="absolute top-0 right-0 w-12 h-12 bg-gradient-to-br from-yellow-400 to-amber-500 shadow-lg z-20"
             style={{ clipPath: 'polygon(100% 0, 100% 100%, 0 0)' }}
           >
-            <span className="absolute bottom-3 right-2 text-xs font-semibold text-white transform rotate-45 origin-bottom-right">
+            <div className="absolute bottom-3 right-2 text-xs font-semibold text-white transform rotate-45 origin-bottom-right">
               مميز
-            </span>
-          </span>
+            </div>
+          </div>
         )}
         
+        {/* صورة المنتج */}
         <motion.img
           loading="lazy"
           whileHover={{ scale: 1.15, rotate: -2 }}
@@ -133,10 +192,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
           onError={handleImageError}
         />
         
+        {/* تأثير التدرج عند التحويم */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
       </div>
       
-      <div className="p-4">
+      <div className="p-3 flex flex-col flex-grow">
         <div className="flex items-center justify-between mb-1">
           <div className="flex gap-0.5 items-center">
             {[...Array(5)].map((_, i) => (
@@ -145,7 +205,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 className={`w-3 h-3 ${i < Math.floor(rating) ? 'fill-amazon-orange text-amazon-orange' : 'fill-gray-200 text-gray-200'}`} 
               />
             ))}
-            <span className="text-xs font-medium text-gray-500 mr-1">({rating})</span>
+            <span className="text-xs font-medium text-gray-500 mr-1">({ratingCount ? `${rating} (${ratingCount})` : rating})</span>
             <motion.button
               onClick={toggleLike}
               whileHover={{ scale: 1.1 }}
@@ -170,45 +230,115 @@ const ProductCard: React.FC<ProductCardProps> = ({
           </AnimatePresence>
         </div>
         
-        <h3 className="text-lg font-bold mb-1 text-amazon-dark sm:line-clamp-1 group-hover:text-amazon-link transition-colors">
+        {category && (
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5 truncate">
+            {category}
+          </p>
+        )}
+        <h3 className="text-md font-semibold mb-0.5 text-gray-800 dark:text-white sm:line-clamp-2 group-hover:text-delight-600 transition-colors min-h-[2.5rem]">
           {name}
         </h3>
         
-        <p className="text-gray-600 mb-1 text-xs line-clamp-2">
+        <p className="text-gray-600 dark:text-gray-300 mb-1 text-xs line-clamp-2 min-h-[2rem]">
           {description}
         </p>
+
+        {/* Stock Status */}
+        {(() => {
+          let statusText = stockStatusText;
+          let textColor = 'text-gray-600 dark:text-gray-300';
+          let IconComponent: React.ElementType | null = null;
+
+          if (!statusText) {
+            if (stock > 5) {
+              statusText = 'متوفر';
+              textColor = 'text-green-600 dark:text-green-400';
+              IconComponent = PackageCheck;
+            } else if (stock > 0 && stock <= 5) {
+              statusText = 'كمية محدودة';
+              textColor = 'text-amber-600 dark:text-amber-400';
+              IconComponent = Archive;
+            } else {
+              statusText = 'غير متوفر';
+              textColor = 'text-red-600 dark:text-red-400';
+              IconComponent = PackageX;
+            }
+          } else {
+            // إذا تم توفير stockStatusText، نحدد الأيقونة واللون بناءً على النص (يمكن تحسين هذا لاحقًا)
+            if (stock > 0) {
+              IconComponent = PackageCheck;
+              textColor = 'text-green-600 dark:text-green-400';
+            } else {
+              IconComponent = PackageX;
+              textColor = 'text-red-600 dark:text-red-400';
+            }
+          }
+
+          return (
+            <div className={`flex items-center text-xs font-medium mb-1.5 ${textColor}`}>
+              {IconComponent && <IconComponent className="w-3.5 h-3.5 ml-1" />}
+              {statusText}
+            </div>
+          );
+        })()}
         
-        {/* عرض السعر والخصم */}
-        {price && originalPrice ? (
-          <div className="mb-1 flex items-center gap-3">
-            <span className="text-base font-bold text-delight-600 animate-pulse">
-              {price}
-            </span>
-            <span className="text-sm text-gray-400 line-through">
-              {originalPrice}
-            </span>
-            {/* حساب نسبة الخصم */}
-            {(() => {
-              // استخراج الأرقام من النصوص
-              const parse = (str: string) => parseFloat(str.replace(/[^\d.]/g, ''));
-              const orig = parse(originalPrice);
-              const curr = parse(price);
-              if (!isNaN(orig) && !isNaN(curr) && orig > curr) {
-                const percent = Math.round(((orig - curr) / orig) * 100);
+        {/* Price, Discount, Savings */}
+        {price ? (
+          <div className="mb-2 space-y-0.5">
+            <div className="flex items-baseline gap-1.5 flex-wrap">
+              <span className="text-lg font-bold text-delight-600 dark:text-delight-400">
+                {price}
+              </span>
+              {originalPrice && (
+                <span className="text-sm text-gray-500 dark:text-gray-400 line-through">
+                  {originalPrice}
+                </span>
+              )}
+            </div>
+            {originalPrice && price && (() => {
+              const parseNumeric = (str: string) => parseFloat(String(str).replace(/[^\d.]/g, ''));
+              const origNum = parseNumeric(originalPrice);
+              const currNum = parseNumeric(price);
+              if (!isNaN(origNum) && !isNaN(currNum) && origNum > currNum) {
+                const discountPercent = Math.round(((origNum - currNum) / origNum) * 100);
+                const savingsAmount = origNum - currNum;
                 return (
-                  <span className="inline-flex items-center justify-center bg-gradient-to-r from-red-400 to-red-700 text-white text-sm font-semibold px-2 py-1 rounded-full shadow-md animate-bounce">
-                    خصم {percent}%
-                  </span>
+                  <div className="flex items-center gap-1.5 flex-wrap text-[10px]">
+                    {discountPercent > 0 && (
+                      <span className="bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-300 px-1.5 py-0.5 rounded-sm font-semibold">
+                        خصم {discountPercent}%
+                      </span>
+                    )}
+                    {savingsAmount > 0 && (
+                      <span className="bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-300 px-1.5 py-0.5 rounded-sm font-semibold">
+                        وفر {savingsAmount.toFixed(2)} ج.م
+                      </span>
+                    )}
+                  </div>
                 );
               }
               return null;
             })()}
           </div>
-        ) : price && (
-          <div className="amazon-price mb-2 text-lg">{price}</div>
+        ) : price ? (
+          <div className="amazon-price mb-2 text-lg text-delight-600 dark:text-delight-400 font-bold">{price}</div>
+        ) : null}
+        {/* Quick Features */}
+        {quickFeatures && quickFeatures.length > 0 && (
+          <div className="flex flex-wrap gap-x-2 gap-y-1 mt-2 mb-3 items-center">
+            {quickFeatures.map((feature, index) => {
+              const IconComponent = featureIcons[feature] || CheckCircle; // أيقونة افتراضية إذا لم يتم العثور على ميزة
+              return (
+                <span key={index} className="flex items-center text-[10px] text-gray-600 dark:text-gray-300">
+                  <IconComponent className="w-3 h-3 ml-1 text-delight-500 dark:text-delight-400" />
+                  {feature}
+                </span>
+              );
+            })}
+          </div>
         )}
         
-        <div className="flex flex-col sm:flex-row justify-between gap-2">
+        <div className="flex flex-col sm:flex-row justify-between gap-2 mt-auto pt-2 border-t border-gray-100 dark:border-gray-700/50">
           <motion.div className="w-full sm:w-auto" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Button
               size="sm"
@@ -223,8 +353,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
           
           <motion.div 
             className="w-full sm:w-auto"
-            whileHover={{ scale: 1.05 }} 
-            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: stock > 0 ? 1.05 : 1 }} 
+            whileTap={{ scale: stock > 0 ? 0.95 : 1 }}
             animate={isAddedToCart ? { y: [0, -5, 0] } : {}}
             transition={{ duration: 0.5 }}
           >
@@ -234,14 +364,23 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 "transition-all duration-300",
                 isAddedToCart
                   ? "bg-green-600 hover:bg-green-700 text-white"
-                  : "amazon-btn-primary"
+                  : stock <= 0
+                    ? "bg-gray-300 text-gray-600 cursor-not-allowed hover:bg-gray-300"
+                    : "amazon-btn-primary"
               )}
               onClick={handleAddToCart}
+              disabled={stock <= 0}
+              title={stock <= 0 ? "المنتج غير متوفر في المخزون" : ""}
             >
               {isAddedToCart ? (
                 <>
                   <Check className="w-4 h-4 ml-2" />
                   <span>تمت الإضافة</span>
+                </>
+              ) : stock <= 0 ? (
+                <>
+                  <AlertTriangle className="w-4 h-4 ml-2" />
+                  <span>غير متوفر</span>
                 </>
               ) : (
                 <>

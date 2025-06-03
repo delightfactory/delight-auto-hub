@@ -140,16 +140,21 @@ export default defineConfig(({ mode }) => ({
     sourcemap: mode === 'development',
     // تحسين أداء البناء
     target: 'es2015',
-    // تقليل حجم الملفات الناتجة
+    // تقليل حجم الملفات الناتجة - تم تعديله لتجنب مشاكل العرض
     minify: mode === 'production' ? 'terser' : false,
     terserOptions: {
       compress: {
-        drop_console: mode === 'production',
+        drop_console: false, // تم تعطيل حذف console.log للمساعدة في التصحيح
         drop_debugger: mode === 'production',
-        pure_funcs: mode === 'production' ? ['console.log', 'console.info'] : []
+        pure_funcs: [] // تم تعطيل حذف وظائف console.log و console.info
       },
       output: {
         comments: false
+      },
+      // تجنب تحويل أسماء المتغيرات والدوال للحفاظ على قابلية التصحيح
+      mangle: {
+        keep_classnames: true,
+        keep_fnames: true
       }
     },
     // تقسيم الكود إلى حزم أصغر
