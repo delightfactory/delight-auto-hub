@@ -41,19 +41,13 @@
   ],
   "cleanUrls": true,
   "env": {
-    "VITE_API_URL": "https://api.example.com",
-    "VITE_PUBLIC_KEY": "your_public_key_here"
+    "VITE_SUPABASE_URL": "https://xyzabcd123.supabase.co",
+    "VITE_SUPABASE_PUBLISHABLE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.…",
+    "VITE_MAPS_API_KEY": "AIzaSyCyc9GRQHzSc3Seie_YbANohExqnSCWMLg"
   },
   "build": {
     "env": {
       "VITE_BUILD_TIME": "2025-06-03T21:08:46+03:00"
     }
-  },
-  "functions": {
-    "api/**.js": {
-      "memory": 256,
-      "maxDuration": 10
-    }
   }
 }
-
