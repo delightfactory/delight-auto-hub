@@ -66,22 +66,12 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
   }, [categories]);
   
   // حساب عدد الأعمدة بناءً على عرض الشاشة وخيارات المستخدم
-  const getColumnsCount = (width: number) => {
-    if (columnsProp) {
-      if (width < 640) return columnsProp.default || 1;
-      if (width < 768) return columnsProp.sm || columnsProp.default || 2;
-      if (width < 1024) return columnsProp.md || columnsProp.sm || columnsProp.default || 3;
-      return columnsProp.lg || columnsProp.md || columnsProp.sm || columnsProp.default || 4;
-    }
-    
-    // القيم الافتراضية إذا لم يتم تحديد الأعمدة
-    if (width < 640) return 1; // للشاشات الصغيرة
-    if (width < 768) return 2; // للشاشات المتوسطة
-    if (width < 1024) return 3; // للشاشات الكبيرة
-    return 4; // للشاشات الكبيرة جداً
+  const getColumns = (width: number) => {
+    // منتج واحد فقط في كل صف بغض النظر عن حجم الشاشة
+    return 1;
   };
 
-  const columns = getColumnsCount(parentWidth);
+  const columns = getColumns(parentWidth);
   const rows = Math.ceil(products.length / columns);
   
   // استخدام debounce لتحسين الأداء عند تغيير حجم النافذة
@@ -112,17 +102,13 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
     };
   }, [handleResize]);
 
-  // حساب الارتفاع التقديري للصف بناءً على حجم الشاشة
-  const getEstimatedSize = () => {
-    // زيادة الارتفاع التقديري بشكل كبير لضمان عدم تداخل الكروت
-    if (parentWidth < 640) { // الهواتف
-      return estimateSize + 80; // زيادة كبيرة للهواتف
-    } else if (parentWidth < 1024) { // الأجهزة اللوحية
-      return estimateSize + 60; // زيادة متوسطة للأجهزة اللوحية
-    } else { // الشاشات الكبيرة
-      return estimateSize + 40; // زيادة معقولة للشاشات الكبيرة
-    }
-  };
+  // إضافة ثوابت ارتفاع البطاقة، شريط الإجراءات والفجوة الرأسية
+  const CARD_HEIGHT = 144; // تقليل ارتفاع البطاقة بنسبة 20%
+  const ACTION_BAR_HEIGHT = 50;
+  const ROW_GAP = 10;
+
+  // حساب الارتفاع التقديري للصف ليشمل ارتفاع البطاقة وشريط الإجراءات والفجوة
+  const getEstimatedSize = () => CARD_HEIGHT + ACTION_BAR_HEIGHT + ROW_GAP;
   
   // إعداد المكون الافتراضي
   const rowVirtualizer = useVirtualizer({
@@ -151,14 +137,14 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
   }, [rowVirtualizer.getVirtualItems()]);
 
   // Definir clases estáticas para evitar problemas de purga de CSS en producción
-  const containerClasses = 'relative w-full';
+  const containerClasses = 'relative w-full px-4 sm:px-6 lg:px-8 overflow-x-visible';
   const gridClasses = 'grid gap-4';
   const productCardClasses = 'bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden transition-transform hover:shadow-lg hover:-translate-y-1 cursor-pointer';
 
   return (
     <div
       ref={parentRef}
-      className={cn(containerClasses, 'relative', className, useWindowScroll ? '' : 'overflow-auto')}
+      className={cn(containerClasses, className, useWindowScroll ? '' : 'overflow-y-auto overflow-x-visible')}
       style={{
         height: useWindowScroll ? 'auto' : typeof maxHeight === 'number' ? `${maxHeight}px` : maxHeight,
         contain: useWindowScroll ? 'content' : 'strict',
@@ -171,8 +157,8 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
         style={{
           height: `${rowVirtualizer.getTotalSize()}px`,
           width: '100%',
-          position: useWindowScroll ? 'relative' : 'relative',
-          margin: '0 auto', // توسيط المحتوى
+          position: 'relative',
+          margin: '0 auto', // متمركزة داخل الحاوية
         }}
       >
         {memoizedVirtualItems.map((virtualRow) => {
@@ -190,8 +176,8 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
                 transform: `translateY(${virtualRow.start}px)`,
                 display: 'grid',
                 gridTemplateColumns: `repeat(${columns}, 1fr)`,
-                gap: `${gap * 0.4}rem`,
-                padding: '1rem 0.25rem'
+                gap: `${ROW_GAP}px`,
+                padding: '0'
               }}
             >
               {Array.from({ length: columns }).map((_, columnIndex) => {
@@ -203,7 +189,7 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
                 return (
                   <motion.div
                     key={product.id}
-                    className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden cursor-pointer group relative flex flex-col h-full min-h-[280px] sm:min-h-[320px] mb-3 sm:mb-4"
+                    className="w-full bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-visible cursor-pointer group relative grid grid-cols-product-card grid-rows-card-layout h-full flex-shrink-0"
                     whileHover={{ y: -5 }}
                     transition={{ type: "spring", stiffness: 300 }}
                     onClick={() => onProductClick?.(product)}
@@ -219,23 +205,11 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
                     )}
                     
                     {/* قسم الصورة والمعلومات الرئيسية - تم إعادة هيكلته */}
-                    <div className="grid grid-cols-[auto_1fr] gap-2 p-2">
-                      {/* صورة المنتج على اليمين */}
-                      <div className="order-last relative w-[90px] h-[90px] overflow-hidden rounded-md">
-                        <ProgressiveImage
-                          src={product.image}
-                          alt={product.name}
-                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                          placeholderColor="#f3f4f6"
-                          width="100%"
-                          height="100%"
-                        />
-                      </div>
-                      
-                      {/* معلومات المنتج الرئيسية */}
-                      <div className="order-first flex flex-col justify-start space-y-0.5 p-1 pr-0">
-                        {/* Row 1: Category, Stock Status, Rating */}
-                        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                    <div className="row-start-1 col-span-2 grid grid-cols-product-card items-start gap-4 h-full px-4 py-1">
+                      {/* معلومات المنتج على اليسار */}
+                      <div className="flex flex-col justify-start space-y-1 h-full pr-2">
+                        {/* الجزء العلوي: الفئة وحالة المخزون */}
+                        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 mb-1">
                           <span className="text-[10px] bg-delight-50 dark:bg-delight-900/30 text-delight-700 dark:text-delight-300 px-1.5 py-0.5 rounded-sm inline-flex items-center">
                             <Tag className="w-2.5 h-2.5 ml-0.5" />
                             {categoryMap[product.category] || 'منتجات متنوعة'}
@@ -262,34 +236,20 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
                               متوفر
                             </span>
                           )}
-                          {/* Rating */}
-                          {product.rating && (
-                            <div className="flex items-center gap-0.5">
-                              {Array.from({ length: 5 }).map((_, i) => (
-                                <Star 
-                                  key={i} 
-                                  className={`w-3 h-3 ${i < Math.floor(product.rating || 0) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} 
-                                />
-                              ))}
-                              <span className="text-[10px] text-gray-500 dark:text-gray-400 ml-0.5">
-                                ({product.rating})
-                              </span>
-                            </div>
-                          )}
                         </div>
                         
-                        {/* Product Name */}
-                        <h3 className="font-semibold text-gray-800 dark:text-white text-sm leading-tight line-clamp-2 mt-1 min-h-[calc(2*1.25rem)]">
+                        {/* اسم المنتج */}
+                        <h3 className="font-semibold text-gray-800 dark:text-white text-base leading-tight line-clamp-2 mt-0 mb-2">
                           {product.name}
                         </h3>
 
                         {/* Short Description (Moved under Name) */}
-                        <p className="text-xs text-gray-600 dark:text-gray-300 line-clamp-2 mt-0.5 min-h-[calc(2*1rem)]">
+                        <p className="text-xs text-gray-600 dark:text-gray-300 line-clamp-2 mt-0 mb-0 min-h-[calc(2*1rem)]">
                           {product.description || 'وصف المنتج غير متوفر'}
                         </p>
 
                         {/* Price Block (Added vertical margin) */}
-                        <div className="flex items-baseline gap-1 flex-wrap my-1.5">
+                        <div className="flex items-baseline gap-1 flex-wrap my-0">
                           <span className="text-md font-bold text-delight-600 dark:text-delight-400">
                             {typeof product.price === 'number' 
                               ? `${product.price.toFixed(2)} ج.م` 
@@ -317,11 +277,11 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
                             const discount = Math.round(((originalPriceNum - currentPriceNum) / originalPriceNum) * 100);
                             const savings = originalPriceNum - currentPriceNum;
                             return (
-                              <div className="flex items-center gap-1 flex-wrap mt-0.5">
+                              <div className="flex items-center gap-1 flex-wrap -mt-1">
                                 {discount > 0 && (
                                 <span className="text-[10px] bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-300 px-1 py-0.5 rounded-sm font-bold inline-flex items-center">
                                   <svg xmlns="http://www.w3.org/2000/svg" className="h-2.5 w-2.5 mr-0.5" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clipRule="evenodd" />
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                                   </svg>
                                   خصم {discount}%
                                 </span>
@@ -329,7 +289,7 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
                                 {savings > 0 && (
                                 <span className="text-[10px] bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-300 px-1 py-0.5 rounded-sm font-bold inline-flex items-center">
                                   <svg xmlns="http://www.w3.org/2000/svg" className="h-2.5 w-2.5 mr-0.5" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M10 2a8 8 0 100-16 8 8 0 000-16zm1 11a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V5a1 1 0 00-1-1z" clipRule="evenodd" />
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1 11a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V5a1 1 0 00-1-1z" clipRule="evenodd" />
                                   </svg>
                                   وفر {savings.toFixed(2)} ج.م
                                 </span>
@@ -362,10 +322,37 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
                           </span>
                         </div>
                       </div>
+                      
+                      {/* صورة المنتج والتقييم */}
+                      <div className="flex flex-col justify-start items-center space-y-1">
+                        <div className="relative w-[120px] h-[120px] flex-shrink-0 overflow-hidden rounded-md">
+                          <ProgressiveImage
+                            src={product.image}
+                            alt={product.name}
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                            placeholderColor="#f3f4f6"
+                            width={120}
+                            height={120}
+                          />
+                        </div>
+                        {product.rating && (
+                          <div className="flex items-center justify-center gap-0.5">
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`w-3 h-3 ${i < Math.floor(product.rating || 0) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
+                              />
+                            ))}
+                            <span className="text-[10px] text-gray-500 dark:text-gray-400 ml-0.5">
+                              ({product.rating})
+                            </span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                     
                     {/* شريط الإجراءات */}
-                    <div className="mt-auto p-2 flex gap-2 w-full sticky bottom-0 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700">
+                    <div className="row-start-2 col-span-2 -mt-3 flex gap-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-t border-gray-100 dark:border-gray-700 rounded-b-lg px-4 py-2">
                       <button 
                         className={`flex-1 py-1 px-2 rounded-md text-xs font-medium transition-colors flex items-center justify-center gap-1 transform ${product.inStock === false || (typeof product.stock === 'number' && product.stock <= 0) ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-delight-600 hover:bg-delight-700 text-white hover:scale-105 active:scale-95'}`}
                         disabled={product.inStock === false || (typeof product.stock === 'number' && product.stock <= 0)}

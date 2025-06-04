@@ -2,18 +2,25 @@ import React, { useRef, useState, useEffect } from 'react';
 import { useVirtualList } from '../../utils/listOptimizer';
 import OptimizedImage from '../common/OptimizedImage';
 import LoadingIndicator from '../common/LoadingIndicator';
+import ProductCard, { ProductCardProps } from '@/components/ProductCard'; // استيراد المكون الرئيسي وواجهته
 
 // واجهة المنتج
+// واجهة المنتج المستخدمة داخليًا في VirtualizedProductGrid
+// هذه الواجهة تصف البيانات كما هي مستلمة أو مستخدمة قبل تحويلها لـ ProductCardProps
 export interface Product {
   id: string;
   name: string;
-  price: number;
+  description?: string; // الوصف قد يكون اختياريًا هنا
+  price: number; // السعر كرقم
+  originalPrice?: number; // السعر الأصلي كرقم (اختياري)
   image: string;
   rating?: number;
-  discount?: number;
+  discount?: number; // الخصم يمكن أن يبقى هنا إذا كان يستخدم في حسابات ما قبل العرض
   category?: string;
   isNew?: boolean;
   isFeatured?: boolean;
+  stock?: number;
+  // أضف أي حقول أخرى خاصة بـ VirtualizedProductGrid هنا إذا لزم الأمر
 }
 
 interface VirtualizedProductGridProps {
@@ -69,6 +76,20 @@ const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
     };
   }, []);
 
+  // إذا القيمة صفر ولم يبدأ التحميل، أو لم يتم حساب عرض الحاوية بعد
+  if (!containerWidth && !isLoading) {
+    return (
+      <div
+        ref={containerRef} // مهم جداً لوضع الـ ref هنا أيضاً ليتمكن useEffect من حساب العرض الأولي
+        className="relative overflow-auto h-full min-h-[500px]" // نفس الفئات المستخدمة في الحاوية الرئيسية
+      >
+        <div className="flex items-center justify-center h-full">
+          <span className="text-gray-500">جارٍ التحميل...</span>
+        </div>
+      </div>
+    );
+  }
+
   // استخدام القائمة الافتراضية
   const { visibleItems, totalHeight, virtualItemProps } = useVirtualList(
     products,
@@ -102,8 +123,7 @@ const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
   return (
     <div
       ref={containerRef}
-      className="relative overflow-auto"
-      style={{ height: '100%', minHeight: '500px' }}
+      className="relative overflow-auto h-full min-h-[500px]"
     >
       <div style={{ height: `${totalHeight}px`, position: 'relative' }}>
         <div
@@ -114,81 +134,40 @@ const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
             gap: '1rem',
           }}
         >
-          {visibleItems.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              onClick={() => onProductClick?.(product)}
-              width={calculateItemWidth()}
-              height={`${itemHeight}px`}
-            />
-          ))}
+          {visibleItems.map((productItem) => {
+            // تحويل وتكييف كائن المنتج ليتوافق مع ProductCardProps
+            const productCardData: ProductCardProps = {
+              id: productItem.id,
+              name: productItem.name,
+              description: productItem.description || productItem.name, // استخدام الوصف إن وجد، وإلا الاسم
+              image: productItem.image,
+              category: productItem.category,
+              rating: productItem.rating,
+              price: productItem.price ? `${productItem.price} ريال` : undefined, // تحويل السعر إلى نص وإضافة العملة
+              originalPrice: productItem.originalPrice ? `${productItem.originalPrice} ريال` : undefined,
+              isFeatured: productItem.isFeatured,
+              isNew: productItem.isNew,
+              stock: productItem.stock,
+              // stockStatusText: productItem.stockStatusText, // إذا كان متوفرًا في productItem
+              // quickFeatures: productItem.quickFeatures, // إذا كان متوفرًا في productItem
+              // className: `w-[${calculateItemWidth()}] h-[${itemHeight}px]` // يمكن إضافة هذا إذا أردنا تحكمًا دقيقًا بالحجم من هنا
+            };
+
+            return (
+              <ProductCard
+                key={productCardData.id}
+                {...productCardData}
+                // ProductCard الرئيسي يتعامل مع التنقل عند النقر.
+                // إذا كان onProductClick له وظيفة أخرى، يجب التعامل معها بشكل مختلف.
+                // onClick={onProductClick ? () => onProductClick(productItem) : undefined}
+              />
+            );
+          })}
         </div>
       </div>
     </div>
   );
 };
 
-// مكون بطاقة المنتج
-interface ProductCardProps {
-  product: Product;
-  onClick?: () => void;
-  width: string;
-  height: string;
-}
-
-const ProductCard: React.FC<ProductCardProps> = ({
-  product,
-  onClick,
-  width,
-  height,
-}) => {
-  return (
-    <div
-      className="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:shadow-lg hover:-translate-y-1 cursor-pointer"
-      style={{ width, height }}
-      onClick={onClick}
-    >
-      <div className="relative h-48">
-        <OptimizedImage
-          src={product.image}
-          alt={product.name}
-          className="w-full h-full object-cover"
-          blur={true}
-          placeholderColor="#f3f4f6"
-        />
-        {product.discount && (
-          <div className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded-md text-xs font-bold">
-            خصم {product.discount}%
-          </div>
-        )}
-        {product.isNew && (
-          <div className="absolute top-2 left-2 bg-green-500 text-white px-2 py-1 rounded-md text-xs font-bold">
-            جديد
-          </div>
-        )}
-      </div>
-      <div className="p-4">
-        <h3 className="text-lg font-semibold mb-2 line-clamp-2">{product.name}</h3>
-        <div className="flex justify-between items-center">
-          <span className="text-blue-600 font-bold">{product.price} ريال</span>
-          {product.rating && (
-            <div className="flex items-center">
-              <span className="text-yellow-500 mr-1">★</span>
-              <span className="text-sm">{product.rating}</span>
-            </div>
-          )}
-        </div>
-        {product.category && (
-          <div className="mt-2">
-            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-              {product.category}
-            </span>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
 
 export default VirtualizedProductGrid;

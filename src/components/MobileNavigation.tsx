@@ -103,7 +103,7 @@ const MobileNavigation: React.FC = () => {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
               onClick={() => setIsSidebarOpen(false)}
-              className="fixed inset-0 bg-black/40 z-[60] backdrop-blur-sm"
+              className="fixed inset-0 bg-black/50 z-[9990] sm:hidden backdrop-blur-sm"
             />
             <motion.div 
               initial={{ x: '100%' }}
@@ -115,7 +115,7 @@ const MobileNavigation: React.FC = () => {
                 stiffness: 300
               }}
               className={cn(
-                "fixed top-0 right-0 bottom-0 z-[70] w-72 h-full overflow-y-auto",
+                "fixed top-0 right-0 bottom-0 z-[9999] w-72 h-full overflow-y-auto",
                 "bg-white dark:bg-gray-900 shadow-2xl flex flex-col"
               )}
             >

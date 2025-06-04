@@ -1,14 +1,11 @@
-
 import { type Config } from "tailwindcss";
 import { fontFamily } from "tailwindcss/defaultTheme";
 
 const config = {
   darkMode: ["class"],
   content: [
-    './pages/**/*.{ts,tsx}',
-    './components/**/*.{ts,tsx}',
-    './app/**/*.{ts,tsx}',
-    './src/**/*.{ts,tsx}',
+    "./index.html",
+    "./src/**/*.{js,jsx,ts,tsx}",
   ],
   prefix: "",
   // تحسين الأداء عن طريق تقليل حجم CSS
@@ -147,6 +144,12 @@ const config = {
           },
         },
       }),
+      gridTemplateColumns: {
+        'product-card': '1fr 120px',
+      },
+      gridTemplateRows: {
+        'card-layout': '1fr auto',
+      },
     },
   },
   plugins: [
@@ -155,7 +158,7 @@ const config = {
     require('@tailwindcss/forms')({
       strategy: 'class',
     }),
-    require('@tailwindcss/aspect-ratio')
+    require('@tailwindcss/aspect-ratio'),
   ],
   safelist: [
     // فئات لمكون ProductCard و OptimizedProductCard
@@ -170,6 +173,9 @@ const config = {
     'text-blue-600', 'dark:text-blue-400',
     'text-sm', 'line-through',
     'text-amber-500', 'mr-1', 'text-gray-600', 'dark:text-gray-300',
+    // فئات جديدة لضمان تنسيق ProductCard في وضع الإنتاج
+    'grid', 'grid-cols-1', 'order-first', 'order-last',
+    'grid-rows-[auto_1fr]', 'grid-row-1', 'grid-row-2',
     // فئات إضافية لمكون ProductCard
     'cursor-pointer', 'group', 'rounded-xl', 'border', 'border-gray-200', 'dark:border-gray-700', 'shadow-sm', 'hover:shadow-xl', 'flex', 'flex-col', 'h-full',
     'aspect-[3/2]', 'border-b', 'border-gray-100', 'bg-gray-50',
@@ -211,9 +217,14 @@ const config = {
     // فئات للأيقونات
     'w-4', 'h-4', 'ml-1', 'mr-0',
     // فئات للشبكة (grid)
-    'grid', 'grid-cols-[auto_1fr]', 'gap-2', 'p-2',
-    'order-last', 'w-[90px]', 'h-[90px]',
+    'grid', 'gap-2', 'p-2', 'p-3',
+    'order-last', 'w-[90px]', 'h-[90px]', 'w-full', 'h-full', 'h-[180px]',
     'order-first', 'pr-0',
+    'flex-col', 'justify-between', 'h-full',
+    'mb-1', 'mb-2', 'text-base', 'rounded-b-lg',
+    'justify-center', 'items-center',
+    'h-[150px]', 'w-[120px]', 'h-[120px]', 'order-last', 'order-first', 'pr-2',
+    'absolute', 'bottom-0', 'left-0', 'right-0', 'bg-white/80', 'dark:bg-gray-800/80', 'backdrop-blur-sm',
     // فئات إضافية لمكون OptimizedProductCard
     'text-amber-500', 'text-blue-600', 'dark:text-blue-400',
     'font-bold', 'text-lg',
@@ -226,12 +237,31 @@ const config = {
     'relative', 'overflow-auto', 'position-relative', 'grid-cols-1', 'md:grid-cols-2',
     'lg:grid-cols-3', 'xl:grid-cols-4', '2xl:grid-cols-5', 'gap-1', 'gap-2', 'gap-3', 'gap-4',
     'gap-5', 'gap-6', 'gap-8',
-    
     // Clases para animaciones y efectos
     'animate-fade-in', 'animate-slide-up', 'transition-all', 'duration-300',
     'hover:scale-105', 'active:scale-95', 'group-hover:animate-pulse',
     'absolute', '-z-10', 'inset-0', 'bg-gradient-to-r', 'from-amber-200/20', 'to-delight-300/20',
-    'opacity-0', 'group-hover:opacity-100', 'transition-opacity', 'duration-500', 'rounded-xl'
+    'opacity-0', 'group-hover:opacity-100', 'transition-opacity', 'duration-500', 'rounded-xl',
+    // ثوابت الارتفاع والفجوة الرأسية
+    'ROW_GAP', 'CARD_HEIGHT', 'h-[150px]', 'flex-shrink-0', 'backdrop-blur-sm', 'bg-white/80', 'dark:bg-gray-800/80', 'w-[120px]', 'h-[120px]', 'flex-shrink-0',
+    // Classes used by VirtualizedProductGrid component
+    'grid-cols-[1fr]',
+    'grid-rows-[1fr_auto]',
+    'row-start-1',
+    'row-start-2',
+    'col-span-2',
+    '-mt-3',
+    '-mt-9',
+    '-mt-10',
+    'overflow-x-visible',
+    'overflow-y-auto',
+    'px-4',
+    'sm:px-6',
+    'lg:px-8',
+    'py-1',
+    'py-2',
+    'py-3',
+    'h-full',
   ],
 } satisfies Config;
 

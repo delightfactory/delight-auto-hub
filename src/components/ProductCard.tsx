@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '@/context/CartContext';
 import { toast } from '@/components/ui/use-toast';
 
-interface ProductCardProps {
+export interface ProductCardProps {
   id: string;
   name: string;
   description: string;
@@ -153,12 +153,20 @@ const ProductCard: React.FC<ProductCardProps> = ({
       className={cn(
         // نستخدم الفئات الثابتة المعرفة أعلاه مع الفئات الديناميكية
         cardClasses,
-        'cursor-pointer group overflow-hidden rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full',
+        'cursor-pointer group overflow-hidden rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-xl transition-all duration-300 grid grid-cols-1 h-full',
         className
       )}
+      style={{ display: 'grid', gridTemplateRows: 'auto 1fr' }} /* استخدام أسلوب inline لضمان تطبيقه */
     >
-      {/* صورة المنتج مع الشارات */}
-      <div className="relative w-full overflow-hidden bg-gray-50 border-b border-gray-100" style={{ aspectRatio: '3/2' }}>
+      {/* صورة المنتج مع الشارات - نستخدم order-first لضمان ظهورها في الأعلى دائمًا */}
+      <div 
+        className="relative w-full overflow-hidden bg-gray-50 border-b border-gray-100 order-first" 
+        style={{ 
+          aspectRatio: '3/2',
+          gridRow: '1',
+          display: 'block' /* ضمان العرض كـ block */
+        }}
+      >
         {/* شارات المنتج (جديد/مميز) */}
         {isNew && (
           <div
@@ -190,13 +198,20 @@ const ProductCard: React.FC<ProductCardProps> = ({
           alt={name}
           className="h-full w-full object-cover transition-transform duration-150 ease-in-out"
           onError={handleImageError}
+          style={{ display: 'block' }} /* ضمان العرض كـ block */
         />
         
         {/* تأثير التدرج عند التحويم */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
       </div>
       
-      <div className="p-3 flex flex-col flex-grow">
+      {/* محتوى المنتج - نستخدم order-last لضمان ظهوره بعد الصورة */}
+      <div 
+        className="p-3 flex flex-col flex-grow order-last" 
+        style={{ 
+          gridRow: '2',
+          display: 'flex' /* ضمان العرض كـ flex */
+        }}>
         <div className="flex items-center justify-between mb-1">
           <div className="flex gap-0.5 items-center">
             {[...Array(5)].map((_, i) => (
@@ -403,4 +418,5 @@ const ProductCard: React.FC<ProductCardProps> = ({
   );
 };
 
+// تصدير المكون
 export default ProductCard;
