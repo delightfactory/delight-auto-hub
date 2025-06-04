@@ -264,5 +264,7 @@
 }
 
 .product-action {
-  margin-top: 12px;
+  margin-top: 8px; /* تقليل المسافة من 12px إلى 8px لرفع شريط الأزرار للأعلى */
+  position: relative;
+  z-index: 10; /* ضمان ظهور شريط الأزرار فوق العناصر الأخرى */
 }

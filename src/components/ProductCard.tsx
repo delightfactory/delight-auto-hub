@@ -336,7 +336,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
           </div>
         )}
         
-        <div className="flex flex-row justify-between gap-1 mt-auto pt-1 border-t border-gray-100 dark:border-gray-700/50 mb-0.5 relative z-10">
+        <div className="flex flex-row justify-between gap-1 mt-auto pt-0.5 border-t border-gray-100 dark:border-gray-700/50 mb-0.5 relative z-10">
           <motion.div className="w-1/2" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Button
               size="sm"
