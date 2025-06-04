@@ -131,7 +131,8 @@ const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
             ...virtualItemProps.style,
             display: 'grid',
             gridTemplateColumns: `repeat(${columns}, 1fr)`,
-            gap: '1rem',
+            gap: '0.5rem',
+            padding: '0 0.25rem'
           }}
         >
           {visibleItems.map((productItem) => {

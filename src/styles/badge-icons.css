@@ -3,13 +3,16 @@
 /* تنسيق عام للبادجات - تم تحسينه لضمان اتساق الأحجام */
 .product-badge {
   display: inline-block;
-  padding: 3px 8px;
+  padding: 2px 6px;
   border-radius: 4px;
   font-size: 10px;
   font-weight: 600;
   line-height: 1.2;
   text-align: center;
-  min-width: 60px;
+  min-width: auto;
+  white-space: nowrap;
+  margin-right: 3px;
+  margin-bottom: 3px;
 }
 
 /* تنسيق أيقونات البادجات - تم إزالتها لتحسين تنسيق البادجات */
@@ -48,39 +51,48 @@
 /* بادج المخزون */
 .stock-badge {
   display: inline-block;
-  padding: 3px 8px;
+  padding: 2px 6px;
   border-radius: 4px;
   font-size: 10px;
   font-weight: 600;
   text-align: center;
-  min-width: 60px;
+  min-width: auto;
+  white-space: nowrap;
+  margin-right: 3px;
+  margin-bottom: 3px;
 }
 
 .stock-available {
   background-color: rgba(0, 128, 0, 0.1);
   color: #007600;
+  border: 1px solid rgba(0, 118, 0, 0.2);
 }
 
 .stock-limited {
   background-color: rgba(255, 153, 0, 0.1);
   color: #ff9900;
+  border: 1px solid rgba(255, 153, 0, 0.2);
 }
 
 .stock-unavailable {
   background-color: rgba(204, 12, 57, 0.1);
   color: #cc0c39;
+  border: 1px solid rgba(204, 12, 57, 0.2);
 }
 
 /* تنسيق ميزات المنتج */
 .feature-item {
   display: inline-block;
-  padding: 3px 8px;
+  padding: 2px 6px;
   border-radius: 4px;
-  font-size: 10px;
+  font-size: 9px;
   background-color: rgba(0, 0, 0, 0.05);
   color: #555;
   text-align: center;
-  min-width: 60px;
+  min-width: auto;
+  white-space: nowrap;
+  margin-right: 3px;
+  margin-bottom: 3px;
 }
 
 .feature-icon {

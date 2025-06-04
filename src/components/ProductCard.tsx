@@ -115,7 +115,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const cardClasses = "group relative bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-300";
   const imageContainerClasses = "relative overflow-hidden aspect-square";
   const imageClasses = "w-full h-full object-cover transition-transform duration-500 group-hover:scale-105";
-  const contentClasses = "p-2 flex flex-col h-[calc(100%-0px)]";
+  const contentClasses = "p-1 flex flex-col h-[calc(100%-0px)]";
   const titleClasses = "text-lg font-semibold text-gray-800 dark:text-gray-100 mb-1 line-clamp-2 min-h-[48px]";
   const categoryClasses = "text-xs text-gray-500 dark:text-gray-400 mb-2";
   const ratingClasses = "flex items-center mb-2";
@@ -144,10 +144,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
       className={cn(
         // نستخدم الفئات الثابتة المعرفة أعلاه مع الفئات الديناميكية
         cardClasses,
-        'cursor-pointer group overflow-hidden rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-xl transition-all duration-300 grid grid-cols-1 h-full mb-6',
+        'cursor-pointer group overflow-hidden rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-xl transition-all duration-300 grid grid-cols-1 h-full mb-4 w-full',
         className
       )}
-      style={{ display: 'grid', gridTemplateRows: 'auto minmax(0, 1fr)' }} /* استخدام أسلوب inline لضمان تطبيقه */
+      style={{ display: 'grid', gridTemplateRows: 'auto minmax(0, 1fr)', width: '100%' }} /* استخدام أسلوب inline لضمان تطبيقه */
     >
       {/* صورة المنتج مع الشارات - نستخدم order-first لضمان ظهورها في الأعلى دائمًا */}
       <div 
@@ -198,28 +198,28 @@ const ProductCard: React.FC<ProductCardProps> = ({
       
       {/* محتوى المنتج - نستخدم order-last لضمان ظهوره بعد الصورة */}
       <div 
-        className="p-1.5 flex flex-col flex-grow order-last" 
+        className="p-1 flex flex-col flex-grow order-last" 
         style={{ 
           gridRow: '2',
           display: 'flex', /* ضمان العرض كـ flex */
           maxHeight: '180px'
         }}>
-        <div className="flex items-center justify-between mb-1">
+        <div className="flex items-center justify-between mb-0.5">
           <div className="flex gap-0.5 items-center">
             {[...Array(5)].map((_, i) => (
               <Star 
                 key={i} 
-                className={`w-3 h-3 ${i < Math.floor(rating) ? 'fill-amazon-orange text-amazon-orange' : 'fill-gray-200 text-gray-200'}`} 
+                className={`w-2.5 h-2.5 ${i < Math.floor(rating) ? 'fill-amazon-orange text-amazon-orange' : 'fill-gray-200 text-gray-200'}`} 
               />
             ))}
-            <span className="text-xs font-medium text-gray-500 mr-1">({ratingCount ? `${rating} (${ratingCount})` : rating})</span>
+            <span className="text-[10px] font-medium text-gray-500 mr-0.5">({ratingCount ? `${rating} (${ratingCount})` : rating})</span>
             <motion.button
               onClick={toggleLike}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              className="p-1 ml-2 rounded-full shadow-sm bg-white/80 backdrop-blur-sm"
+              className="p-0.5 ml-1 rounded-full shadow-sm bg-white/80 backdrop-blur-sm"
             >
-              <Heart className={`w-4 h-4 ${isLiked ? 'fill-amazon-warning text-amazon-warning' : 'text-gray-500'}`} />
+              <Heart className={`w-3.5 h-3.5 ${isLiked ? 'fill-amazon-warning text-amazon-warning' : 'text-gray-500'}`} />
             </motion.button>
           </div>
           
@@ -229,24 +229,24 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 initial={{ opacity: 0, scale: 0.5 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.5 }}
-                className="text-xs font-medium bg-green-100 text-green-700 px-2 py-1 rounded-full flex items-center"
+                className="text-[10px] font-medium bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full flex items-center"
               >
-                <Check className="h-3 w-3 mr-1" /> في السلة
+                <Check className="h-2.5 w-2.5 mr-0.5" /> في السلة
               </motion.div>
             )}
           </AnimatePresence>
         </div>
         
         {category && (
-          <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5 truncate">
+          <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-0.5 truncate">
             {category}
           </p>
         )}
-        <h3 className="text-md font-semibold mb-0.5 text-gray-800 dark:text-white sm:line-clamp-2 group-hover:text-delight-600 transition-colors min-h-[2rem]">
+        <h3 className="text-sm font-semibold mb-0.5 text-gray-800 dark:text-white line-clamp-1 group-hover:text-delight-600 transition-colors min-h-[1.25rem]">
           {name}
         </h3>
         
-        <p className="text-gray-600 dark:text-gray-300 mb-1 text-xs line-clamp-1 min-h-[1rem]">
+        <p className="text-gray-600 dark:text-gray-300 mb-0.5 text-[10px] line-clamp-1 min-h-[0.75rem]">
           {description}
         </p>
 
@@ -276,7 +276,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
           }
 
           return (
-            <div className={`stock-badge text-xs font-medium mb-1.5 ${textColor} ${stock > 5 ? 'stock-available' : stock > 0 ? 'stock-limited' : 'stock-unavailable'}`}>
+            <div className={`stock-badge text-[10px] font-medium mb-0.5 inline-block ${textColor} ${stock > 5 ? 'stock-available' : stock > 0 ? 'stock-limited' : 'stock-unavailable'}`}>
               {statusText}
             </div>
           );
@@ -284,13 +284,13 @@ const ProductCard: React.FC<ProductCardProps> = ({
         
         {/* Price, Discount, Savings */}
         {price ? (
-          <div className="mb-1 space-y-0.5">
-            <div className="flex items-baseline gap-1 flex-wrap">
-              <span className="text-base font-bold text-delight-600 dark:text-delight-400">
+          <div className="mb-0.5 space-y-0">
+            <div className="flex items-baseline gap-0.5 flex-nowrap">
+              <span className="text-sm font-bold text-delight-600 dark:text-delight-400">
                 {price}
               </span>
               {originalPrice && (
-                <span className="text-xs text-gray-500 dark:text-gray-400 line-through">
+                <span className="text-[10px] text-gray-500 dark:text-gray-400 line-through">
                   {originalPrice}
                 </span>
               )}
@@ -303,14 +303,14 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 const discountPercent = Math.round(((origNum - currNum) / origNum) * 100);
                 const savingsAmount = origNum - currNum;
                 return (
-                  <div className="flex items-center gap-1 flex-wrap text-[10px]">
+                  <div className="flex items-center gap-0.5 flex-nowrap text-[9px]">
                     {discountPercent > 0 && (
-                      <span className="product-badge discount-badge">
+                      <span className="product-badge discount-badge inline-block">
                         خصم {discountPercent}%
                       </span>
                     )}
                     {savingsAmount > 0 && (
-                      <span className="product-badge savings-badge">
+                      <span className="product-badge savings-badge inline-block">
                         وفر {savingsAmount.toFixed(2)} ج.م
                       </span>
                     )}
@@ -321,14 +321,14 @@ const ProductCard: React.FC<ProductCardProps> = ({
             })()}
           </div>
         ) : price ? (
-          <div className="amazon-price mb-1 text-base text-delight-600 dark:text-delight-400 font-bold">{price}</div>
+          <div className="amazon-price mb-0.5 text-sm text-delight-600 dark:text-delight-400 font-bold">{price}</div>
         ) : null}
         {/* Quick Features */}
         {quickFeatures && quickFeatures.length > 0 && (
-          <div className="flex flex-wrap gap-x-1 gap-y-0.5 mt-1 mb-2 items-center">
+          <div className="flex flex-wrap gap-x-0.5 gap-y-0.5 mt-0.5 mb-1 items-center">
             {quickFeatures.map((feature, index) => {
               return (
-                <span key={index} className="feature-item text-[9px]">
+                <span key={index} className="feature-item text-[8px] py-0.5 px-1.5 inline-block">
                   {feature}
                 </span>
               );
@@ -336,21 +336,21 @@ const ProductCard: React.FC<ProductCardProps> = ({
           </div>
         )}
         
-        <div className="flex flex-col sm:flex-row justify-between gap-2 mt-auto pt-2 border-t border-gray-100 dark:border-gray-700/50 mb-1 relative z-10">
-          <motion.div className="w-full sm:w-auto" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+        <div className="flex flex-row justify-between gap-1 mt-auto pt-1 border-t border-gray-100 dark:border-gray-700/50 mb-0.5 relative z-10">
+          <motion.div className="w-1/2" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Button
               size="sm"
               variant="outline"
-              className="border-gray-200 text-amazon-link hover:bg-gray-50 hover:text-amazon-link hover:border-gray-300 transition duration-150 ease-in-out text-xs py-1 h-auto"
+              className="border-gray-200 text-amazon-link hover:bg-gray-50 hover:text-amazon-link hover:border-gray-300 transition duration-150 ease-in-out text-[9px] py-0.5 h-auto w-full"
               onClick={() => navigate(`/products/${id}`)}
             >
-              <Eye className="w-3 h-3 ml-1" />
+              <Eye className="w-2.5 h-2.5 ml-0.5" />
               <span>التفاصيل</span>
             </Button>
           </motion.div>
           
           <motion.div 
-            className="w-full sm:w-auto"
+            className="w-1/2"
             whileHover={{ scale: stock > 0 ? 1.05 : 1 }} 
             whileTap={{ scale: stock > 0 ? 0.95 : 1 }}
             animate={isAddedToCart ? { y: [0, -5, 0] } : {}}
@@ -359,7 +359,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
             <Button 
               size="sm"
               className={cn(
-                "transition-all duration-300 text-xs py-1 h-auto",
+                "transition-all duration-300 text-[9px] py-0.5 h-auto w-full",
                 isAddedToCart
                   ? "bg-green-600 hover:bg-green-700 text-white"
                   : stock <= 0
@@ -372,17 +372,17 @@ const ProductCard: React.FC<ProductCardProps> = ({
             >
               {isAddedToCart ? (
                 <>
-                  <Check className="w-3 h-3 ml-1" />
+                  <Check className="w-2.5 h-2.5 ml-0.5" />
                   <span>تمت الإضافة</span>
                 </>
               ) : stock <= 0 ? (
                 <>
-                  <AlertTriangle className="w-3 h-3 ml-1" />
+                  <AlertTriangle className="w-2.5 h-2.5 ml-0.5" />
                   <span>غير متوفر</span>
                 </>
               ) : (
                 <>
-                  <ShoppingCart className="w-3 h-3 ml-1 group-hover:animate-pulse" />
+                  <ShoppingCart className="w-2.5 h-2.5 ml-0.5 group-hover:animate-pulse" />
                   <span>إضافة للسلة</span>
                 </>
               )}
