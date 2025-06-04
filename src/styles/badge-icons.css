@@ -1,0 +1,88 @@
+/* تنسيقات مخصصة للبادجات والأيقونات في كارت المنتج */
+
+/* تنسيق عام للبادجات - تم تحسينه لضمان اتساق الأحجام */
+.product-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  min-width: 60px;
+}
+
+/* تنسيق أيقونات البادجات - تم إزالتها لتحسين تنسيق البادجات */
+.badge-icon {
+  display: none !important; /* إخفاء الأيقونات بشكل إجباري */
+}
+
+/* بادج الخصم */
+.discount-badge {
+  background-color: rgba(255, 0, 0, 0.1);
+  color: #cc0c39;
+  border: 1px solid rgba(204, 12, 57, 0.2);
+}
+
+/* بادج التوفير */
+.savings-badge {
+  background-color: rgba(0, 128, 0, 0.1);
+  color: #007600;
+  border: 1px solid rgba(0, 118, 0, 0.2);
+}
+
+/* بادج الشحن */
+.shipping-badge {
+  background-color: rgba(0, 119, 204, 0.1);
+  color: #0077cc;
+  border: 1px solid rgba(0, 119, 204, 0.2);
+}
+
+/* بادج الضمان */
+.warranty-badge {
+  background-color: rgba(102, 51, 153, 0.1);
+  color: #663399;
+  border: 1px solid rgba(102, 51, 153, 0.2);
+}
+
+/* بادج المخزون */
+.stock-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  text-align: center;
+  min-width: 60px;
+}
+
+.stock-available {
+  background-color: rgba(0, 128, 0, 0.1);
+  color: #007600;
+}
+
+.stock-limited {
+  background-color: rgba(255, 153, 0, 0.1);
+  color: #ff9900;
+}
+
+.stock-unavailable {
+  background-color: rgba(204, 12, 57, 0.1);
+  color: #cc0c39;
+}
+
+/* تنسيق ميزات المنتج */
+.feature-item {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #555;
+  text-align: center;
+  min-width: 60px;
+}
+
+.feature-icon {
+  display: none; /* إخفاء أيقونات الميزات */
+}

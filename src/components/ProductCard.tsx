@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, Eye, Star, Heart, Check, AlertTriangle, Flag, FlaskConical, ShieldCheck, Sparkles, Zap, CheckCircle, Tag, Award, PackageCheck, PackageX, Archive } from 'lucide-react';
+import { ShoppingCart, Eye, Star, Heart, Check, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '@/context/CartContext';
 import { toast } from '@/components/ui/use-toast';
@@ -42,16 +42,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   stockStatusText,
   quickFeatures = [],
 }) => {
-  const featureIcons: { [key: string]: React.ElementType } = {
-    "صنع في مصر": Flag,
-    "تركيبة فعالة": FlaskConical,
-    "آمن على الأسطح": ShieldCheck,
-    "لمعان فائق": Sparkles,
-    "حماية طويلة": Zap,
-    "جودة عالية": Award, // Award موجودة بالفعل، يمكن استخدامها
-    "سهل الاستخدام": CheckCircle, // أيقونة عامة
-    // أضف المزيد من الميزات الشائعة وأيقوناتها هنا
-  };
+  // تم إزالة تعريف featureIcons لتبسيط البادجات وإزالة الأيقونات
   const { addItem, items } = useCart();
   const [isLiked, setIsLiked] = React.useState(false);
   const [isAddedToCart, setIsAddedToCart] = React.useState(false);
@@ -124,7 +115,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const cardClasses = "group relative bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-300";
   const imageContainerClasses = "relative overflow-hidden aspect-square";
   const imageClasses = "w-full h-full object-cover transition-transform duration-500 group-hover:scale-105";
-  const contentClasses = "p-4 flex flex-col h-[calc(100%-0px)]";
+  const contentClasses = "p-2 flex flex-col h-[calc(100%-0px)]";
   const titleClasses = "text-lg font-semibold text-gray-800 dark:text-gray-100 mb-1 line-clamp-2 min-h-[48px]";
   const categoryClasses = "text-xs text-gray-500 dark:text-gray-400 mb-2";
   const ratingClasses = "flex items-center mb-2";
@@ -153,16 +144,16 @@ const ProductCard: React.FC<ProductCardProps> = ({
       className={cn(
         // نستخدم الفئات الثابتة المعرفة أعلاه مع الفئات الديناميكية
         cardClasses,
-        'cursor-pointer group overflow-hidden rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-xl transition-all duration-300 grid grid-cols-1 h-full',
+        'cursor-pointer group overflow-hidden rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-xl transition-all duration-300 grid grid-cols-1 h-full mb-6',
         className
       )}
-      style={{ display: 'grid', gridTemplateRows: 'auto 1fr' }} /* استخدام أسلوب inline لضمان تطبيقه */
+      style={{ display: 'grid', gridTemplateRows: 'auto minmax(0, 1fr)' }} /* استخدام أسلوب inline لضمان تطبيقه */
     >
       {/* صورة المنتج مع الشارات - نستخدم order-first لضمان ظهورها في الأعلى دائمًا */}
       <div 
         className="relative w-full overflow-hidden bg-gray-50 border-b border-gray-100 order-first" 
         style={{ 
-          aspectRatio: '3/2',
+          aspectRatio: '4/1.8',
           gridRow: '1',
           display: 'block' /* ضمان العرض كـ block */
         }}
@@ -207,10 +198,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
       
       {/* محتوى المنتج - نستخدم order-last لضمان ظهوره بعد الصورة */}
       <div 
-        className="p-3 flex flex-col flex-grow order-last" 
+        className="p-1.5 flex flex-col flex-grow order-last" 
         style={{ 
           gridRow: '2',
-          display: 'flex' /* ضمان العرض كـ flex */
+          display: 'flex', /* ضمان العرض كـ flex */
+          maxHeight: '180px'
         }}>
         <div className="flex items-center justify-between mb-1">
           <div className="flex gap-0.5 items-center">
@@ -250,11 +242,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
             {category}
           </p>
         )}
-        <h3 className="text-md font-semibold mb-0.5 text-gray-800 dark:text-white sm:line-clamp-2 group-hover:text-delight-600 transition-colors min-h-[2.5rem]">
+        <h3 className="text-md font-semibold mb-0.5 text-gray-800 dark:text-white sm:line-clamp-2 group-hover:text-delight-600 transition-colors min-h-[2rem]">
           {name}
         </h3>
         
-        <p className="text-gray-600 dark:text-gray-300 mb-1 text-xs line-clamp-2 min-h-[2rem]">
+        <p className="text-gray-600 dark:text-gray-300 mb-1 text-xs line-clamp-1 min-h-[1rem]">
           {description}
         </p>
 
@@ -262,36 +254,29 @@ const ProductCard: React.FC<ProductCardProps> = ({
         {(() => {
           let statusText = stockStatusText;
           let textColor = 'text-gray-600 dark:text-gray-300';
-          let IconComponent: React.ElementType | null = null;
-
+          
           if (!statusText) {
             if (stock > 5) {
               statusText = 'متوفر';
               textColor = 'text-green-600 dark:text-green-400';
-              IconComponent = PackageCheck;
             } else if (stock > 0 && stock <= 5) {
               statusText = 'كمية محدودة';
               textColor = 'text-amber-600 dark:text-amber-400';
-              IconComponent = Archive;
             } else {
               statusText = 'غير متوفر';
               textColor = 'text-red-600 dark:text-red-400';
-              IconComponent = PackageX;
             }
           } else {
-            // إذا تم توفير stockStatusText، نحدد الأيقونة واللون بناءً على النص (يمكن تحسين هذا لاحقًا)
+            // إذا تم توفير stockStatusText، نحدد اللون بناءً على النص
             if (stock > 0) {
-              IconComponent = PackageCheck;
               textColor = 'text-green-600 dark:text-green-400';
             } else {
-              IconComponent = PackageX;
               textColor = 'text-red-600 dark:text-red-400';
             }
           }
 
           return (
-            <div className={`flex items-center text-xs font-medium mb-1.5 ${textColor}`}>
-              {IconComponent && <IconComponent className="w-3.5 h-3.5 ml-1" />}
+            <div className={`stock-badge text-xs font-medium mb-1.5 ${textColor} ${stock > 5 ? 'stock-available' : stock > 0 ? 'stock-limited' : 'stock-unavailable'}`}>
               {statusText}
             </div>
           );
@@ -299,13 +284,13 @@ const ProductCard: React.FC<ProductCardProps> = ({
         
         {/* Price, Discount, Savings */}
         {price ? (
-          <div className="mb-2 space-y-0.5">
-            <div className="flex items-baseline gap-1.5 flex-wrap">
-              <span className="text-lg font-bold text-delight-600 dark:text-delight-400">
+          <div className="mb-1 space-y-0.5">
+            <div className="flex items-baseline gap-1 flex-wrap">
+              <span className="text-base font-bold text-delight-600 dark:text-delight-400">
                 {price}
               </span>
               {originalPrice && (
-                <span className="text-sm text-gray-500 dark:text-gray-400 line-through">
+                <span className="text-xs text-gray-500 dark:text-gray-400 line-through">
                   {originalPrice}
                 </span>
               )}
@@ -318,14 +303,14 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 const discountPercent = Math.round(((origNum - currNum) / origNum) * 100);
                 const savingsAmount = origNum - currNum;
                 return (
-                  <div className="flex items-center gap-1.5 flex-wrap text-[10px]">
+                  <div className="flex items-center gap-1 flex-wrap text-[10px]">
                     {discountPercent > 0 && (
-                      <span className="bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-300 px-1.5 py-0.5 rounded-sm font-semibold">
+                      <span className="product-badge discount-badge">
                         خصم {discountPercent}%
                       </span>
                     )}
                     {savingsAmount > 0 && (
-                      <span className="bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-300 px-1.5 py-0.5 rounded-sm font-semibold">
+                      <span className="product-badge savings-badge">
                         وفر {savingsAmount.toFixed(2)} ج.م
                       </span>
                     )}
@@ -336,16 +321,14 @@ const ProductCard: React.FC<ProductCardProps> = ({
             })()}
           </div>
         ) : price ? (
-          <div className="amazon-price mb-2 text-lg text-delight-600 dark:text-delight-400 font-bold">{price}</div>
+          <div className="amazon-price mb-1 text-base text-delight-600 dark:text-delight-400 font-bold">{price}</div>
         ) : null}
         {/* Quick Features */}
         {quickFeatures && quickFeatures.length > 0 && (
-          <div className="flex flex-wrap gap-x-2 gap-y-1 mt-2 mb-3 items-center">
+          <div className="flex flex-wrap gap-x-1 gap-y-0.5 mt-1 mb-2 items-center">
             {quickFeatures.map((feature, index) => {
-              const IconComponent = featureIcons[feature] || CheckCircle; // أيقونة افتراضية إذا لم يتم العثور على ميزة
               return (
-                <span key={index} className="flex items-center text-[10px] text-gray-600 dark:text-gray-300">
-                  <IconComponent className="w-3 h-3 ml-1 text-delight-500 dark:text-delight-400" />
+                <span key={index} className="feature-item text-[9px]">
                   {feature}
                 </span>
               );
@@ -353,15 +336,15 @@ const ProductCard: React.FC<ProductCardProps> = ({
           </div>
         )}
         
-        <div className="flex flex-col sm:flex-row justify-between gap-2 mt-auto pt-2 border-t border-gray-100 dark:border-gray-700/50">
+        <div className="flex flex-col sm:flex-row justify-between gap-2 mt-auto pt-2 border-t border-gray-100 dark:border-gray-700/50 mb-1 relative z-10">
           <motion.div className="w-full sm:w-auto" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Button
               size="sm"
               variant="outline"
-              className="border-gray-200 text-amazon-link hover:bg-gray-50 hover:text-amazon-link hover:border-gray-300 transition duration-150 ease-in-out"
+              className="border-gray-200 text-amazon-link hover:bg-gray-50 hover:text-amazon-link hover:border-gray-300 transition duration-150 ease-in-out text-xs py-1 h-auto"
               onClick={() => navigate(`/products/${id}`)}
             >
-              <Eye className="w-4 h-4 ml-2" />
+              <Eye className="w-3 h-3 ml-1" />
               <span>التفاصيل</span>
             </Button>
           </motion.div>
@@ -376,7 +359,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
             <Button 
               size="sm"
               className={cn(
-                "transition-all duration-300",
+                "transition-all duration-300 text-xs py-1 h-auto",
                 isAddedToCart
                   ? "bg-green-600 hover:bg-green-700 text-white"
                   : stock <= 0
@@ -389,17 +372,17 @@ const ProductCard: React.FC<ProductCardProps> = ({
             >
               {isAddedToCart ? (
                 <>
-                  <Check className="w-4 h-4 ml-2" />
+                  <Check className="w-3 h-3 ml-1" />
                   <span>تمت الإضافة</span>
                 </>
               ) : stock <= 0 ? (
                 <>
-                  <AlertTriangle className="w-4 h-4 ml-2" />
+                  <AlertTriangle className="w-3 h-3 ml-1" />
                   <span>غير متوفر</span>
                 </>
               ) : (
                 <>
-                  <ShoppingCart className="w-4 h-4 ml-2 group-hover:animate-pulse" />
+                  <ShoppingCart className="w-3 h-3 ml-1 group-hover:animate-pulse" />
                   <span>إضافة للسلة</span>
                 </>
               )}

@@ -103,9 +103,9 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
   }, [handleResize]);
 
   // إضافة ثوابت ارتفاع البطاقة، شريط الإجراءات والفجوة الرأسية
-  const CARD_HEIGHT = 144; // تقليل ارتفاع البطاقة بنسبة 20%
-  const ACTION_BAR_HEIGHT = 50;
-  const ROW_GAP = 10;
+  const CARD_HEIGHT = 165; // تقليل ارتفاع البطاقة بنسبة 25%
+  const ACTION_BAR_HEIGHT = 50; // تقليل ارتفاع شريط الإجراءات
+  const ROW_GAP = 24; // زيادة الفجوة بين الصفوف
 
   // حساب الارتفاع التقديري للصف ليشمل ارتفاع البطاقة وشريط الإجراءات والفجوة
   const getEstimatedSize = () => CARD_HEIGHT + ACTION_BAR_HEIGHT + ROW_GAP;
@@ -189,7 +189,7 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
                 return (
                   <motion.div
                     key={product.id}
-                    className="w-full bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-visible cursor-pointer group relative grid grid-cols-product-card grid-rows-card-layout h-full flex-shrink-0"
+                    className="w-full bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-visible cursor-pointer group relative grid grid-cols-1 grid-rows-card-layout h-full flex-shrink-0 p-3"
                     whileHover={{ y: -5 }}
                     transition={{ type: "spring", stiffness: 300 }}
                     onClick={() => onProductClick?.(product)}
@@ -205,7 +205,7 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
                     )}
                     
                     {/* قسم الصورة والمعلومات الرئيسية - تم إعادة هيكلته */}
-                    <div className="row-start-1 col-span-2 grid grid-cols-product-card items-start gap-4 h-full px-4 py-1">
+                    <div className="row-start-1 col-span-2 grid grid-cols-product-card items-start gap-4 h-full px-4 py-3">
                       {/* معلومات المنتج على اليسار */}
                       <div className="flex flex-col justify-start space-y-1 h-full pr-2">
                         {/* الجزء العلوي: الفئة وحالة المخزون */}
@@ -216,23 +216,19 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
                           </span>
                           {/* Stock Status */}
                           {product.inStock === false || (typeof product.stock === 'number' && product.stock <= 0) ? (
-                            <span className="text-[10px] bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-300 px-1.5 py-0.5 rounded-sm inline-flex items-center">
-                              <AlertTriangle className="w-2.5 h-2.5 ml-0.5" />
+                            <span className="stock-badge stock-unavailable">
                               غير متوفر
                             </span>
                           ) : typeof product.stock === 'number' && product.stock < 10 ? (
-                            <span className="text-[10px] bg-amber-100 dark:bg-amber-900/20 text-amber-600 dark:text-amber-300 px-1.5 py-0.5 rounded-sm inline-flex items-center">
-                              <AlertTriangle className="w-2.5 h-2.5 ml-0.5" />
+                            <span className="stock-badge stock-limited">
                               أوشك على النفاذ
                             </span>
                           ) : typeof product.stock === 'number' && product.stock < 50 ? (
-                            <span className="text-[10px] bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-300 px-1.5 py-0.5 rounded-sm inline-flex items-center">
-                              <Check className="w-2.5 h-2.5 ml-0.5" />
+                            <span className="stock-badge stock-limited">
                               مخزون منخفض
                             </span>
                           ) : (
-                            <span className="text-[10px] bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-300 px-1.5 py-0.5 rounded-sm inline-flex items-center">
-                              <Check className="w-2.5 h-2.5 ml-0.5" />
+                            <span className="stock-badge stock-available">
                               متوفر
                             </span>
                           )}
@@ -279,18 +275,12 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
                             return (
                               <div className="flex items-center gap-1 flex-wrap -mt-1">
                                 {discount > 0 && (
-                                <span className="text-[10px] bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-300 px-1 py-0.5 rounded-sm font-bold inline-flex items-center">
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-2.5 w-2.5 mr-0.5" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                  </svg>
+                                <span className="product-badge discount-badge">
                                   خصم {discount}%
                                 </span>
                                 )}
                                 {savings > 0 && (
-                                <span className="text-[10px] bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-300 px-1 py-0.5 rounded-sm font-bold inline-flex items-center">
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-2.5 w-2.5 mr-0.5" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1 11a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V5a1 1 0 00-1-1z" clipRule="evenodd" />
-                                  </svg>
+                                <span className="product-badge savings-badge">
                                   وفر {savings.toFixed(2)} ج.م
                                 </span>
                                 )}
@@ -302,22 +292,13 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
 
                         {/* Quick Features */}
                         <div className="flex flex-wrap gap-1 mt-1">
-                          <span className="text-[10px] bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-300 px-1.5 py-0.5 rounded-sm flex items-center gap-0.5">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-2.5 w-2.5" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                            </svg>
+                          <span className="feature-item shipping-badge">
                             شحن سريع
                           </span>
-                          <span className="text-[10px] bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-300 px-1.5 py-0.5 rounded-sm flex items-center gap-0.5">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-2.5 w-2.5" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                            </svg>
+                          <span className="feature-item warranty-badge">
                             ضمان سنة
                           </span>
-                          <span className="text-[10px] bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-300 px-1.5 py-0.5 rounded-sm flex items-center gap-0.5">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-2.5 w-2.5" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                            </svg>
+                          <span className="feature-item">
                             أصلي 100%
                           </span>
                         </div>
@@ -325,14 +306,14 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
                       
                       {/* صورة المنتج والتقييم */}
                       <div className="flex flex-col justify-start items-center space-y-1">
-                        <div className="relative w-[120px] h-[120px] flex-shrink-0 overflow-hidden rounded-md">
+                        <div className="relative w-[140px] h-[140px] flex-shrink-0 overflow-hidden rounded-md">
                           <ProgressiveImage
                             src={product.image}
                             alt={product.name}
                             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                             placeholderColor="#f3f4f6"
-                            width={120}
-                            height={120}
+                            width={140}
+                            height={140}
                           />
                         </div>
                         {product.rating && (
@@ -352,7 +333,7 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
                     </div>
                     
                     {/* شريط الإجراءات */}
-                    <div className="row-start-2 col-span-2 -mt-3 flex gap-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-t border-gray-100 dark:border-gray-700 rounded-b-lg px-4 py-2">
+                    <div className="row-start-2 col-span-2 mt-2 flex gap-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-t border-gray-100 dark:border-gray-700 rounded-b-lg px-4 py-2">
                       <button 
                         className={`flex-1 py-1 px-2 rounded-md text-xs font-medium transition-colors flex items-center justify-center gap-1 transform ${product.inStock === false || (typeof product.stock === 'number' && product.stock <= 0) ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-delight-600 hover:bg-delight-700 text-white hover:scale-105 active:scale-95'}`}
                         disabled={product.inStock === false || (typeof product.stock === 'number' && product.stock <= 0)}

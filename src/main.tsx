@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 // BrowserRouter تم نقله إلى App.tsx
 import App from './App.tsx';
 import './index.css';
+import './styles/badge-icons.css';
 
 // تسجيل Service Worker في وضع الإنتاج
 if ('serviceWorker' in navigator && import.meta.env.MODE === 'production') {
