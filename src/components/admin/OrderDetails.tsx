@@ -12,6 +12,21 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Constants } from '@/integrations/supabase/types';
+
+const { order_status_expanded_enum: ORDER_STATUSES } = Constants.public.Enums;
+const [
+  PENDING,
+  PAID,
+  PROCESSING,
+  READY_FOR_SHIPPING,
+  READY_FOR_PICKUP,
+  SHIPPED,
+  OUT_FOR_DELIVERY,
+  DELIVERED,
+  CANCELLED,
+  FAILED_DELIVERY
+] = ORDER_STATUSES;
 
 interface OrderDetailsProps {
   orderId: string;
@@ -130,16 +145,16 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onStatusUpdate }) 
             <SelectValue placeholder="اختر الحالة" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="pending">قيد الانتظار</SelectItem>
-            <SelectItem value="paid">تم الدفع</SelectItem>
-            <SelectItem value="processing">قيد المعالجة</SelectItem>
-            <SelectItem value="ready_for_shipping">جاهز للشحن</SelectItem>
-            <SelectItem value="ready_for_pickup">جاهز للاستلام</SelectItem>
-            <SelectItem value="shipped">تم الشحن</SelectItem>
-            <SelectItem value="out_for_delivery">في الطريق للتسليم</SelectItem>
-            <SelectItem value="delivered">تم التسليم</SelectItem>
-            <SelectItem value="cancelled">ملغي</SelectItem>
-            <SelectItem value="failed_delivery">فشل التسليم</SelectItem>
+            <SelectItem value={PENDING}>قيد الانتظار</SelectItem>
+            <SelectItem value={PAID}>تم الدفع</SelectItem>
+            <SelectItem value={PROCESSING}>قيد المعالجة</SelectItem>
+            <SelectItem value={READY_FOR_SHIPPING}>جاهز للشحن</SelectItem>
+            <SelectItem value={READY_FOR_PICKUP}>جاهز للاستلام</SelectItem>
+            <SelectItem value={SHIPPED}>تم الشحن</SelectItem>
+            <SelectItem value={OUT_FOR_DELIVERY}>في الطريق للتسليم</SelectItem>
+            <SelectItem value={DELIVERED}>تم التسليم</SelectItem>
+            <SelectItem value={CANCELLED}>ملغي</SelectItem>
+            <SelectItem value={FAILED_DELIVERY}>فشل التسليم</SelectItem>
           </SelectContent>
         </Select>
       </div>

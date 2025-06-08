@@ -42,6 +42,21 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import OrderDetails from '@/components/admin/OrderDetails';
+import { Constants } from '@/integrations/supabase/types';
+
+const { order_status_expanded_enum: ORDER_STATUSES } = Constants.public.Enums;
+const [
+  PENDING,
+  PAID,
+  PROCESSING,
+  READY_FOR_SHIPPING,
+  READY_FOR_PICKUP,
+  SHIPPED,
+  OUT_FOR_DELIVERY,
+  DELIVERED,
+  CANCELLED,
+  FAILED_DELIVERY
+] = ORDER_STATUSES;
 
 const OrdersPage = () => {
   const { toast } = useToast();
@@ -73,15 +88,20 @@ const OrdersPage = () => {
   
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'delivered':
+      case DELIVERED:
         return 'text-green-600 bg-green-100 border-green-300';
-      case 'shipped':
+      case SHIPPED:
+      case OUT_FOR_DELIVERY:
         return 'text-blue-600 bg-blue-100 border-blue-300';
-      case 'paid':
+      case READY_FOR_SHIPPING:
+      case READY_FOR_PICKUP:
+      case PROCESSING:
+        return 'text-orange-600 bg-orange-100 border-orange-300';
+      case PAID:
+      case PENDING:
         return 'text-yellow-600 bg-yellow-100 border-yellow-300';
-      case 'pending':
-        return 'text-yellow-600 bg-yellow-100 border-yellow-300';
-      case 'cancelled':
+      case CANCELLED:
+      case FAILED_DELIVERY:
         return 'text-red-600 bg-red-100 border-red-300';
       default:
         return 'text-gray-600 bg-gray-100 border-gray-300';
@@ -90,16 +110,23 @@ const OrdersPage = () => {
   
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'delivered':
+      case DELIVERED:
         return <Check className="h-4 w-4 text-green-600" />;
-      case 'shipped':
+      case SHIPPED:
         return <Truck className="h-4 w-4 text-blue-600" />;
-      case 'paid':
+      case OUT_FOR_DELIVERY:
+        return <Truck className="h-4 w-4 text-blue-600" />;
+      case READY_FOR_SHIPPING:
+      case READY_FOR_PICKUP:
+      case PROCESSING:
+        return <Clock className="h-4 w-4 text-orange-600" />;
+      case PAID:
+      case PENDING:
         return <Clock className="h-4 w-4 text-yellow-600" />;
-      case 'pending':
-        return <Clock className="h-4 w-4 text-yellow-600" />;
-      case 'cancelled':
+      case CANCELLED:
         return <Ban className="h-4 w-4 text-red-600" />;
+      case FAILED_DELIVERY:
+        return <FileX className="h-4 w-4 text-red-600" />;
       default:
         return null;
     }
@@ -107,15 +134,25 @@ const OrdersPage = () => {
   
   const translateStatus = (status: string) => {
     switch (status) {
-      case 'delivered':
+      case DELIVERED:
         return 'مكتمل';
-      case 'shipped':
+      case SHIPPED:
         return 'تم الشحن';
-      case 'paid':
+      case OUT_FOR_DELIVERY:
+        return 'في الطريق للتسليم';
+      case FAILED_DELIVERY:
+        return 'فشل التسليم';
+      case READY_FOR_SHIPPING:
+        return 'جاهز للشحن';
+      case READY_FOR_PICKUP:
+        return 'جاهز للاستلام';
+      case PROCESSING:
         return 'قيد المعالجة';
-      case 'pending':
+      case PAID:
+        return 'تم الدفع';
+      case PENDING:
         return 'قيد الانتظار';
-      case 'cancelled':
+      case CANCELLED:
         return 'ملغي';
       default:
         return status;
@@ -166,11 +203,16 @@ const OrdersPage = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">جميع الحالات</SelectItem>
-              <SelectItem value="pending">قيد الانتظار</SelectItem>
-              <SelectItem value="paid">قيد المعالجة</SelectItem>
-              <SelectItem value="shipped">تم الشحن</SelectItem>
-              <SelectItem value="delivered">مكتمل</SelectItem>
-              <SelectItem value="cancelled">ملغي</SelectItem>
+              <SelectItem value={PENDING}>قيد الانتظار</SelectItem>
+              <SelectItem value={PAID}>تم الدفع</SelectItem>
+              <SelectItem value={PROCESSING}>قيد المعالجة</SelectItem>
+              <SelectItem value={READY_FOR_SHIPPING}>جاهز للشحن</SelectItem>
+              <SelectItem value={READY_FOR_PICKUP}>جاهز للاستلام</SelectItem>
+              <SelectItem value={SHIPPED}>تم الشحن</SelectItem>
+              <SelectItem value={OUT_FOR_DELIVERY}>في الطريق للتسليم</SelectItem>
+              <SelectItem value={DELIVERED}>مكتمل</SelectItem>
+              <SelectItem value={CANCELLED}>ملغي</SelectItem>
+              <SelectItem value={FAILED_DELIVERY}>فشل التسليم</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -240,11 +282,16 @@ const OrdersPage = () => {
                           <SelectValue placeholder="الحالة" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="pending">قيد الانتظار</SelectItem>
-                          <SelectItem value="paid">قيد المعالجة</SelectItem>
-                          <SelectItem value="shipped">تم الشحن</SelectItem>
-                          <SelectItem value="delivered">مكتمل</SelectItem>
-                          <SelectItem value="cancelled">ملغي</SelectItem>
+                          <SelectItem value={PENDING}>قيد الانتظار</SelectItem>
+                          <SelectItem value={PAID}>تم الدفع</SelectItem>
+                          <SelectItem value={PROCESSING}>قيد المعالجة</SelectItem>
+                          <SelectItem value={READY_FOR_SHIPPING}>جاهز للشحن</SelectItem>
+                          <SelectItem value={READY_FOR_PICKUP}>جاهز للاستلام</SelectItem>
+                          <SelectItem value={SHIPPED}>تم الشحن</SelectItem>
+                          <SelectItem value={OUT_FOR_DELIVERY}>في الطريق للتسليم</SelectItem>
+                          <SelectItem value={DELIVERED}>مكتمل</SelectItem>
+                          <SelectItem value={CANCELLED}>ملغي</SelectItem>
+                          <SelectItem value={FAILED_DELIVERY}>فشل التسليم</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>

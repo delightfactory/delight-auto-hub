@@ -2,15 +2,18 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Star, ShoppingCart, Award, Truck, Shield, Phone } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import ProductCard from '@/components/ProductCard';
 import SectionHeading from '@/components/SectionHeading';
 import FactoryTour from '@/components/FactoryTour';
 import { ProductDataService } from '@/services/productDataService';
 import { ProgressiveImage } from '@/components/performance/ProgressiveImage';
+import { VirtualizedProductGrid } from '@/components/performance/VirtualizedProductGrid';
 
 const Index: React.FC = () => {
+  const navigate = useNavigate();
+
   // جلب المنتجات المميزة
   const { data: featuredProducts = [], isLoading: loadingFeatured } = useQuery({
     queryKey: ['featured-products'],
@@ -121,32 +124,20 @@ const Index: React.FC = () => {
               ))}
             </div>
           ) : featuredProducts.length > 0 ? (
-            <motion.div 
-              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-10"
-              variants={containerVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-            >
-              {featuredProducts.map((product) => (
-                <motion.div key={product.id} variants={itemVariants}>
-                  <ProductCard 
-                    id={product.id}
-                    name={product.name}
-                    description={product.description}
-                    image={product.image}
-                    price={product.price}
-                    originalPrice={product.originalPrice}
-                    rating={product.rating}
-                    ratingCount={product.reviews} // reviews من ProductDisplay هو ratingCount
-                    stock={product.stock}
-                    isNew={product.isNew}
-                    category={product.category}
-                    quickFeatures={product.features}
-                  />
-                </motion.div>
-              ))}
-            </motion.div>
+            <VirtualizedProductGrid
+              products={featuredProducts.map(product => ({
+                ...product,
+                price: typeof product.price === 'string'
+                  ? parseFloat(product.price.replace(/[^\d.]/g, ''))
+                  : product.price
+              }))}
+              onProductClick={product => navigate(`/products/${product.id}`)}
+              columns={{ default: 1, sm: 2, md: 3, lg: 4 }}
+              gap={6}
+              estimateSize={320}
+              useWindowScroll={true}
+              className="mt-10"
+            />
           ) : (
             <div className="text-center py-12">
               <p className="text-gray-600">لا توجد منتجات مميزة متاحة حالياً</p>
@@ -186,32 +177,20 @@ const Index: React.FC = () => {
                 ))}
               </div>
             ) : (
-              <motion.div 
-                className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-10"
-                variants={containerVariants}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-              >
-                {newProducts.map((product) => (
-                  <motion.div key={product.id} variants={itemVariants}>
-                    <ProductCard 
-                      id={product.id}
-                      name={product.name}
-                      description={product.description}
-                      image={product.image}
-                      price={product.price}
-                      originalPrice={product.originalPrice}
-                      rating={product.rating}
-                      ratingCount={product.reviews}
-                      stock={product.stock}
-                      isNew={product.isNew}
-                      category={product.category}
-                      quickFeatures={product.features}
-                    />
-                  </motion.div>
-                ))}
-              </motion.div>
+              <VirtualizedProductGrid
+                products={newProducts.map(product => ({
+                  ...product,
+                  price: typeof product.price === 'string'
+                    ? parseFloat(product.price.replace(/[^\d.]/g, ''))
+                    : product.price
+                }))}
+                onProductClick={product => navigate(`/products/${product.id}`)}
+                columns={{ default: 1, sm: 2, md: 3, lg: 4 }}
+                gap={6}
+                estimateSize={320}
+                useWindowScroll={true}
+                className="mt-10"
+              />
             )}
           </div>
         </section>

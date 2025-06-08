@@ -9,6 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 import { categoryService } from '@/services/adminService';
 import { useToast } from '@/components/ui/use-toast';
 import { useCart } from '@/context/CartContext';
+import { WishlistService } from '@/services/wishlistService';
 import { cn } from '@/lib/utils'; // Importar la función cn para combinar clases
 
 // استيراد نوع ProductDisplay من المكان الصحيح في المشروع
@@ -101,6 +102,19 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
       window.removeEventListener('resize', handleResize);
     };
   }, [handleResize]);
+
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const favs = await WishlistService.getFavorites();
+        const favMap: Record<string, boolean> = {};
+        favs.forEach(id => { favMap[id] = true; });
+        setFavorites(favMap);
+      } catch (err) {
+        console.error('Error loading favorites:', err);
+      }
+    })();
+  }, []);
 
   // إضافة ثوابت ارتفاع البطاقة، شريط الإجراءات والفجوة الرأسية
   const CARD_HEIGHT = 165; // تقليل ارتفاع البطاقة بنسبة 25%
@@ -315,19 +329,19 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
                             height={140}
                           />
                         </div>
-                        {product.rating && (
-                          <div className="flex items-center justify-center gap-0.5">
-                            {Array.from({ length: 5 }).map((_, i) => (
-                              <Star
-                                key={i}
-                                className={`w-3 h-3 ${i < Math.floor(product.rating || 0) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
-                              />
-                            ))}
+                        <div className="flex items-center justify-center gap-0.5">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-3 h-3 ${i < Math.floor(product.rating || 0) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
+                            />
+                          ))}
+                          {product.rating > 0 && (
                             <span className="text-[10px] text-gray-500 dark:text-gray-400 ml-0.5">
-                              ({product.rating})
+                              ({product.rating.toFixed(1)})
                             </span>
-                          </div>
-                        )}
+                          )}
+                        </div>
                       </div>
                     </div>
                     
@@ -406,29 +420,28 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
                       
                       <button 
                         className={`bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 p-1.5 rounded-md transition-colors transform hover:scale-110 active:scale-95 ${favorites[product.id] ? 'bg-red-100 dark:bg-red-900/30 text-red-600' : ''} flex-shrink-0`}
-                        onClick={(e) => {
+                        onClick={async (e) => {
                           e.stopPropagation();
-                          // إضافة/إزالة من المفضلة
-                          setFavorites(prev => {
-                            const newFavorites = { ...prev };
-                            newFavorites[product.id] = !prev[product.id];
-                            
-                            if (newFavorites[product.id]) {
-                              toast({
-                                title: "تمت الإضافة إلى المفضلة",
-                                description: `تم إضافة ${product.name} إلى المفضلة`,
-                                variant: "success",
-                              });
-                            } else {
-                              toast({
-                                title: "تمت الإزالة من المفضلة",
-                                description: `تم إزالة ${product.name} من المفضلة`,
-                                variant: "default",
-                              });
-                            }
-                            
-                            return newFavorites;
-                          });
+                          const isAdding = !favorites[product.id];
+                          try {
+                            if (isAdding) await WishlistService.addFavorite(product.id);
+                            else await WishlistService.removeFavorite(product.id);
+                            setFavorites(prev => ({ ...prev, [product.id]: isAdding }));
+                            toast({
+                              title: isAdding ? "تمت الإضافة إلى المفضلة" : "تمت الإزالة من المفضلة",
+                              description: isAdding
+                                ? `تم إضافة ${product.name} إلى المفضلة`
+                                : `تم إزالة ${product.name} من المفضلة`,
+                              variant: isAdding ? "success" : "default",
+                            });
+                          } catch (err: any) {
+                            console.error("Error toggling favorite:", err);
+                            toast({
+                              title: "خطأ في المفضلة",
+                              description: err.message,
+                              variant: "destructive",
+                            });
+                          }
                         }}
                       >
                         <Heart className={`w-4 h-4 ${favorites[product.id] ? 'fill-red-500 text-red-500' : 'hover:fill-red-500 hover:text-red-500'}`} />

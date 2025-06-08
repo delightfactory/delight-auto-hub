@@ -18,6 +18,8 @@ import { ProductDataService } from '../services/productDataService';
 import ProductCard from '../components/ProductCard';
 import { ProgressiveImage } from '../components/performance/ProgressiveImage';
 import { cn } from '../lib/utils';
+import { ReviewService } from '../services/reviewService';
+import type { Review } from '../types/db';
 
 // دالة لتنسيق الأسعار مع معالجة الأرقام العشرية بشكل أفضل
 const formatPrice = (price: number | string): React.ReactNode => {
@@ -84,6 +86,39 @@ const ProductPage: React.FC = () => {
       setQuantity(1); // إعادة تعيين الكمية عند تغيير المنتج
     }
   }, [productId]);
+
+  // Review system hooks moved above early returns to maintain hook order
+  const [newReviewRating, setNewReviewRating] = useState<number>(0);
+  const [newReviewComment, setNewReviewComment] = useState<string>('');
+  const [submittingReview, setSubmittingReview] = useState<boolean>(false);
+  const { data: reviews = [], isLoading: loadingReviews, refetch: refetchReviews } = useQuery({
+    queryKey: ['reviews', productId],
+    queryFn: () => ReviewService.getReviews(productId!),
+    enabled: !!productId,
+  });
+  const { data: canWriteReview = false, isLoading: checkingReviewEligibility } = useQuery({
+    queryKey: ['canReview', productId],
+    queryFn: () => ReviewService.canReview(productId!),
+    enabled: !!productId,
+  });
+  const ratingCount = reviews.length;
+  const ratingAverage = ratingCount > 0 ? reviews.reduce((sum, r) => sum + r.rating, 0) / ratingCount : 0;
+  const handleSubmitReview = async () => {
+    if (!productId) return;
+    setSubmittingReview(true);
+    try {
+      await ReviewService.createReview(productId, newReviewRating, newReviewComment);
+      toast({ title: 'تم إرسال التقييم', description: 'شكراً لمساهمتك!', duration: 3000 });
+      setNewReviewRating(0);
+      setNewReviewComment('');
+      await refetchReviews();
+    } catch (err: any) {
+      console.error('Error submitting review:', err);
+      toast({ title: 'حدث خطأ', description: err.message, variant: 'destructive' });
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
 
   // جلب بيانات المنتج من Supabase
   const { data: product, isLoading, error } = useQuery({
@@ -233,9 +268,7 @@ const ProductPage: React.FC = () => {
     }
   };
 
-  // Ensure we have valid rating values
-  const rating = product.rating || 0;
-  const reviews = product.reviews || 0;
+  // Removed static rating and reviews; using dynamic values instead
 
   // تحويل activeTab إلى تنسيق متوافق مع مكون Tabs من shadcn
   const tabValue = activeTab === 'features' ? 'features' : activeTab === 'reviews' ? 'reviews' : 'usage';
@@ -469,12 +502,12 @@ const ProductPage: React.FC = () => {
                         {[...Array(5)].map((_, i) => (
                           <Star
                             key={i}
-                            className={`w-4 h-4 ${i < Math.floor(rating) ? 'fill-amber-500 text-amber-500' : 'fill-gray-200 text-gray-200 dark:fill-gray-700 dark:text-gray-700'}`}
+                            className={`w-4 h-4 ${i < Math.floor(ratingAverage) ? 'fill-amber-500 text-amber-500' : 'fill-gray-200 text-gray-200 dark:fill-gray-700 dark:text-gray-700'}`}
                           />
                         ))}
                       </div>
                       <span className="text-sm text-gray-600 dark:text-gray-400">
-                        {rating.toFixed(1)} ({reviews} تقييم)
+                        {ratingAverage.toFixed(1)} ({ratingCount} تقييم)
                       </span>
                       <Badge variant="outline" className={cn(
                         "ml-auto",
@@ -656,30 +689,18 @@ const ProductPage: React.FC = () => {
               {/* Tabs Section */}
               <Tabs defaultValue={tabValue} onValueChange={(value) => setActiveTab(value as 'features' | 'specs' | 'reviews' | 'usage')} className="w-full">
                 <div className="px-6 pt-4">
-                  <TabsList className="w-full grid grid-cols-4 bg-gray-100 dark:bg-gray-800/50 p-1 rounded-lg">
+                  <TabsList className="w-full grid grid-cols-2 sm:grid-cols-4 bg-gray-100 dark:bg-gray-800/50 p-1 rounded-lg">
                     <TabsTrigger value="features" className="rounded-md data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:text-purple-600 dark:data-[state=active]:text-purple-400 data-[state=active]:shadow-sm">
-                      <div className="flex items-center gap-1.5">
-                        <Check className="w-4 h-4" />
-                        <span className="hidden sm:inline">المميزات</span>
-                      </div>
+                      <span className="w-full text-center text-xs sm:text-sm font-medium">المميزات</span>
                     </TabsTrigger>
                     <TabsTrigger value="specs" className="rounded-md data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:text-purple-600 dark:data-[state=active]:text-purple-400 data-[state=active]:shadow-sm">
-                      <div className="flex items-center gap-1.5">
-                        <Settings className="w-4 h-4" />
-                        <span className="hidden sm:inline">المواصفات</span>
-                      </div>
+                      <span className="w-full text-center text-xs sm:text-sm font-medium">المواصفات</span>
                     </TabsTrigger>
                     <TabsTrigger value="reviews" className="rounded-md data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:text-purple-600 dark:data-[state=active]:text-purple-400 data-[state=active]:shadow-sm">
-                      <div className="flex items-center gap-1.5">
-                        <MessageCircle className="w-4 h-4" />
-                        <span className="hidden sm:inline">التقييمات</span>
-                      </div>
+                      <span className="w-full text-center text-xs sm:text-sm font-medium">التقييمات</span>
                     </TabsTrigger>
                     <TabsTrigger value="usage" className="rounded-md data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:text-purple-600 dark:data-[state=active]:text-purple-400 data-[state=active]:shadow-sm">
-                      <div className="flex items-center gap-1.5">
-                        <Info className="w-4 h-4" />
-                        <span className="hidden sm:inline">الاستخدام</span>
-                      </div>
+                      <span className="w-full text-center text-xs sm:text-sm font-medium">الاستخدام</span>
                     </TabsTrigger>
                   </TabsList>
                 </div>
@@ -716,22 +737,27 @@ const ProductPage: React.FC = () => {
                   <TabsContent value="specs" className="mt-0">
                     <div className="bg-purple-50 dark:bg-purple-900/10 border border-purple-100 dark:border-purple-800/20 rounded-lg overflow-hidden">
                       <div className="p-4 border-b border-purple-100 dark:border-purple-800/20">
-                        <h3 className="text-lg font-semibold flex items-center gap-2 text-purple-700 dark:text-purple-400">
+                        <h3 className="text-lg font-semibold flex items-center gap-2 mb-3 text-purple-700 dark:text-purple-400">
                           <Settings className="w-5 h-5" />
                           <span>المواصفات الفنية</span>
                         </h3>
                       </div>
                       
                       <div className="divide-y divide-purple-100 dark:divide-purple-800/20">
-                        {/* نستخدم مواصفات ثابتة للعرض */}
                         {[
                           { key: 'الموديل', value: product.name },
-                          { key: 'النوع', value: product.category || 'غير محدد' },
-                          { key: 'الماركة', value: 'ديلايت أوتو' },
-                          { key: 'الضمان', value: '12 شهر' },
-                          { key: 'بلد المنشأ', value: 'مصر' },
-                          { key: 'الوزن', value: '1.2 كجم' },
-                          { key: 'الأبعاد', value: '10 × 15 × 5 سم' },
+                          { key: 'النوع', value: product.subtype || product.category || 'غير محدد' },
+                          { key: 'الماركة', value: product.brand || 'غير متوفر' },
+                          { key: 'البائع', value: product.vendor || 'غير متوفر' },
+                          { key: 'بلد المنشأ', value: product.country_of_origin || 'غير متوفر' },
+                          { key: 'الأبعاد', value: product.dimensions
+                              ? `${product.dimensions.width || ''}×${product.dimensions.height || ''}×${product.dimensions.depth || ''} ${product.dimensions.unit || ''}`
+                              : 'غير محدد'
+                          },
+                          { key: 'رابط الفيديو', value: product.video_url
+                              ? (<a href={product.video_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">عرض الفيديو</a>)
+                              : 'غير متوفر'
+                          },
                         ].map((spec, index) => (
                           <div 
                             key={index} 
@@ -750,58 +776,75 @@ const ProductPage: React.FC = () => {
                       <div className="flex items-center justify-between">
                         <h3 className="text-lg font-semibold flex items-center gap-2">
                           <ThumbsUp className="w-5 h-5 text-amber-500" />
-                          <span>التقييمات ({reviews})</span>
+                          <span>التقييمات ({ratingCount})</span>
                         </h3>
                         <Badge variant="outline" className="bg-amber-100 text-amber-800 dark:bg-amber-900/20 dark:text-amber-400 border-amber-200 dark:border-amber-800/30">
-                          {rating.toFixed(1)} / 5
+                          {ratingAverage.toFixed(1)} / 5
                         </Badge>
                       </div>
-                      
-                      <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-800/20 rounded-lg p-4">
-                        <div className="flex items-start gap-3">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-200 to-amber-100 dark:from-amber-700 dark:to-amber-800 flex items-center justify-center flex-shrink-0">
-                            <span className="text-amber-700 dark:text-amber-300 font-bold">م</span>
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between">
-                              <h4 className="font-semibold text-gray-800 dark:text-gray-200">محمد أحمد</h4>
-                              <div className="flex items-center">
-                                {[...Array(5)].map((_, i) => (
-                                  <Star key={i} className={`w-3.5 h-3.5 ${i < 5 ? 'fill-amber-500 text-amber-500' : 'fill-gray-300 text-gray-300'}`} />
-                                ))}
+                      {loadingReviews ? (
+                        <div className="flex justify-center py-4">
+                          <Loader2 className="animate-spin text-amber-500" />
+                        </div>
+                      ) : reviews.length > 0 ? (
+                        reviews.map((rev) => (
+                          <div key={rev.id} className="bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-800/20 rounded-lg p-4">
+                            <div className="flex items-start gap-3">
+                              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-200 to-amber-100 dark:from-amber-700 dark:to-amber-800 flex items-center justify-center flex-shrink-0">
+                                <span className="text-amber-700 dark:text-amber-300 font-bold">{rev.rating}</span>
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center">
+                                    {[...Array(5)].map((_, i) => (
+                                      <Star
+                                        key={i}
+                                        className={`w-3.5 h-3.5 ${i < rev.rating ? 'fill-amber-500 text-amber-500' : 'fill-gray-300 text-gray-300'}`}
+                                      />
+                                    ))}
+                                  </div>
+                                  <p className="text-gray-400 dark:text-gray-500 text-xs">{new Date(rev.created_at).toLocaleDateString('ar-EG')}</p>
+                                </div>
+                                <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">"{rev.comment}"</p>
                               </div>
                             </div>
-                            <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">"منتج رائع وخدمة سريعة. أنصح به بشدة!"</p>
-                            <p className="text-gray-400 dark:text-gray-500 text-xs mt-2">12 مايو 2025</p>
                           </div>
+                        ))
+                      ) : (
+                        <p className="text-gray-500 dark:text-gray-400 text-center py-4">لا توجد تقييمات بعد لهذا المنتج</p>
+                      )}
+                      {canWriteReview && (
+                        <div className="mt-4 p-4 border border-purple-200 rounded-lg">
+                          <h4 className="font-semibold mb-2">أضف تقييمك</h4>
+                          <div className="flex items-center mb-2 space-x-2">
+                            {[...Array(5)].map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`w-5 h-5 cursor-pointer ${i < newReviewRating ? 'fill-amber-500 text-amber-500' : 'fill-gray-300 text-gray-300'}`}
+                                onClick={() => setNewReviewRating(i + 1)}
+                              />
+                            ))}
+                          </div>
+                          <textarea
+                            className="w-full p-2 border rounded mb-2"
+                            rows={3}
+                            placeholder="اكتب تعليقك هنا..."
+                            value={newReviewComment}
+                            onChange={(e) => setNewReviewComment(e.target.value)}
+                          />
+                          <Button
+                            onClick={handleSubmitReview}
+                            disabled={submittingReview || newReviewRating === 0}
+                          >
+                            {submittingReview ? 'جاري الإرسال...' : 'إرسال التقييم'}
+                          </Button>
                         </div>
-                      </div>
-                      
-                      <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-800/20 rounded-lg p-4">
-                        <div className="flex items-start gap-3">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-200 to-amber-100 dark:from-amber-700 dark:to-amber-800 flex items-center justify-center flex-shrink-0">
-                            <span className="text-amber-700 dark:text-amber-300 font-bold">س</span>
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between">
-                              <h4 className="font-semibold text-gray-800 dark:text-gray-200">سارة محمود</h4>
-                              <div className="flex items-center">
-                                {[...Array(5)].map((_, i) => (
-                                  <Star key={i} className={`w-3.5 h-3.5 ${i < 4 ? 'fill-amber-500 text-amber-500' : 'fill-gray-300 text-gray-300'}`} />
-                                ))}
-                              </div>
-                            </div>
-                            <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">"جودة ممتازة وسعر مناسب. الشحن كان سريعاً والتغليف ممتاز."</p>
-                            <p className="text-gray-400 dark:text-gray-500 text-xs mt-2">5 مايو 2025</p>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="text-center">
-                        <Button variant="outline" size="sm" className="text-purple-600 border-purple-200 hover:border-purple-300 hover:bg-purple-50 dark:text-purple-400 dark:border-purple-800/30 dark:hover:border-purple-700/50 dark:hover:bg-purple-900/10">
-                          عرض جميع التقييمات
-                        </Button>
-                      </div>
+                      )}
+                      {!canWriteReview && !checkingReviewEligibility && (
+                        <p className="text-gray-500 dark:text-gray-400 text-center py-4">
+                          يرجى شراء هذا المنتج لتتمكن من كتابة تقييم.
+                        </p>
+                      )}
                     </div>
                   </TabsContent>
                   
@@ -815,17 +858,37 @@ const ProductPage: React.FC = () => {
                         <div className="space-y-4">
                           <p className="text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-line">{product.usage_instructions}</p>
                           
-                          {/* فيديو تعليمي إن وجد - نستخدم فيديو ثابت للعرض */}
-                          <div className="mt-4 border border-blue-200 dark:border-blue-800/30 rounded-lg overflow-hidden">
-                            <div className="aspect-video bg-black">
-                              <iframe 
-                                src="https://www.youtube.com/embed/dQw4w9WgXcQ" 
-                                className="w-full h-full" 
-                                title="فيديو تعليمي"
-                                allowFullScreen
-                              ></iframe>
+                          {/* فيديو تعليمي إن وجد */}
+                          {product.video_url && (
+                            <div className="mt-4 border border-blue-200 dark:border-blue-800/30 rounded-lg overflow-hidden">
+                              <div className="aspect-video bg-black">
+                                {(product.video_url.includes("youtube.com") || product.video_url.includes("youtu.be")) ? (
+                                  <iframe
+                                    src={(() => {
+                                      const url = product.video_url;
+                                      let id: string;
+                                      if (url.includes("watch?v=")) {
+                                        id = url.split("watch?v=")[1].split(/[?&]/)[0];
+                                      } else if (url.includes("youtu.be/")) {
+                                        id = url.split("youtu.be/")[1].split(/[?&]/)[0];
+                                      } else if (url.includes("embed/")) {
+                                        id = url.split("embed/")[1].split(/[?&]/)[0];
+                                      } else {
+                                        return url;
+                                      }
+                                      return `https://www.youtube-nocookie.com/embed/${id}?rel=0&modestbranding=1`;
+                                    })()}
+                                    className="w-full h-full"
+                                    title="فيديو توضيحي"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allowFullScreen
+                                  />
+                                ) : (
+                                  <video src={product.video_url} controls className="w-full h-full bg-black" />
+                                )}
+                              </div>
                             </div>
-                          </div>
+                          )}
                           
                           {/* روابط مفيدة */}
                           <div className="mt-4 p-4 bg-blue-100/50 dark:bg-blue-900/20 rounded-lg">
@@ -921,7 +984,7 @@ const ProductPage: React.FC = () => {
             <div className="mt-10 text-center">
               <Button 
                 variant="outline" 
-                className="bg-transparent hover:bg-purple-50 text-purple-600 border-purple-200 hover:border-purple-300 dark:text-purple-400 dark:border-purple-800/30 dark:hover:border-purple-700/50 dark:hover:bg-purple-900/10 rounded-full px-6"
+                className="bg-transparent hover:bg-purple-50 text-purple-600 border-purple-200 hover:border-purple-300 dark:text-purple-400 dark:border-purple-800/30 dark:hover:border-purple-700/50 dark:hover:bg-purple-900/10"
                 onClick={() => navigate('/products')}
               >
                 عرض جميع المنتجات

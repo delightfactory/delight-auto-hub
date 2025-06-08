@@ -18,6 +18,17 @@ export interface ProductDisplay {
   isFeatured?: boolean;
   category?: string;
   usage_instructions?: string;
+  brand?: string;
+  subtype?: string;
+  vendor?: string;
+  country_of_origin?: string;
+  video_url?: string;
+  dimensions?: {
+    width?: number;
+    height?: number;
+    depth?: number;
+    unit?: string;
+  };
 }
 
 // تحويل بيانات المنتج من قاعدة البيانات إلى تنسيق العرض
@@ -32,8 +43,8 @@ const transformProductToDisplay = (product: Product): ProductDisplay => {
     fullDescription: product.description || '',
     price: product.discount_price ? `${product.discount_price} جنيه` : priceText,
     originalPrice: product.discount_price ? priceText : undefined,
-    rating: 4.5, // يمكن إضافة نظام تقييم لاحقاً
-    reviews: 0, // يمكن إضافة نظام مراجعات لاحقاً
+    rating: 0,
+    reviews: 0,
     image: product.images && product.images.length > 0 ? product.images[0] : '/placeholder.svg',
     images: product.images || ['/placeholder.svg'],
     features: Array.isArray(product.features) ? product.features : [],
@@ -42,7 +53,28 @@ const transformProductToDisplay = (product: Product): ProductDisplay => {
     isFeatured: product.is_featured || false,
     category: product.category || undefined,
     usage_instructions: product.usage_instructions || '',
+    brand: product.brand || undefined,
+    subtype: product.subtype || undefined,
+    vendor: product.vendor || undefined,
+    country_of_origin: product.country_of_origin || undefined,
+    video_url: product.video_url || undefined,
+    dimensions: product.dimensions,
   };
+};
+
+// مساعد لإضافة التقييمات الحقيقية لعرض المنتج
+const addRatingsToDisplay = async (product: ProductDisplay): Promise<ProductDisplay> => {
+  const { data: reviewsData, error: revErr } = await supabase
+    .from('reviews')
+    .select('rating')
+    .eq('product_id', product.id)
+    .eq('approved', true);
+  if (revErr) console.error('Error fetching reviews for product', product.id, revErr);
+  const count = reviewsData?.length || 0;
+  const avgRating = count
+    ? reviewsData.reduce((sum, r) => sum + r.rating, 0) / count
+    : 0;
+  return { ...product, rating: avgRating, reviews: count };
 };
 
 export const ProductDataService = {
@@ -59,7 +91,9 @@ export const ProductDataService = {
         return [];
       }
       
-      return data?.map(transformProductToDisplay) || [];
+      const products = data || [];
+      const displays = products.map(transformProductToDisplay);
+      return await Promise.all(displays.map(addRatingsToDisplay));
     } catch (error) {
       console.error('خطأ غير متوقع في جلب المنتجات:', error);
       return [];
@@ -80,7 +114,9 @@ export const ProductDataService = {
         return null;
       }
       
-      return data ? transformProductToDisplay(data) : null;
+      if (!data) return null;
+      const display = transformProductToDisplay(data);
+      return await addRatingsToDisplay(display);
     } catch (error) {
       console.error('خطأ غير متوقع في جلب المنتج:', error);
       return null;
@@ -101,7 +137,27 @@ export const ProductDataService = {
         return [];
       }
       
-      return data?.map(transformProductToDisplay) || [];
+      const products = data || [];
+      const productsWithReviews = await Promise.all(
+        products.map(async prod => {
+          const display = transformProductToDisplay(prod);
+          const { data: reviewsData, error: revErr } = await supabase
+            .from('reviews')
+            .select('rating')
+            .eq('product_id', prod.id)
+            .eq('approved', true);
+          if (revErr) {
+            console.error('Error fetching reviews for product', prod.id, revErr);
+            return display;
+          }
+          const count = reviewsData?.length || 0;
+          const avgRating = count
+            ? reviewsData.reduce((sum, r) => sum + r.rating, 0) / count
+            : 0;
+          return { ...display, rating: avgRating, reviews: count };
+        })
+      );
+      return productsWithReviews;
     } catch (error) {
       console.error('خطأ غير متوقع في جلب المنتجات المميزة:', error);
       return [];
@@ -122,7 +178,27 @@ export const ProductDataService = {
         return [];
       }
       
-      return data?.map(transformProductToDisplay) || [];
+      const products = data || [];
+      const productsWithReviews = await Promise.all(
+        products.map(async prod => {
+          const display = transformProductToDisplay(prod);
+          const { data: reviewsData, error: revErr } = await supabase
+            .from('reviews')
+            .select('rating')
+            .eq('product_id', prod.id)
+            .eq('approved', true);
+          if (revErr) {
+            console.error('Error fetching reviews for product', prod.id, revErr);
+            return display;
+          }
+          const count = reviewsData?.length || 0;
+          const avgRating = count
+            ? reviewsData.reduce((sum, r) => sum + r.rating, 0) / count
+            : 0;
+          return { ...display, rating: avgRating, reviews: count };
+        })
+      );
+      return productsWithReviews;
     } catch (error) {
       console.error('خطأ غير متوقع في جلب المنتجات الجديدة:', error);
       return [];
@@ -142,7 +218,9 @@ export const ProductDataService = {
         return [];
       }
       
-      return data?.map(transformProductToDisplay) || [];
+      const products = data || [];
+      const displays = products.map(transformProductToDisplay);
+      return await Promise.all(displays.map(addRatingsToDisplay));
     } catch (error) {
       console.error('خطأ غير متوقع في البحث:', error);
       return [];
@@ -152,24 +230,24 @@ export const ProductDataService = {
   // جلب المنتجات ذات الصلة (بناءً على الفئة)
   getRelatedProducts: async (productId: string, categoryId?: string): Promise<ProductDisplay[]> => {
     try {
-      let query = supabase
+      let queryBuilder = supabase
         .from('products')
         .select('*')
         .neq('id', productId)
         .limit(4);
-      
       if (categoryId) {
-        query = query.eq('category', categoryId);
+        queryBuilder = queryBuilder.eq('category', categoryId);
       }
-      
-      const { data, error } = await query;
+      const { data, error } = await queryBuilder;
       
       if (error) {
         console.error('خطأ في جلب المنتجات ذات الصلة:', error);
         return [];
       }
       
-      return data?.map(transformProductToDisplay) || [];
+      const products = data || [];
+      const displays = products.map(transformProductToDisplay);
+      return await Promise.all(displays.map(addRatingsToDisplay));
     } catch (error) {
       console.error('خطأ غير متوقع في جلب المنتجات ذات الصلة:', error);
       return [];

@@ -18,12 +18,87 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import { Constants } from '@/integrations/supabase/types';
 
 interface OrdersTabProps {
   orders: any[];
   loadingOrders: boolean;
   refreshOrders: () => Promise<void>;
 }
+
+const { order_status_expanded_enum: ORDER_STATUSES } = Constants.public.Enums;
+const [PENDING, PAID, PROCESSING, READY_FOR_SHIPPING, READY_FOR_PICKUP, SHIPPED, OUT_FOR_DELIVERY, DELIVERED, CANCELLED, FAILED_DELIVERY] = ORDER_STATUSES;
+
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case DELIVERED:
+      return 'text-green-600 bg-green-100 border-green-300';
+    case SHIPPED:
+    case OUT_FOR_DELIVERY:
+      return 'text-blue-600 bg-blue-100 border-blue-300';
+    case READY_FOR_SHIPPING:
+    case READY_FOR_PICKUP:
+    case PROCESSING:
+      return 'text-orange-600 bg-orange-100 border-orange-300';
+    case PAID:
+    case PENDING:
+      return 'text-yellow-600 bg-yellow-100 border-yellow-300';
+    case CANCELLED:
+    case FAILED_DELIVERY:
+      return 'text-red-600 bg-red-100 border-red-300';
+    default:
+      return 'text-gray-600 bg-gray-100 border-gray-300';
+  }
+};
+
+const getStatusIcon = (status: string) => {
+  switch (status) {
+    case DELIVERED:
+      return <CheckCircle className="h-6 w-6 text-green-600" />;
+    case SHIPPED:
+    case OUT_FOR_DELIVERY:
+      return <Truck className="h-6 w-6 text-blue-600" />;
+    case READY_FOR_SHIPPING:
+    case READY_FOR_PICKUP:
+    case PROCESSING:
+      return <Clock className="h-6 w-6 text-orange-600" />;
+    case PAID:
+    case PENDING:
+      return <Clock className="h-6 w-6 text-yellow-600" />;
+    case CANCELLED:
+    case FAILED_DELIVERY:
+      return <XCircle className="h-6 w-6 text-red-600" />;
+    default:
+      return null;
+  }
+};
+
+const translateStatus = (status: string) => {
+  switch (status) {
+    case DELIVERED:
+      return 'مكتمل';
+    case SHIPPED:
+      return 'تم الشحن';
+    case OUT_FOR_DELIVERY:
+      return 'في الطريق للتسليم';
+    case FAILED_DELIVERY:
+      return 'فشل التسليم';
+    case READY_FOR_SHIPPING:
+      return 'جاهز للشحن';
+    case READY_FOR_PICKUP:
+      return 'جاهز للاستلام';
+    case PROCESSING:
+      return 'قيد المعالجة';
+    case PAID:
+      return 'تم الدفع';
+    case PENDING:
+      return 'قيد الانتظار';
+    case CANCELLED:
+      return 'ملغي';
+    default:
+      return status;
+  }
+};
 
 const OrdersTab: React.FC<OrdersTabProps> = ({ orders, loadingOrders, refreshOrders }) => {
   const navigate = useNavigate();
@@ -104,15 +179,7 @@ const OrdersTab: React.FC<OrdersTabProps> = ({ orders, loadingOrders, refreshOrd
                   <div className="flex flex-wrap justify-between items-start mb-4">
                     <div className="flex items-start">
                       <div className="bg-blue-50 dark:bg-blue-900/20 p-2 rounded-lg ml-3">
-                        {order.status === 'completed' ? (
-                          <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
-                        ) : order.status === 'processing' ? (
-                          <Truck className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                        ) : order.status === 'cancelled' ? (
-                          <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
-                        ) : (
-                          <Clock className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
-                        )}
+                        {getStatusIcon(order.status)}
                       </div>
                       <div>
                         <div className="flex items-center mb-1">
@@ -141,23 +208,10 @@ const OrdersTab: React.FC<OrdersTabProps> = ({ orders, loadingOrders, refreshOrd
                     </div>
                     <div>
                       <span 
-                        className={`inline-flex items-center px-3 py-1 text-xs rounded-full font-medium ${
-                          order.status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800' : 
-                          order.status === 'pending' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-800' :
-                          order.status === 'processing' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200 dark:border-blue-800' :
-                          order.status === 'cancelled' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800' :
-                          'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400 border border-gray-200 dark:border-gray-700'
-                        }`}
+                        className={`inline-flex items-center px-3 py-1 text-xs rounded-full font-medium ${getStatusColor(order.status)}`}
                       >
-                        {order.status === 'completed' ? <CheckCircle className="h-3 w-3 ml-1" /> : 
-                         order.status === 'processing' ? <Truck className="h-3 w-3 ml-1" /> :
-                         order.status === 'cancelled' ? <XCircle className="h-3 w-3 ml-1" /> :
-                         <Clock className="h-3 w-3 ml-1" />}
-                        {order.status === 'pending' ? 'قيد الانتظار' :
-                         order.status === 'processing' ? 'قيد التجهيز' :
-                         order.status === 'completed' ? 'مكتمل' :
-                         order.status === 'cancelled' ? 'ملغي' :
-                         order.status}
+                        {getStatusIcon(order.status)}
+                        {translateStatus(order.status)}
                       </span>
                     </div>
                   </div>
@@ -218,14 +272,11 @@ const OrdersTab: React.FC<OrdersTabProps> = ({ orders, loadingOrders, refreshOrd
                         
                         <div className="mt-4">
                           <div className="flex items-center mb-3">
-                            <div className={`h-2 w-2 rounded-full mr-2 ${order.status === 'completed' ? 'bg-green-500' : order.status === 'processing' ? 'bg-blue-500' : order.status === 'cancelled' ? 'bg-red-500' : 'bg-yellow-500'}`}></div>
+                            <div className={`h-2 w-2 rounded-full mr-2 ${getStatusColor(order.status)}`}></div>
                             <h4 className="font-medium text-gray-700 dark:text-gray-300">
                               حالة الطلب: 
                               <span className="font-normal">
-                                {order.status === 'pending' ? 'قيد الانتظار' :
-                                order.status === 'processing' ? 'قيد التجهيز' :
-                                order.status === 'completed' ? 'مكتمل' :
-                                order.status === 'cancelled' ? 'ملغي' : order.status}
+                                {translateStatus(order.status)}
                               </span>
                             </h4>
                           </div>
@@ -277,7 +328,7 @@ const OrdersTab: React.FC<OrdersTabProps> = ({ orders, loadingOrders, refreshOrd
                       </DialogContent>
                     </Dialog>
                     
-                    {order.status === 'pending' && (
+                    {order.status === PENDING && (
                       <Button
                         variant="destructive"
                         size="sm"
@@ -304,7 +355,7 @@ const OrdersTab: React.FC<OrdersTabProps> = ({ orders, loadingOrders, refreshOrd
                       </Button>
                     )}
                     
-                    {order.status === 'completed' && (
+                    {order.status === DELIVERED && (
                       <Button
                         variant="default"
                         size="sm"

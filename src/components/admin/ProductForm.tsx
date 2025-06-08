@@ -31,6 +31,12 @@ const productSchema = z.object({
   description: z.string().optional(),
   usage_instructions: z.string().optional(),
   product_code: z.string().min(1, "رمز المنتج مطلوب"),
+  sku: z.string().optional().nullable(),
+  brand: z.string().optional().nullable(),
+  subtype: z.string().optional().nullable(),
+  vendor: z.string().optional().nullable(),
+  country_of_origin: z.string().optional().nullable(),
+  video_url: z.string().url("رابط الفيديو غير صالح").optional().nullable(),
   price: z.coerce.number().min(0, "يجب أن يكون السعر عددًا موجبًا"),
   discount_price: z.coerce.number().min(0, "يجب أن يكون سعر الخصم عددًا موجبًا").optional().nullable(),
   stock: z.coerce.number().min(0, "يجب أن تكون الكمية عددًا موجبًا").optional().nullable(),
@@ -39,6 +45,8 @@ const productSchema = z.object({
   is_new: z.boolean().default(false),
   features: z.array(z.string()).optional(),
   images: z.array(z.string()).optional(),
+  gallery_images: z.array(z.string().url()).optional(),
+  specifications: z.array(z.string()).optional(),
 });
 
 type ProductFormValues = z.infer<typeof productSchema>;
@@ -64,6 +72,12 @@ const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit, onCanc
       description: initialData?.description || '',
       usage_instructions: initialData?.usage_instructions || '',
       product_code: initialData?.product_code || '',
+      sku: initialData?.sku || '',
+      brand: initialData?.brand || '',
+      subtype: initialData?.subtype || '',
+      vendor: initialData?.vendor || '',
+      country_of_origin: initialData?.country_of_origin || '',
+      video_url: initialData?.video_url || '',
       price: initialData?.price || 0,
       discount_price: initialData?.discount_price || null,
       stock: initialData?.stock || 0,
@@ -72,6 +86,8 @@ const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit, onCanc
       is_new: initialData?.is_new || false,
       features: initialData?.features || [],
       images: initialData?.images || [],
+      gallery_images: initialData?.gallery_images || [],
+      specifications: initialData?.specifications || [],
     }
   });
   
@@ -239,6 +255,90 @@ const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit, onCanc
                         <FormLabel>رمز المنتج</FormLabel>
                         <FormControl>
                           <Input placeholder="أدخل رمز المنتج" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="sku"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>رمز SKU</FormLabel>
+                        <FormControl>
+                          <Input placeholder="أدخل رمز SKU" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="brand"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>الماركة</FormLabel>
+                        <FormControl>
+                          <Input placeholder="أدخل الماركة" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="subtype"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>النوع/الفئة الفرعية</FormLabel>
+                        <FormControl>
+                          <Input placeholder="أدخل النوع/الفئة الفرعية" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="vendor"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>البائع</FormLabel>
+                        <FormControl>
+                          <Input placeholder="أدخل البائع" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="country_of_origin"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>بلد الصنع</FormLabel>
+                        <FormControl>
+                          <Input placeholder="أدخل بلد الصنع" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="video_url"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>رابط فيديو توضيحي</FormLabel>
+                        <FormControl>
+                          <Input placeholder="أدخل رابط الفيديو" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

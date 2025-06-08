@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, ShoppingCart, List, User, Package, PanelLeft, Zap, ChevronLeft, X, Moon, Sun, Settings, Book, Info, Phone, Factory } from 'lucide-react';
+import { Home, ShoppingCart, List, User, Package, PanelLeft, Zap, ChevronLeft, X, Moon, Sun, Settings, Book, Info, Phone, Factory, Heart } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -32,11 +32,13 @@ const MobileNavigation: React.FC = () => {
         { path: '/admin', label: 'لوحة التحكم', icon: Settings },
         { path: '/profile', label: 'الملف الشخصي', icon: User },
         { path: '/orders', label: 'طلباتي', icon: ShoppingCart },
+        { path: '/favorites', label: 'المفضلة', icon: Heart },
         { path: '/settings', label: 'الإعدادات', icon: Settings },
       ]
     : [
         { path: '/profile', label: 'الملف الشخصي', icon: User },
         { path: '/orders', label: 'طلباتي', icon: ShoppingCart },
+        { path: '/favorites', label: 'المفضلة', icon: Heart },
         { path: '/settings', label: 'الإعدادات', icon: Settings },
       ];
 

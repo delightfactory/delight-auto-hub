@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ShoppingCart, User, Menu, X } from 'lucide-react';
+import { ShoppingCart, User, Menu, X, Heart } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
@@ -19,6 +19,7 @@ const Header = () => {
 
   const navItems = [
     { name: 'الرئيسية', path: '/' },
+    { name: 'المفضلة', path: '/favorites' },
     { name: 'المنتجات', path: '/products' },
     { name: 'العروض الخاصة', path: '/best-deals' },
     { name: 'المصنع', path: '/factory' },
@@ -62,6 +63,16 @@ const Header = () => {
           <div className="flex items-center space-x-4 space-x-reverse">
             {/* Notifications - only show for authenticated users */}
             {user && <NotificationCenter />}
+            {/* Favorites shortcut */}
+            {user && (
+              <Link
+                to="/favorites"
+                className="flex items-center text-gray-700 hover:text-red-600"
+                title="المفضلة"
+              >
+                <Heart className="w-5 h-5" />
+              </Link>
+            )}
             
             {/* Cart */}
             <CartDropdown />
@@ -111,6 +122,17 @@ const Header = () => {
       {isMenuOpen && (
         <div className="lg:hidden bg-white border-t">
           <div className="container-custom py-4">
+            {/* رابط المفضلة الظاهر في أعلى القائمة الجانبية على الموبايل */}
+            {user && (
+              <Link
+                to="/favorites"
+                onClick={() => setIsMenuOpen(false)}
+                className="flex items-center space-x-2 text-gray-700 hover:text-red-600 mb-4"
+              >
+                <Heart className="w-6 h-6" />
+                <span className="text-base font-medium">المفضلة</span>
+              </Link>
+            )}
             <nav className="flex flex-col space-y-4">
               {navItems.map((item) => (
                 <Link
@@ -124,6 +146,16 @@ const Header = () => {
                   {item.name}
                 </Link>
               ))}
+              {user && (
+                <Link
+                  to="/favorites"
+                  className="flex items-center space-x-2 text-sm font-medium text-gray-700 hover:text-red-600"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <Heart className="w-5 h-5" />
+                  <span>المفضلة</span>
+                </Link>
+              )}
               
               {user ? (
                 <div className="flex flex-col space-y-2 pt-4 border-t">

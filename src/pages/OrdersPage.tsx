@@ -8,6 +8,10 @@ import { Loader2, Package } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
+import { Constants } from '@/integrations/supabase/types';
+
+const { order_status_expanded_enum: ORDER_STATUSES } = Constants.public.Enums;
+const [PENDING, PAID, PROCESSING, READY_FOR_SHIPPING, READY_FOR_PICKUP, SHIPPED, OUT_FOR_DELIVERY, DELIVERED, CANCELLED, FAILED_DELIVERY] = ORDER_STATUSES;
 
 // تم إزالة PageHeader لتوفير مساحة عرض
 
@@ -54,14 +58,14 @@ const OrdersPage: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'delivered':
+      case DELIVERED:
         return 'text-green-600 bg-green-100 border-green-300';
-      case 'shipped':
+      case SHIPPED:
         return 'text-blue-600 bg-blue-100 border-blue-300';
-      case 'paid':
-      case 'pending':
+      case PAID:
+      case PENDING:
         return 'text-yellow-600 bg-yellow-100 border-yellow-300';
-      case 'cancelled':
+      case CANCELLED:
         return 'text-red-600 bg-red-100 border-red-300';
       default:
         return 'text-gray-600 bg-gray-100 border-gray-300';
@@ -70,15 +74,15 @@ const OrdersPage: React.FC = () => {
 
   const translateStatus = (status: string) => {
     switch (status) {
-      case 'delivered':
+      case DELIVERED:
         return 'مكتمل';
-      case 'shipped':
+      case SHIPPED:
         return 'تم الشحن';
-      case 'paid':
+      case PAID:
         return 'قيد المعالجة';
-      case 'pending':
+      case PENDING:
         return 'قيد الانتظار';
-      case 'cancelled':
+      case CANCELLED:
         return 'ملغي';
       default:
         return status;

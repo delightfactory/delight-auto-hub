@@ -32,6 +32,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from "@/components/ui/toaster"
 import NotificationsPage from './pages/admin/NotificationsPage';
 import NotificationSettingsPage from './pages/NotificationSettingsPage';
+import FavoritesPage from './pages/FavoritesPage';
 import AdminCategoriesPage from './pages/admin/CategoriesPage';
 import AdminAppearancePage from './pages/admin/AppearancePage';
 import AdminBackupsPage from './pages/admin/BackupsPage';
@@ -63,6 +64,7 @@ function App() {
                   <Route path="/cart" element={<MainLayout><SmoothPageTransition><CartPage /></SmoothPageTransition></MainLayout>} />
                   <Route path="/checkout" element={<MainLayout><SmoothPageTransition><CheckoutPage /></SmoothPageTransition></MainLayout>} />
                   <Route path="/orders" element={<MainLayout><SmoothPageTransition><OrdersPage /></SmoothPageTransition></MainLayout>} />
+                  <Route path="/favorites" element={<MainLayout><SmoothPageTransition><FavoritesPage /></SmoothPageTransition></MainLayout>} />
                   <Route path="/best-deals" element={<MainLayout><SmoothPageTransition><BestDealsPage /></SmoothPageTransition></MainLayout>} />
 
                   <Route path="/admin" element={<AdminLayout />}>

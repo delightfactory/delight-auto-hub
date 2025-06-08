@@ -6,6 +6,7 @@ import { ShoppingCart, Eye, Star, Heart, Check, AlertTriangle } from 'lucide-rea
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '@/context/CartContext';
 import { toast } from '@/components/ui/use-toast';
+import { WishlistService } from '@/services/wishlistService';
 
 export interface ProductCardProps {
   id: string;
@@ -55,6 +56,18 @@ const ProductCard: React.FC<ProductCardProps> = ({
     setIsAddedToCart(isInCart);
   }, [items, id]);
 
+  // جلب حالة المفضلات عند التحميل
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const favs = await WishlistService.getFavorites();
+        setIsLiked(favs.includes(id));
+      } catch (e) {
+        console.error('Error fetching favorites:', e);
+      }
+    })();
+  }, [id]);
+
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -90,17 +103,21 @@ const ProductCard: React.FC<ProductCardProps> = ({
     });
   };
 
-  const toggleLike = (e: React.MouseEvent) => {
+  const toggleLike = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsLiked(!isLiked);
-    
-    if (!isLiked) {
-      toast({
-        title: "تمت الإضافة للمفضلة",
-        description: `تم إضافة ${name} إلى المفضلة.`,
-        duration: 3000,
-      });
+    try {
+      if (!isLiked) {
+        await WishlistService.addFavorite(id);
+        toast({ title: "تمت الإضافة للمفضلة", description: `تم إضافة ${name} إلى المفضلة.`, duration: 3000 });
+      } else {
+        await WishlistService.removeFavorite(id);
+        toast({ title: "تمت إزالة من المفضلة", description: `تمت إزالة ${name} من المفضلة.`, duration: 3000 });
+      }
+      setIsLiked(!isLiked);
+    } catch (err: any) {
+      console.error('Error toggling favorite:', err);
+      toast({ title: "حدث خطأ", description: err.message, variant: "destructive" });
     }
   };
 

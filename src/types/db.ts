@@ -14,6 +14,17 @@ export interface Product {
   images?: string[];
   usage_instructions?: string;
   product_code: string;
+  brand?: string;
+  subtype?: string;
+  vendor?: string;
+  country_of_origin?: string;
+  video_url?: string;
+  dimensions?: {
+    width?: number;
+    height?: number;
+    depth?: number;
+    unit?: string;
+  };
 }
 
 export type OrderStatus =
@@ -119,4 +130,22 @@ export interface Banner {
   end_at?: string;
   created_at: string;
   updated_at: string;
+}
+
+// إضافة واجهات Favorite و Review لدعم الجداول الجديدة
+export interface Favorite {
+  id: string;
+  user_id: string;
+  product_id: string;
+  created_at: string;
+}
+
+export interface Review {
+  id: string;
+  user_id: string;
+  product_id: string;
+  rating: number;
+  comment?: string;
+  created_at: string;
+  approved: boolean;
 }
