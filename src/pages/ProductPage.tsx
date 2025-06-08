@@ -15,8 +15,8 @@ import SectionHeading from '../components/SectionHeading';
 import { toast } from '../components/ui/use-toast';
 import { useCart } from '../context/CartContext';
 import { ProductDataService } from '../services/productDataService';
-import ProductCard from '../components/ProductCard';
 import { ProgressiveImage } from '../components/performance/ProgressiveImage';
+import { VirtualizedProductGrid } from '../components/performance/VirtualizedProductGrid';
 import { cn } from '../lib/utils';
 import { ReviewService } from '../services/reviewService';
 import type { Review } from '../types/db';
@@ -952,34 +952,15 @@ const ProductPage: React.FC = () => {
               </p>
             </div>
             
-            <motion.div 
-              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 py-4"
-              variants={staggerVariants}
-              initial="hidden"
-              animate={controls}
-            >
-              {displayedProducts.map((rp, index) => (
-                <motion.div 
-                  key={rp.id} 
-                  variants={fadeInVariants} 
-                  className="w-full"
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <ProductCard 
-                    id={rp.id}
-                    name={rp.name}
-                    description={rp.description}
-                    image={rp.image}
-                    price={rp.price}
-                    rating={rp.rating}
-                    isFeatured={rp.isFeatured}
-                    isNew={rp.isNew}
-                    originalPrice={rp.originalPrice}
-                    className="h-full"
-                  />
-                </motion.div>
-              ))}
-            </motion.div>
+            <VirtualizedProductGrid
+              products={displayedProducts}
+              onProductClick={(p) => navigate(`/products/${p.id}`)}
+              className="mb-8"
+              useWindowScroll={true}
+              columns={{ default: 1, sm: 2, md: 3, lg: 4 }}
+              gap={6}
+              estimateSize={320}
+            />
             
             <div className="mt-10 text-center">
               <Button 
