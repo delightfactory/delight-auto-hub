@@ -11,6 +11,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { useCart } from '@/context/CartContext';
 import { WishlistService } from '@/services/wishlistService';
 import { cn } from '@/lib/utils'; // Importar la función cn para combinar clases
+import { useNavigate, useLocation } from 'react-router-dom';
 
 // استيراد نوع ProductDisplay من المكان الصحيح في المشروع
 interface Product {
@@ -58,6 +59,8 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
   const [parentWidth, setParentWidth] = useState(0);
   const { toast } = useToast();
   const cart = useCart();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
   const { data: categories = [] } = useQuery({ queryKey: ['categories'], queryFn: categoryService.getCategories });
   const categoryMap = useMemo(() => {
@@ -110,7 +113,11 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
         const favMap: Record<string, boolean> = {};
         favs.forEach(id => { favMap[id] = true; });
         setFavorites(favMap);
-      } catch (err) {
+      } catch (err: any) {
+        if (err.name === 'AuthSessionMissingError' || err.message.includes('session missing') || err.message.includes('يجب تسجيل الدخول')) {
+          navigate('/auth', { state: { from: location.pathname } });
+          return;
+        }
         console.error('Error loading favorites:', err);
       }
     })();
@@ -435,6 +442,10 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
                               variant: isAdding ? "success" : "default",
                             });
                           } catch (err: any) {
+                            if (err.name === 'AuthSessionMissingError' || err.message.includes('session missing') || err.message.includes('يجب تسجيل الدخول')) {
+                              navigate('/auth', { state: { from: location.pathname } });
+                              return;
+                            }
                             console.error("Error toggling favorite:", err);
                             toast({
                               title: "خطأ في المفضلة",

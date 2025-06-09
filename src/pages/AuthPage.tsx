@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';
+import { useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,6 +13,8 @@ const AuthPage = () => {
   
   const { user, signIn, signUp } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from || '/';
   
   // If already logged in, redirect to home
   if (user) {
@@ -36,7 +37,7 @@ const AuthPage = () => {
         return;
       }
 
-      navigate('/');
+      navigate(from, { replace: true });
     } catch (error) {
       console.error("Submission error:", error);
       setIsSubmitting(false);
@@ -44,7 +45,7 @@ const AuthPage = () => {
   };
   
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-red-700 to-red-900 p-4">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-red-500 to-red-600 p-4">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -152,6 +153,16 @@ const AuthPage = () => {
                 : 'لديك حساب بالفعل؟ سجل الدخول'}
             </Button>
           </CardFooter>
+          <div className="flex justify-center mt-4">
+            <Button
+              variant="destructive"
+              size="sm"
+              className="relative -top-2"
+              onClick={() => navigate(from)}
+            >
+              تصفّح كزائر
+            </Button>
+          </div>
         </Card>
       </motion.div>
     </div>

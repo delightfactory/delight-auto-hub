@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart, Eye, Star, Heart, Check, AlertTriangle } from 'lucide-react';
@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '@/context/CartContext';
 import { toast } from '@/components/ui/use-toast';
 import { WishlistService } from '@/services/wishlistService';
+import { useAuth } from '@/context/AuthContext';
 
 export interface ProductCardProps {
   id: string;
@@ -49,6 +50,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const [isAddedToCart, setIsAddedToCart] = React.useState(false);
   const [imageError, setImageError] = React.useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const { user } = useAuth();
   
   // Check if item is already in cart
   React.useEffect(() => {
@@ -106,6 +109,12 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const toggleLike = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    // التأكد من تسجيل الدخول قبل الإضافة أو الإزالة
+    if (!user) {
+      toast({ title: "يجب تسجيل الدخول أولاً", description: "الرجاء تسجيل الدخول للوصول للمفضلة.", variant: "warning" });
+      navigate('/auth', { state: { from: location.pathname } });
+      return;
+    }
     try {
       if (!isLiked) {
         await WishlistService.addFavorite(id);
