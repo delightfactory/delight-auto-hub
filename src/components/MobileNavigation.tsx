@@ -45,7 +45,7 @@ const MobileNavigation: React.FC = () => {
   return (
     <>
       {/* Mobile Navigation Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 shadow-2xl z-50 sm:hidden h-16">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 shadow-2xl sm:hidden h-16" style={{ zIndex: 10000 }}>
         <ul className="flex items-center h-full w-full px-2">
           <li className="flex-1">
             <button 
@@ -105,7 +105,7 @@ const MobileNavigation: React.FC = () => {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
               onClick={() => setIsSidebarOpen(false)}
-              className="fixed inset-0 bg-black/50 z-[9990] sm:hidden backdrop-blur-sm"
+              className="fixed inset-0 bg-black/50 sm:hidden backdrop-blur-sm" style={{ zIndex: 9990 }}
             />
             <motion.div 
               initial={{ x: '100%' }}
@@ -117,9 +117,9 @@ const MobileNavigation: React.FC = () => {
                 stiffness: 300
               }}
               className={cn(
-                "fixed top-0 right-0 bottom-0 z-[9999] w-72 h-full overflow-y-auto",
+                "fixed top-0 right-0 bottom-0 w-72 h-full overflow-y-auto",
                 "bg-white dark:bg-gray-900 shadow-2xl flex flex-col"
-              )}
+              )} style={{ zIndex: 9999 }}
             >
               {/* Header */}
               <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">

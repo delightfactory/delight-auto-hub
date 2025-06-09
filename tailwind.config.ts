@@ -274,6 +274,8 @@ const config = {
     'overflow-y-auto',
     // Ensure custom strikethrough utilities are not purged
     'h-[1.5px]', 'rotate-[-7deg]', 'top-[50%]', 'transform',
+    // Ensure sidebar z-index classes are preserved
+    'z-[9990]', 'z-[9999]',
   ],
 } satisfies Config;
 
