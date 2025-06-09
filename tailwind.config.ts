@@ -161,6 +161,13 @@ const config = {
     require('@tailwindcss/aspect-ratio'),
   ],
   safelist: [
+    // احتياطي للحفاظ على فئات أنيمشن وموضع Dialog
+    'data-[state=open]:animate-fade-in',
+    'data-[state=closed]:animate-fade-out',
+    'data-[state=open]:animate-slide-in',
+    'data-[state=closed]:animate-slide-out',
+    '-translate-x-1/2',
+    '-translate-y-1/2',
     // فئات لمكون ProductCard و OptimizedProductCard
     'bg-white', 'dark:bg-gray-800', 'rounded-lg', 'shadow-md', 'overflow-hidden', 'hover:shadow-lg', 'transition-all', 'duration-300',
     'block', 'relative', 'aspect-square', 'w-full', 'h-full', 'object-cover', 'transition-transform', 'duration-500',
@@ -262,6 +269,9 @@ const config = {
     'py-2',
     'py-3',
     'h-full',
+    // فئات لضمان دعم تمرير ونسبة ارتفاع الموديال
+    'max-h-[90vh]',
+    'overflow-y-auto',
   ],
 } satisfies Config;
 
