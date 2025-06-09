@@ -49,7 +49,7 @@ const MobileNavigation: React.FC = () => {
         <ul className="flex items-center h-full w-full px-2">
           <li className="flex-1">
             <button 
-              onClick={() => setIsSidebarOpen(true)}
+              onClick={() => setIsSidebarOpen(prev => !prev)}
               className="flex flex-col items-center justify-center gap-1 h-full w-full text-xs py-1 transition-colors text-delight-600 dark:text-delight-400"
             >
               <PanelLeft className="w-6 h-6" />

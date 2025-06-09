@@ -272,6 +272,8 @@ const config = {
     // فئات لضمان دعم تمرير ونسبة ارتفاع الموديال
     'max-h-[90vh]',
     'overflow-y-auto',
+    // Ensure custom strikethrough utilities are not purged
+    'h-[1.5px]', 'rotate-[-7deg]', 'top-[50%]', 'transform',
   ],
 } satisfies Config;
 

@@ -187,6 +187,26 @@
   .toast-compact {
     @apply max-w-sm text-sm rounded-md shadow-md;
   }
+
+  /* Custom angled strikethrough component */
+  .strike-angled {
+    position: relative;
+    display: inline-block;
+    text-decoration: none !important;
+    z-index: 0;
+  }
+  .strike-angled::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1.5px;
+    background-color: #ef4444; /* red-500 */
+    transform: rotate(-7deg);
+    transform-origin: center;
+    z-index: 10;
+  }
 }
 
 @layer utilities {

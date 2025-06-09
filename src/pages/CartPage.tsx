@@ -141,7 +141,7 @@ const CartPage: React.FC = () => {
                 >
                   <button
                     onClick={() => removeItem(item.id)}
-                    className="absolute top-2 right-2 text-gray-400 hover:text-red-500 transition-colors"
+                    className="absolute top-2 left-2 text-red-500 hover:text-red-600 transition-colors"
                     aria-label="إزالة المنتج"
                   >
                     <Trash2 className="h-4 w-4 md:h-5 md:w-5" />

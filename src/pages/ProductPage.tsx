@@ -243,6 +243,7 @@ const ProductPage: React.FC = () => {
         
         // تحريك الصفحة للأعلى
         window.scrollTo({ top: 0, behavior: 'smooth' });
+        setQuantity(1);
       }
     } catch (error) {
       console.error('Error adding to cart:', error);
@@ -559,21 +560,16 @@ const ProductPage: React.FC = () => {
                       
                       <div className="flex items-center gap-1 text-xs">
                         {product.originalPrice && discountPercent && (
-                          <>
-                            <span className="text-white/90 font-medium relative inline-block">
-                              <span className="relative">
-                              {quantity > 1 ? (
-                                <>
-                                  {formatPrice(parseFloat(discountInfo?.totalOriginal || '0'))}
-                                  <span className="mr-1 text-xs">ج.م</span>
-                                </>
-                              ) : (
-                                formatDisplayPrice(product.originalPrice || '')
-                              )}
-                            </span>
-                              <span className="absolute left-0 right-0 h-[1.5px] bg-red-500 transform rotate-[-7deg] top-[50%] z-20 opacity-100 border-0 border-red-500"></span>
-                            </span>
-                          </>
+                          <span className="strike-angled text-white/90 font-medium">
+                            {quantity > 1 ? (
+                              <>
+                                {formatPrice(parseFloat(discountInfo?.totalOriginal || '0'))}
+                                <span className="mr-1 text-xs">ج.م</span>
+                              </>
+                            ) : (
+                              formatDisplayPrice(product.originalPrice || '')
+                            )}
+                          </span>
                         )}
                         
                         {discountInfo && (
@@ -630,6 +626,7 @@ const ProductPage: React.FC = () => {
                                 title: "تمت الإضافة إلى السلة",
                                 description: `تمت إضافة ${successCount} ${successCount > 1 ? 'وحدات' : 'وحدة'} من ${product.name} إلى سلة التسوق.`,
                               });
+                              setQuantity(1); // Reset quantity after successful addition
                             }
                           } catch (error) {
                             console.error('Error adding to cart:', error);
@@ -668,8 +665,9 @@ const ProductPage: React.FC = () => {
                     </div>
                     {product.originalPrice && discountPercent && (
                       <div className="mt-1">
-                        <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">بدلاً من </span>
-                        <span className="text-sm text-gray-500 dark:text-gray-400 line-through font-semibold">{product.originalPrice}</span>
+                        <span className="strike-angled text-sm text-gray-500 dark:text-gray-400 font-medium">
+                          {formatDisplayPrice(product.originalPrice || '')}
+                        </span>
                       </div>
                     )}
                   </div>
@@ -689,17 +687,17 @@ const ProductPage: React.FC = () => {
               {/* Tabs Section */}
               <Tabs defaultValue={tabValue} onValueChange={(value) => setActiveTab(value as 'features' | 'specs' | 'reviews' | 'usage')} className="w-full">
                 <div className="px-6 pt-4">
-                  <TabsList className="w-full grid grid-cols-2 sm:grid-cols-4 bg-gray-100 dark:bg-gray-800/50 p-1 rounded-lg">
-                    <TabsTrigger value="features" className="rounded-md data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:text-purple-600 dark:data-[state=active]:text-purple-400 data-[state=active]:shadow-sm">
+                  <TabsList className="flex w-full bg-gray-100 dark:bg-gray-800/50 p-1 rounded-lg">
+                    <TabsTrigger value="features" className="flex-1 rounded-md px-2 py-1 text-xs sm:text-sm font-medium text-center data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:text-purple-600 dark:data-[state=active]:text-purple-400 data-[state=active]:shadow-sm">
                       <span className="w-full text-center text-xs sm:text-sm font-medium">المميزات</span>
                     </TabsTrigger>
-                    <TabsTrigger value="specs" className="rounded-md data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:text-purple-600 dark:data-[state=active]:text-purple-400 data-[state=active]:shadow-sm">
+                    <TabsTrigger value="specs" className="flex-1 rounded-md px-2 py-1 text-xs sm:text-sm font-medium text-center data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:text-purple-600 dark:data-[state=active]:text-purple-400 data-[state=active]:shadow-sm">
                       <span className="w-full text-center text-xs sm:text-sm font-medium">المواصفات</span>
                     </TabsTrigger>
-                    <TabsTrigger value="reviews" className="rounded-md data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:text-purple-600 dark:data-[state=active]:text-purple-400 data-[state=active]:shadow-sm">
+                    <TabsTrigger value="reviews" className="flex-1 rounded-md px-2 py-1 text-xs sm:text-sm font-medium text-center data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:text-purple-600 dark:data-[state=active]:text-purple-400 data-[state=active]:shadow-sm">
                       <span className="w-full text-center text-xs sm:text-sm font-medium">التقييمات</span>
                     </TabsTrigger>
-                    <TabsTrigger value="usage" className="rounded-md data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:text-purple-600 dark:data-[state=active]:text-purple-400 data-[state=active]:shadow-sm">
+                    <TabsTrigger value="usage" className="flex-1 rounded-md px-2 py-1 text-xs sm:text-sm font-medium text-center data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:text-purple-600 dark:data-[state=active]:text-purple-400 data-[state=active]:shadow-sm">
                       <span className="w-full text-center text-xs sm:text-sm font-medium">الاستخدام</span>
                     </TabsTrigger>
                   </TabsList>

@@ -318,7 +318,7 @@ const CheckoutForm: React.FC = () => {
             notes: formData.notes
           }
         );
-        
+        clearCart();
         // الانتقال إلى خطوة التأكيد
         setStep('confirmation');
       } catch (error) {
