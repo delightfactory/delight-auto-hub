@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { Product, Comment, Banner } from "@/types/db";
+import { Product, Comment, Banner, Category, CategoryNode } from "@/types/db";
 
 // التحقق إذا كان المستخدم مسؤول
 export const checkIfAdmin = async () => {
@@ -400,12 +400,11 @@ export const articleService = {
 // خدمات إدارة الفئات
 export const categoryService = {
   // جلب جميع الفئات
-  getCategories: async () => {
+  getCategories: async (): Promise<Category[]> => {
     const { data, error } = await supabase
       .from('categories')
       .select('*')
       .order('name');
-    
     if (error) {
       console.error("خطأ في جلب الفئات:", error);
       throw error;
@@ -414,13 +413,12 @@ export const categoryService = {
   },
   
   // جلب فئة بواسطة المعرف
-  getCategoryById: async (id: string) => {
+  getCategoryById: async (id: string): Promise<Category> => {
     const { data, error } = await supabase
       .from('categories')
       .select('*')
       .eq('id', id)
       .single();
-    
     if (error) {
       console.error(`خطأ في جلب الفئة رقم ${id}:`, error);
       throw error;
@@ -429,12 +427,11 @@ export const categoryService = {
   },
   
   // إنشاء فئة جديدة
-  createCategory: async (categoryData: any) => {
+  createCategory: async (categoryData: Partial<Category>): Promise<Category> => {
     const { data, error } = await supabase
       .from('categories')
       .insert([categoryData])
       .select();
-    
     if (error) {
       console.error("خطأ في إنشاء الفئة:", error);
       throw error;
@@ -443,13 +440,12 @@ export const categoryService = {
   },
   
   // تحديث فئة موجودة
-  updateCategory: async (id: string, categoryData: any) => {
+  updateCategory: async (id: string, categoryData: Partial<Category>): Promise<Category> => {
     const { data, error } = await supabase
       .from('categories')
       .update(categoryData)
       .eq('id', id)
       .select();
-    
     if (error) {
       console.error(`خطأ في تحديث الفئة رقم ${id}:`, error);
       throw error;
@@ -458,18 +454,32 @@ export const categoryService = {
   },
   
   // حذف فئة
-  deleteCategory: async (id: string) => {
+  deleteCategory: async (id: string): Promise<boolean> => {
     const { error } = await supabase
       .from('categories')
       .delete()
       .eq('id', id);
-    
     if (error) {
       console.error(`خطأ في حذف الفئة رقم ${id}:`, error);
       throw error;
     }
     return true;
-  }
+  },
+  
+  // جلب شجرة الفئات (hierarchical)
+  getCategoryTree: async (): Promise<CategoryNode[]> => {
+    // يستدعي الـ service العادي ثم يبني الشجرة client-side
+    const list = await categoryService.getCategories();
+    const map: Record<string, CategoryNode> = {};
+    // تهيئة العقد
+    list.forEach(cat => map[cat.id] = { ...cat, children: [] });
+    const tree: CategoryNode[] = [];
+    list.forEach(cat => {
+      if (cat.parent_id && map[cat.parent_id]) map[cat.parent_id].children.push(map[cat.id]);
+      else tree.push(map[cat.id]);
+    });
+    return tree;
+  },
 };
 
 // خدمات إدارة التعليقات

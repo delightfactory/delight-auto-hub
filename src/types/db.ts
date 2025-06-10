@@ -132,6 +132,23 @@ export interface Banner {
   updated_at: string;
 }
 
+// تعريف واجهة الفئة الهرمية
+export interface Category {
+  id: string;
+  name: string;
+  description?: string;
+  image?: string | null;
+  icon?: string | null;
+  parent_id?: string | null;
+  created_at: string;
+  updated_at?: string;
+}
+
+// واجهة شجرة الفئات لدعم الهيكل الهرمي
+export interface CategoryNode extends Category {
+  children: CategoryNode[];
+}
+
 // إضافة واجهات Favorite و Review لدعم الجداول الجديدة
 export interface Favorite {
   id: string;

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
+import type { Category, CategoryNode } from '@/types/db';
 import { useQuery } from '@tanstack/react-query';
 import { 
   PlusCircle, 
@@ -13,7 +14,9 @@ import {
   Star,
   Truck,
   TagsIcon,
-  ImageIcon
+  ImageIcon,
+  ChevronDown,
+  ChevronRight
 } from 'lucide-react';
 import { categoryService } from '@/services/adminService';
 import { Button } from '@/components/ui/button';
@@ -48,7 +51,6 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
-import { useCallback } from 'react';  // إضافة useCallback لتحسين الأداء
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -77,8 +79,7 @@ type CategoryFormValues = z.infer<typeof categorySchema>;
 const CategoriesPage = () => {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
-  // إزالة متغير حالة الحوار واستخدام نمط التحكم المعلن بدلاً من ذلك
-  const [dialogOpen, setDialogOpen] = useState(false);  // فقط للتحكم في حالة فتح الحوار برمجياً وليس لإظهار المكون نفسه
+  const [dialogOpen, setDialogOpen] = useState(false);  
   const [categoryToDelete, setCategoryToDelete] = useState<string>("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [confirmationShown, setConfirmationShown] = useState(false);
@@ -86,16 +87,106 @@ const CategoriesPage = () => {
   const [uploading, setUploading] = useState(false);
   const [uploadingIcon, setUploadingIcon] = useState(false);
   
-  const {
-    data: categories = [],
-    isLoading,
-    refetch
-  } = useQuery({
-    queryKey: ['admin-categories'],
-    queryFn: categoryService.getCategories
+  const { data: treeData = [], isLoading, refetch } = useQuery<CategoryNode[]>({
+    queryKey: ['admin-category-tree'],
+    queryFn: categoryService.getCategoryTree
   });
   
-  // نموذج إضافة/تعديل الفئة
+  const [expandedIds, setExpandedIds] = useState<Record<string, boolean>>({});
+  const toggleExpand = useCallback((id: string) => {
+    setExpandedIds(prev => ({ ...prev, [id]: !prev[id] }));
+  }, []);
+
+  // معالج تعديل الفئة: إعادة تعيين النموذج وفتح الحوار
+  function handleEditCategory(category: CategoryNode) {
+    setEditingCategory(category);
+    form.reset({
+      name: category.name,
+      description: category.description || '',
+      image: category.image,
+      parent_id: category.parent_id,
+      icon: category.icon,
+    });
+    setDialogOpen(true);
+  }
+
+  const filterTree = useCallback((nodes: CategoryNode[], term: string): CategoryNode[] => {
+    const lower = term.toLowerCase();
+    return nodes.reduce<CategoryNode[]>((acc, node) => {
+      const children = filterTree(node.children, term);
+      if (node.name.toLowerCase().includes(lower) || node.description?.toLowerCase().includes(lower) || children.length) {
+        acc.push({ ...node, children });
+      }
+      return acc;
+    }, []);
+  }, []);
+
+  const displayedTree = useMemo(() => searchTerm ? filterTree(treeData, searchTerm) : treeData, [treeData, searchTerm, filterTree]);
+
+  const flattenCategories = useMemo(() => {
+    type Flat = Category & { depth: number };
+    const list: Flat[] = [];
+    const traverse = (nodes: CategoryNode[], depth = 0) => {
+      nodes.forEach(({ children, ...node }) => {
+        list.push({ ...node, depth });
+        traverse(children, depth + 1);
+      });
+    };
+    traverse(treeData);
+    return list;
+  }, [treeData]);
+
+  const renderRows = useCallback((nodes: CategoryNode[], depth = 0): React.ReactNode[] => {
+    return nodes.flatMap(node => {
+      const isExp = expandedIds[node.id];
+      return [
+        <TableRow key={node.id}>
+          <TableCell>
+            {node.children.length > 0 ? (
+              <button onClick={() => toggleExpand(node.id)}>
+                {isExp ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+              </button>
+            ) : <div className="w-4" />}
+          </TableCell>
+          <TableCell style={{ paddingLeft: depth * 16 }} className="font-medium">
+            {node.name}
+          </TableCell>
+          <TableCell className="max-w-[300px] truncate">
+            {node.description || "لا يوجد وصف"}
+          </TableCell>
+          <TableCell>
+            {flattenCategories.find(c => c.id === node.parent_id)?.name || "-"}
+          </TableCell>
+          <TableCell>
+            <div className="flex gap-2">
+              <Button variant="ghost" onClick={() => handleEditCategory(node)}>
+                <Edit />
+              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="ghost"><Trash2 /></Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>حذف الفئة</AlertDialogTitle>
+                    <AlertDialogDescription>هل أنت متأكد من حذف هذه الفئة؟ هذا الإجراء لا يمكن التراجع عنه.</AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                    <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={() => handleDeleteCategory(node.id)}>
+                      حذف
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          </TableCell>
+        </TableRow>,
+        isExp && node.children.length > 0 ? renderRows(node.children, depth + 1) : null
+      ];
+    });
+  }, [expandedIds, toggleExpand, flattenCategories, handleEditCategory]);
+
   const form = useForm<CategoryFormValues>({
     resolver: zodResolver(categorySchema),
     defaultValues: {
@@ -107,20 +198,6 @@ const CategoriesPage = () => {
     }
   });
   
-  // تهيئة النموذج عند التعديل
-  const handleEditCategory = (category: any) => {
-    setEditingCategory(category);
-    form.reset({
-      name: category.name,
-      description: category.description || '',
-      image: category.image,
-      parent_id: category.parent_id,
-      icon: category.icon,
-    });
-    setDialogOpen(true);  // تعيين حالة الحوار للفتح
-  };
-  
-  // إضافة فئة جديدة
   const handleAddNewCategory = () => {
     setEditingCategory(null);
     form.reset({
@@ -130,10 +207,9 @@ const CategoriesPage = () => {
       parent_id: null,
       icon: null,
     });
-    setDialogOpen(true);  // تعيين حالة الحوار للفتح
+    setDialogOpen(true);  
   };
   
-  // حذف فئة
   const handleDeleteCategory = async (id: string) => {
     if (!id) return;
     
@@ -155,14 +231,12 @@ const CategoriesPage = () => {
     }
   };
   
-  // تأكيد الحذف
   const confirmDelete = (id: string) => {
     setCategoryToDelete(id);
     setDeleteDialogOpen(true);
-    setConfirmationShown(false); // إعادة تعيين حالة التأكيد عند فتح حوار جديد
+    setConfirmationShown(false); 
   };
   
-  // حفظ الفئة
   const handleFormSubmit = async (data: CategoryFormValues) => {
     try {
       if (editingCategory) {
@@ -178,7 +252,7 @@ const CategoriesPage = () => {
           description: "تم إنشاء الفئة بنجاح"
         });
       }
-      setDialogOpen(false);  // إغلاق الحوار باستخدام الحالة
+      setDialogOpen(false);  
       setEditingCategory(null);
       refetch();
     } catch (error) {
@@ -189,7 +263,6 @@ const CategoriesPage = () => {
     }
   };
   
-  // رفع صورة الفئة
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
@@ -198,24 +271,20 @@ const CategoriesPage = () => {
     setUploading(true);
     
     try {
-      // إنشاء اسم ملف فريد
       const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
       const filePath = `categories/${fileName}`;
       
-      // رفع الملف إلى Storage
       const { data, error } = await supabase.storage
         .from('category-images')
         .upload(filePath, file);
         
       if (error) throw error;
       
-      // إنشاء عنوان URL للصورة
       const { data: { publicUrl } } = supabase.storage
         .from('category-images')
         .getPublicUrl(filePath);
       
-      // تعيين صورة الفئة
       form.setValue('image', publicUrl);
       
       toast({
@@ -234,12 +303,10 @@ const CategoriesPage = () => {
     }
   };
   
-  // حذف صورة الفئة
   const handleRemoveImage = () => {
     form.setValue('image', null);
   };
   
-  // رفع أيقونة الفئة
   const handleIconUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
@@ -251,7 +318,6 @@ const CategoriesPage = () => {
       const filePath = `icons/${fileName}`;
       const { data, error } = await supabase.storage.from('category-icons').upload(filePath, file);
       if (error) throw error;
-      // البوكت عام، استخدم الرابط العام
       const { data: { publicUrl } } = supabase.storage
         .from('category-icons')
         .getPublicUrl(filePath);
@@ -265,14 +331,6 @@ const CategoriesPage = () => {
     }
   };
   const handleRemoveIcon = () => form.setValue('icon', null);
-  
-  // تصفية الفئات بناءً على مصطلح البحث
-  const filteredCategories = searchTerm
-    ? categories.filter((category: any) =>
-        category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        category.description?.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    : categories;
 
   return (
     <div className="space-y-6">
@@ -301,11 +359,11 @@ const CategoriesPage = () => {
           <Loader2 className="h-12 w-12 animate-spin text-red-600 mb-4" />
           <p className="text-lg font-medium">جارِ تحميل الفئات...</p>
         </div>
-      ) : filteredCategories.length > 0 ? (
+      ) : displayedTree.length > 0 ? (
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[50px]">الصورة</TableHead>
+              <TableHead className="w-[50px]"></TableHead>
               <TableHead>الاسم</TableHead>
               <TableHead>الوصف</TableHead>
               <TableHead>الفئة الأب</TableHead>
@@ -313,77 +371,14 @@ const CategoriesPage = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredCategories.map((category: any) => (
-              <TableRow key={category.id}>
-                <TableCell>
-                  {category.image ? (
-                    <img
-                      src={category.image}
-                      alt={category.name}
-                      className="w-10 h-10 object-cover rounded"
-                    />
-                  ) : (
-                    <div className="w-10 h-10 bg-gray-200 rounded flex items-center justify-center">
-                      <TagsIcon size={16} className="text-gray-400" />
-                    </div>
-                  )}
-                </TableCell>
-                <TableCell className="font-medium">{category.name}</TableCell>
-                <TableCell className="max-w-[300px] truncate">
-                  {category.description || "لا يوجد وصف"}
-                </TableCell>
-                <TableCell>
-                  {categories.find((c: any) => c.id === category.parent_id)?.name || "-"}
-                </TableCell>
-                <TableCell>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleEditCategory(category)}
-                    >
-                      <Edit className="h-4 w-4 text-blue-600" />
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="sm" onClick={() => {
-                          confirmDelete(category.id);
-                        }}>
-                          <Trash2 className="h-4 w-4 text-red-600" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent className="z-[100]">
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>هل أنت متأكد من حذف الفئة؟</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            سيتم حذف الفئة وجميع المنتجات المرتبطة بها
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel onClick={() => setDeleteDialogOpen(false)}>إلغاء</AlertDialogCancel>
-                          <AlertDialogAction
-                            className="bg-red-600 hover:bg-red-700"
-                            onClick={() => {
-                              handleDeleteCategory(categoryToDelete);
-                              setDeleteDialogOpen(false);
-                            }}
-                          >
-                            تأكيد الحذف
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
+            {renderRows(displayedTree, 0)}
           </TableBody>
         </Table>
       ) : (
         <div className="py-24 text-center">
           <FileX className="mx-auto h-12 w-12 text-gray-400 mb-3" />
           <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-1">
-            {searchTerm ? "لا يوجد فئات مطابقة" : "لا يوجد فئات"}
+            {searchTerm ? "لا يوجد فئات مطابقة" : "لا توجد فئات"}
           </h3>
           <p className="text-gray-500 dark:text-gray-400 mb-6">
             {searchTerm
@@ -398,7 +393,7 @@ const CategoriesPage = () => {
       )}
       
       {/* نافذة إضافة/تعديل الفئة */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>  {/* استخدام نمط التحكم المعلن */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>  
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{editingCategory ? 'تعديل الفئة' : 'إضافة فئة جديدة'}</DialogTitle>
@@ -456,14 +451,13 @@ const CategoriesPage = () => {
                         onChange={(e) => field.onChange(e.target.value || null)}
                       >
                         <option value="">لا يوجد فئة أب</option>
-                        {categories
-                          .filter((c: any) => c.id !== editingCategory?.id) // استبعاد الفئة نفسها من القائمة
-                          .map((category: any) => (
-                            <option key={category.id} value={category.id}>
-                              {category.name}
+                        {flattenCategories
+                          .filter(c => c.id !== editingCategory?.id)
+                          .map(c => (
+                            <option key={c.id} value={c.id}>
+                              {`${'--'.repeat(c.depth)}${c.name}`}
                             </option>
-                          ))
-                        }
+                          ))}
                       </select>
                     </FormControl>
                     <FormDescription>
@@ -575,7 +569,7 @@ const CategoriesPage = () => {
               />
               
               <DialogFooter className="mt-6">
-                <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>  {/* استخدام متغير الحالة الجديد */}
+                <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>  
                   إلغاء
                 </Button>
                 <Button type="submit">
