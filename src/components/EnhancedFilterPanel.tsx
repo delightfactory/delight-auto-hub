@@ -129,13 +129,13 @@ const EnhancedFilterPanel: React.FC<EnhancedFilterPanelProps> = ({
   ].filter(Boolean).length;
 
   return (
-    <Card className="w-full overflow-hidden shadow-lg border-0 bg-white dark:bg-gray-900 rounded-xl">
-      <CardHeader className="flex flex-row items-center justify-between p-4 border-b bg-gray-50 dark:bg-gray-800">
-        <div className="flex items-center gap-2">
-          <SlidersHorizontal className="h-5 w-5 text-delight-600" />
-          <h3 className="text-lg font-semibold tracking-wide">تصفية المنتجات</h3>
+    <Card className="w-full max-w-[260px] overflow-hidden shadow-lg border-0 bg-white dark:bg-gray-900 rounded-xl">
+      <CardHeader className="flex flex-row items-center justify-between p-2 border-b bg-gray-50 dark:bg-gray-800">
+        <div className="flex items-center gap-1.5">
+          <SlidersHorizontal className="h-4 w-4 text-delight-600" />
+          <h3 className="text-sm font-semibold tracking-wide">الفلاتر</h3>
           {activeFiltersCount > 0 && (
-            <Badge variant="secondary" className="mr-2">
+            <Badge variant="secondary" className="mr-1 h-5 w-5 flex items-center justify-center p-0">
               {activeFiltersCount}
             </Badge>
           )}
@@ -144,20 +144,20 @@ const EnhancedFilterPanel: React.FC<EnhancedFilterPanelProps> = ({
           variant="ghost" 
           size="sm" 
           onClick={resetFilters}
-          className="text-gray-500 hover:text-delight-600"
+          className="text-gray-500 hover:text-delight-600 h-6 px-1.5 text-xs"
         >
-          مسح الكل
+          مسح
         </Button>
       </CardHeader>
 
       <CardContent className="p-0 relative">
-        <ScrollArea className="h-[calc(100vh-220px)] overflow-y-auto pb-16">
-          <div className="p-4 space-y-6">
+        <ScrollArea className="h-[calc(100vh-200px)] overflow-y-auto pb-3">
+          <div className="p-3 space-y-4">
             {/* عرض الفلاتر النشطة */}
             {activeFiltersCount > 0 && (
-              <div className="mb-4">
-                <h4 className="text-sm font-medium mb-2 text-gray-500">الفلاتر النشطة</h4>
-                <div className="flex flex-wrap gap-2">
+              <div className="mb-3">
+                <h4 className="text-xs font-medium mb-1.5 text-gray-500">الفلاتر النشطة</h4>
+                <div className="flex flex-wrap gap-1.5">
                   {selected && (
                     <Badge variant="outline" className="flex items-center gap-1 px-3 py-1 bg-gray-100 dark:bg-gray-800">
                       <span>الفئة</span>
@@ -230,18 +230,18 @@ const EnhancedFilterPanel: React.FC<EnhancedFilterPanelProps> = ({
             <Accordion type="multiple" defaultValue={['categories', 'price']} className="w-full">
               {/* الفئات */}
               <AccordionItem value="categories" className="border-b border-gray-200 dark:border-gray-700">
-                <AccordionTrigger className="py-3 hover:no-underline">
+                <AccordionTrigger className="py-2 hover:no-underline">
                   <div className="flex items-center gap-2">
                     <List className="h-4 w-4 text-delight-600" />
                     <span className="font-medium">الفئة</span>
                   </div>
                 </AccordionTrigger>
-                <AccordionContent className="pb-3">
+                <AccordionContent className="pb-2">
                   <CategorySidebar 
                     selected={selected} 
                     onSelect={onSelect} 
                     showSearch={true} 
-                    maxHeight="300px"
+                    maxHeight="250px"
                     categoryProductsCount={categoryProductsCount}
                   />
                 </AccordionContent>
@@ -249,39 +249,41 @@ const EnhancedFilterPanel: React.FC<EnhancedFilterPanelProps> = ({
 
               {/* السعر */}
               <AccordionItem value="price" className="border-b border-gray-200 dark:border-gray-700">
-                <AccordionTrigger className="py-3 hover:no-underline">
+                <AccordionTrigger className="py-2 hover:no-underline">
                   <div className="flex items-center gap-2">
                     <DollarSign className="h-4 w-4 text-delight-600" />
                     <span className="font-medium">السعر</span>
                   </div>
                 </AccordionTrigger>
-                <AccordionContent className="pb-3 px-1">
-                  <div className="space-y-4">
-                    <Slider
-                      value={priceRange}
-                      onValueChange={onPriceChange}
-                      min={minPrice}
-                      max={maxPrice}
-                      step={1}
-                      className="w-full"
-                    />
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="flex flex-col">
+                <AccordionContent className="pb-2 px-1">
+                  <div className="space-y-3">
+                    <div className="pt-2 px-1">
+                      <Slider
+                        value={priceRange}
+                        onValueChange={onPriceChange}
+                        min={minPrice}
+                        max={maxPrice}
+                        step={1}
+                        className="w-full"
+                      />
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex flex-col w-[48%]">
                         <span className="text-xs text-gray-500 mb-1">من</span>
                         <Input
                           type="number"
                           value={priceRange[0]}
                           onChange={(e) => onPriceChange([+e.target.value, priceRange[1]])}
-                          className="h-8"
+                          className="h-7 text-sm px-2"
                         />
                       </div>
-                      <div className="flex flex-col">
+                      <div className="flex flex-col w-[48%]">
                         <span className="text-xs text-gray-500 mb-1">إلى</span>
                         <Input
                           type="number"
                           value={priceRange[1]}
                           onChange={(e) => onPriceChange([priceRange[0], +e.target.value])}
-                          className="h-8"
+                          className="h-7 text-sm px-2"
                         />
                       </div>
                     </div>
