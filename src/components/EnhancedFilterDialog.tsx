@@ -113,7 +113,7 @@ const EnhancedFilterDialog: React.FC<EnhancedFilterDialogProps> = ({
           </ScrollArea>
         </div>
         
-        <SheetFooter className="border-t p-3 bg-gray-50/80 dark:bg-gray-800/80 backdrop-blur-sm fixed bottom-0 left-0 right-0 z-10 shadow-md">
+        <SheetFooter className="border-t p-3 bg-gray-50/80 dark:bg-gray-800/80 backdrop-blur-sm fixed bottom-0 left-0 right-0 z-[10001] shadow-md">
           <div className="flex justify-between w-full">
             <SheetClose asChild>
               <Button variant="outline" size="sm">
