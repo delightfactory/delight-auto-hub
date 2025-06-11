@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import ProductCard from '@/components/ProductCard';
 import SectionHeading from '@/components/SectionHeading';
 import FactoryTour from '@/components/FactoryTour';
+import CategoryShowcase from '@/components/CategoryShowcase';
 import { ProductDataService } from '@/services/productDataService';
 import { ProgressiveImage } from '@/components/performance/ProgressiveImage';
 import { VirtualizedProductGrid } from '@/components/performance/VirtualizedProductGrid';
@@ -100,6 +101,25 @@ const Index: React.FC = () => {
               </div>
             </motion.div>
           </div>
+        </div>
+      </section>
+
+      {/* Categories Showcase */}
+      <section className="py-8 bg-white">
+        <div className="container-custom">
+          <SectionHeading 
+            title="تصفح الفئات" 
+            subtitle="اكتشف منتجاتنا المتنوعة بشكل سهل وسريع"
+            center
+          />
+          <CategoryShowcase 
+            maxCategories={24} 
+            showSearch={true} 
+            compact={true} 
+            maxHeight="40vh" 
+            showTabs={true}
+            showFavorites={true}
+          />
         </div>
       </section>
 

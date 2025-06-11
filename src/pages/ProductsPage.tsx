@@ -10,15 +10,18 @@ import ProductCard from '@/components/ProductCard';
 import { ProductDataService } from '@/services/productDataService';
 import { VirtualizedProductGrid } from '@/components/performance/VirtualizedProductGrid';
 import { SmoothPageTransition } from '@/components/performance/SmoothPageTransition';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import EnhancedFilterDialog from '@/components/EnhancedFilterDialog';
 import EnhancedFilterPanel from '@/components/EnhancedFilterPanel';
 import { categoryService } from '@/services/adminService';
 import type { CategoryNode } from '@/types/db';
 
 const ProductsPage: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const categoryParam = searchParams.get('category');
+  
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(categoryParam);
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [selectedVendor, setSelectedVendor] = useState<string | null>(null);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 0]);

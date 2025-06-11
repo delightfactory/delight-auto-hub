@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronRight, Search, Tag, X } from 'lucide-react';
+import { ChevronDown, ChevronRight, Search, Tag, X, Folder, FolderOpen, FileText } from 'lucide-react';
 import { categoryService } from '@/services/adminService';
 import type { CategoryNode } from '@/types/db';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface CategorySidebarProps {
   selected: string | null;
@@ -118,38 +119,109 @@ const CategorySidebar: React.FC<CategorySidebarProps> = ({
     return filterNodes(tree);
   }, [tree, searchQuery]);
 
+  // تحديد ما إذا كانت الفئة هي فئة رئيسية (أب) أم لا
+  const isRootCategory = (node: CategoryNode): boolean => {
+    return !node.parent_id;
+  };
+
+  // تحديد مستوى الفئة (الأب، الابن، الحفيد)
+  const getCategoryLevel = (node: CategoryNode): 'parent' | 'child' | 'grandchild' => {
+    if (!node.parent_id) return 'parent';
+    
+    // البحث عن الفئة الأب لتحديد ما إذا كانت فئة ابن أو حفيد
+    const findParent = (nodes: CategoryNode[], parentId: string): CategoryNode | null => {
+      for (const n of nodes) {
+        if (n.id === parentId) return n;
+        const found = findParent(n.children, parentId);
+        if (found) return found;
+      }
+      return null;
+    };
+    
+    const parent = node.parent_id ? findParent(tree, node.parent_id) : null;
+    if (parent && !parent.parent_id) return 'child';
+    return 'grandchild';
+  };
+
   const renderNodes = (nodes: CategoryNode[], depth = 0) =>
     nodes.map(node => {
       const isOpen = openMap[node.id];
       const hasChildren = node.children.length > 0;
       const isActive = selected === node.id;
+      const level = getCategoryLevel(node);
+      const isRoot = isRootCategory(node);
+      const productCount = categoryProductsCount[node.id] || 0;
       
       return (
         <div key={node.id} className="relative">
-          <div
-            className={`flex items-center p-2 cursor-pointer transition-colors duration-200 ${isActive ? 'bg-delight-50 dark:bg-delight-900/20 text-delight-600 dark:text-delight-400 font-medium border-r-2 border-delight-500' : 'hover:bg-gray-100 dark:hover:bg-gray-800'} rounded-sm my-0.5`}
-            style={{ paddingLeft: depth * 16 + 8 }}
-            onClick={() => onSelect(node.id)}
-          >
-            {hasChildren ? (
-              <motion.button 
-                className="flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-delight-100 dark:hover:bg-delight-900/30 transition-all duration-300 shadow-sm hover:shadow-md"
-                onClick={(e) => toggleOpen(node.id, e)}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                initial={{ rotate: isOpen ? 90 : 0 }}
-                animate={{ rotate: isOpen ? 90 : 0 }}
-                transition={{ duration: 0.3, type: "spring", stiffness: 300 }}
-              >
-                <ChevronRight size={14} className={`text-delight-600 dark:text-delight-400 transition-transform duration-300 ${isOpen ? 'rotate-90' : ''}`} />
-              </motion.button>
-            ) : <div className="w-6 h-6" />}
-            
-            <span className={`ml-2 text-sm transition-colors ${isActive ? 'text-delight-600 dark:text-delight-400' : ''}`}>
-              {node.name}
-              <span className="text-xs text-gray-400 dark:text-gray-500 ml-1">({categoryProductsCount[node.id] || 0})</span>
-            </span>
-          </div>
+          <TooltipProvider delayDuration={300}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div
+                  className={`flex items-center p-2 cursor-pointer transition-all duration-200 
+                    ${isActive ? 'bg-delight-50 dark:bg-delight-900/20 text-delight-600 dark:text-delight-400 font-medium border-r-2 border-delight-500' : 'hover:bg-gray-100 dark:hover:bg-gray-800'} 
+                    ${isRoot ? 'font-semibold rounded-md my-1' : 'rounded-sm my-0.5'}
+                    ${level === 'child' ? 'text-sm' : level === 'grandchild' ? 'text-xs' : 'text-base'}
+                  `}
+                  style={{ 
+                    paddingLeft: depth * 16 + 8,
+                    borderLeft: isRoot ? '3px solid #f59e0b' : 'none',
+                    backgroundColor: isRoot && !isActive ? '#f8fafc' : ''
+                  }}
+                  onClick={() => onSelect(node.id)}
+                >
+                  {/* أيقونة الفئة حسب نوعها ومستواها */}
+                  {hasChildren ? (
+                    <motion.button 
+                      className={`flex items-center justify-center w-6 h-6 rounded-full 
+                        ${isRoot ? 'bg-amber-100 text-amber-600' : 'bg-gray-100 dark:bg-gray-800'} 
+                        hover:bg-delight-100 dark:hover:bg-delight-900/30 transition-all duration-300 shadow-sm hover:shadow-md`}
+                      onClick={(e) => toggleOpen(node.id, e)}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                      initial={{ rotate: isOpen ? 90 : 0 }}
+                      animate={{ rotate: isOpen ? 90 : 0 }}
+                      transition={{ duration: 0.3, type: "spring", stiffness: 300 }}
+                    >
+                      {isRoot ? (
+                        isOpen ? 
+                          <FolderOpen size={14} className="text-amber-600" /> : 
+                          <Folder size={14} className="text-amber-600" />
+                      ) : (
+                        <ChevronRight size={14} className={`text-delight-600 dark:text-delight-400 transition-transform duration-300 ${isOpen ? 'rotate-90' : ''}`} />
+                      )}
+                    </motion.button>
+                  ) : (
+                    <div className="w-6 h-6 flex items-center justify-center">
+                      {isRoot ? 
+                        <Folder size={14} className="text-amber-600" /> : 
+                        <FileText size={12} className="text-gray-400" />
+                      }
+                    </div>
+                  )}
+                  
+                  {/* اسم الفئة وعدد المنتجات */}
+                  <div className="ml-2 flex flex-col">
+                    <span className={`transition-colors ${isActive ? 'text-delight-600 dark:text-delight-400' : ''}`}>
+                      {node.name}
+                    </span>
+                    {productCount > 0 && (
+                      <span className={`text-xs ${isRoot ? 'text-amber-600' : 'text-gray-400 dark:text-gray-500'}`}>
+                        {productCount} منتج
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="left" className="max-w-xs">
+                <div>
+                  <p className="font-semibold">{node.name}</p>
+                  {node.description && <p className="text-xs text-gray-500">{node.description}</p>}
+                  <p className="text-xs mt-1">{productCount} منتج</p>
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           
           <AnimatePresence initial={false}>
             {hasChildren && isOpen && (
@@ -168,8 +240,13 @@ const CategorySidebar: React.FC<CategorySidebarProps> = ({
       );
     });
 
+  // تجميع الفئات الرئيسية (الأب) للعرض السريع
+  const rootCategories = useMemo(() => {
+    return tree.filter(node => !node.parent_id);
+  }, [tree]);
+
   return (
-    <aside className="bg-white dark:bg-gray-900 border rounded-md overflow-hidden">
+    <aside className="bg-white dark:bg-gray-900 border rounded-md overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
       {showSearch && (
         <div className="p-3 border-b">
           <div className="relative">
@@ -191,6 +268,31 @@ const CategorySidebar: React.FC<CategorySidebarProps> = ({
               </button>
             )}
           </div>
+          
+          {/* عرض الفئات الرئيسية للوصول السريع */}
+          {!searchQuery && rootCategories.length > 0 && (
+            <div className="mt-3">
+              <div className="text-xs text-gray-500 mb-1.5">الأقسام الرئيسية:</div>
+              <div className="flex flex-wrap gap-1.5">
+                {rootCategories.slice(0, 5).map(category => (
+                  <Badge 
+                    key={category.id}
+                    variant={selected === category.id ? "default" : "outline"}
+                    className={`cursor-pointer px-2 py-1 ${selected === category.id ? 'bg-delight-600' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+                    onClick={() => onSelect(category.id)}
+                  >
+                    <Folder className="h-3 w-3 mr-1" />
+                    <span>{category.name}</span>
+                  </Badge>
+                ))}
+                {rootCategories.length > 5 && (
+                  <Badge variant="secondary" className="cursor-pointer px-2 py-1">
+                    +{rootCategories.length - 5}
+                  </Badge>
+                )}
+              </div>
+            </div>
+          )}
           
           {selectedCategory && (
             <div className="mt-3">
@@ -224,7 +326,15 @@ const CategorySidebar: React.FC<CategorySidebarProps> = ({
       <ScrollArea className="overflow-y-auto" style={{ maxHeight: maxHeight }}>
         <div className="p-2">
           {filteredTree.length > 0 ? (
-            renderNodes(filteredTree)
+            <div className="space-y-1">
+              {/* عنوان توضيحي للفئات */}
+              {!searchQuery && (
+                <div className="px-2 py-1 text-xs text-gray-500 border-b border-gray-100 mb-2">
+                  تصفح حسب الفئات
+                </div>
+              )}
+              {renderNodes(filteredTree)}
+            </div>
           ) : !searchQuery ? (
             <div className="py-3 text-center text-gray-500 text-sm">
               لا توجد فئات متاحة
