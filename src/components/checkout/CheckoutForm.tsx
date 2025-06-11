@@ -160,6 +160,13 @@ const CheckoutForm: React.FC = () => {
   // التعامل مع تغيير المحافظة
   const handleGovernorateChange = useCallback(async (governorateId: string, fee: number = 0) => {
     try {
+      // تحديث قيمة المحافظة في formData وإعادة تعيين المدينة
+      setFormData(prev => ({
+        ...prev,
+        governorate: governorateId,
+        city: '' // إعادة تعيين المدينة عند تغيير المحافظة
+      }));
+      
       if (governorateId) {
         // استعلام عن اسم المحافظة من قاعدة البيانات
         const { data: governorate, error } = await supabase
@@ -184,6 +191,12 @@ const CheckoutForm: React.FC = () => {
   // التعامل مع تغيير المدينة
   const handleCityChange = useCallback(async (cityId: string, fee: number) => {
     try {
+      // تحديث قيمة المدينة في formData
+      setFormData(prev => ({
+        ...prev,
+        city: cityId
+      }));
+      
       if (cityId) {
         // استعلام عن اسم المدينة وتكلفة الشحن من قاعدة البيانات
         const { data: city, error } = await supabase
@@ -435,11 +448,11 @@ const CheckoutForm: React.FC = () => {
                 selectedGovernorate={formData.governorate}
                 selectedCity={formData.city}
                 onGovernorateChange={(governorateId) => {
-                  setFormData(prev => ({ ...prev, governorate: governorateId, city: '' }));
+                  // استدعاء دالة handleGovernorateChange فقط لتجنب التكرار
                   handleGovernorateChange(governorateId, 0);
                 }}
                 onCityChange={(cityId, fee) => {
-                  setFormData(prev => ({ ...prev, city: cityId }));
+                  // استدعاء دالة handleCityChange فقط لتجنب التكرار
                   handleCityChange(cityId, fee);
                 }}
                 onShippingCostChange={setShippingCost}

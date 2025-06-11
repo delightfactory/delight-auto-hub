@@ -166,3 +166,22 @@ export interface Review {
   created_at: string;
   approved: boolean;
 }
+
+// تعريف واجهات المدن والمحافظات
+export interface City {
+  name_ar: string;
+  name_en: string;
+  id?: string;
+  governorate_id?: string;
+  delivery_fee?: number;
+  is_active?: boolean;
+  delivery_days?: string[] | null;
+}
+
+export interface Governorate {
+  id: string;
+  name_ar: string;
+  name_en: string;
+  cities: City[];
+  is_active?: boolean;
+}

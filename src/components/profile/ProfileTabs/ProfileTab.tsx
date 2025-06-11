@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import LocationFetcher from '@/components/map/LocationFetcher';
-import type { Governorate, City } from '@/lib/egyptian-locations';
+import type { Governorate, City } from '@/types/db';
 
 interface ProfileTabProps {
   formData: {
@@ -185,7 +185,7 @@ const ProfileTab: React.FC<ProfileTabProps> = ({
                   </SelectTrigger>
                   <SelectContent>
                     {availableCities.map(city => (
-                      <SelectItem key={city.name_en} value={city.name_en}>
+                      <SelectItem key={city.id} value={city.id}>
                         {city.name_ar}
                       </SelectItem>
                     ))}

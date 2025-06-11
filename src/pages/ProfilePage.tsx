@@ -9,7 +9,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { getCustomerOrders } from '@/services/orderService';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
-import { egyptianGovernorates, City } from '@/lib/egyptian-locations';
+import type { Governorate, City } from '@/types/db';
+import { locationService } from '@/services/locationService';
 import { Constants } from '@/integrations/supabase/types';
 const { order_status_expanded_enum: ORDER_STATUSES } = Constants.public.Enums;
 const [PENDING, PAID, PROCESSING, READY_FOR_SHIPPING, READY_FOR_PICKUP, SHIPPED, OUT_FOR_DELIVERY, DELIVERED, CANCELLED, FAILED_DELIVERY] = ORDER_STATUSES;
@@ -93,6 +94,7 @@ const ProfilePage = () => {
   });
   
   const [availableCities, setAvailableCities] = useState<City[]>([]);
+  const [governorates, setGovernorates] = useState<Governorate[]>([]);
   
   // Redirect if not logged in
   useEffect(() => {
@@ -100,6 +102,42 @@ const ProfilePage = () => {
       navigate('/auth');
     }
   }, [user, loading, navigate]);
+  
+  // جلب المحافظات من قاعدة البيانات
+  useEffect(() => {
+    const fetchGovernorates = async () => {
+      try {
+        const dbGovernorates = await locationService.getGovernorates();
+        const cities = await locationService.getCities();
+        
+        // تحويل البيانات إلى الصيغة المطلوبة
+        const formattedGovernorates = dbGovernorates.map(gov => ({
+          id: gov.id,
+          name_ar: gov.name_ar,
+          name_en: gov.name_en,
+          is_active: gov.is_active,
+          cities: cities
+            .filter(city => city.governorate_id === gov.id && city.is_active)
+            .map(city => ({
+              name_ar: city.name_ar,
+              name_en: city.name_en,
+              id: city.id
+            }))
+        }));
+        
+        setGovernorates(formattedGovernorates);
+      } catch (error) {
+        console.error('خطأ في جلب المحافظات:', error);
+        toast({
+          title: 'خطأ',
+          description: 'حدث خطأ أثناء جلب بيانات المحافظات',
+          variant: 'destructive',
+        });
+      }
+    };
+    
+    fetchGovernorates();
+  }, []);
   
   // Initialize form data from user object
   useEffect(() => {
@@ -133,31 +171,47 @@ const ProfilePage = () => {
 
   // تحديث قائمة المدن عند تغيير المحافظة
   useEffect(() => {
-    if (formData.governorate) {
-      const selected = egyptianGovernorates.find(g => g.id === formData.governorate);
-      setAvailableCities(selected ? selected.cities : []);
-      
-      // تحقق فقط إذا كانت المدينة غير موجودة في المحافظة المحددة وليست فارغة بالفعل
-      if (formData.city && selected && !selected.cities.find(c => c.name_en === formData.city || c.name_ar === formData.city)) {
-        // احتفظ بالمدينة الحالية في متغير مؤقت للتحقق لاحقاً
-        const currentCity = formData.city;
-        
-        // تحقق مما إذا كانت المدينة موجودة في قاعدة البيانات
-        if (user && user.city === currentCity) {
-          // المدينة موجودة في قاعدة البيانات، لا تقم بإعادة تعيينها
-          console.log('المدينة موجودة في قاعدة البيانات، لا يتم إعادة تعيينها');
-        } else {
-          // المدينة غير موجودة في قاعدة البيانات أو المحافظة المحددة، قم بإعادة تعيينها
+    const fetchCitiesForGovernorate = async () => {
+      if (formData.governorate) {
+        try {
+          // جلب المدن للمحافظة المحددة من قاعدة البيانات
+          const cities = await locationService.getCities(formData.governorate);
+          setAvailableCities(cities.map(city => ({
+            name_ar: city.name_ar,
+            name_en: city.name_en,
+            id: city.id
+          })));
+          
+          // تحقق مما إذا كانت المدينة المحددة موجودة في المحافظة المحددة
+          if (formData.city && !cities.find(c => c.id === formData.city)) {
+            // احتفظ بالمدينة الحالية في متغير مؤقت للتحقق لاحقاً
+            const currentCity = formData.city;
+            
+            // تحقق مما إذا كانت المدينة موجودة في قاعدة البيانات وتنتمي للمحافظة المحددة
+            const cityBelongsToGovernorate = cities.some(c => c.id === currentCity);
+            
+            if (user && user.city === currentCity && cityBelongsToGovernorate) {
+              // المدينة موجودة في قاعدة البيانات وتنتمي للمحافظة المحددة، لا تقم بإعادة تعيينها
+              console.log('المدينة موجودة في قاعدة البيانات وتنتمي للمحافظة المحددة، لا يتم إعادة تعيينها');
+            } else {
+              // المدينة غير موجودة في قاعدة البيانات أو لا تنتمي للمحافظة المحددة، قم بإعادة تعيينها
+              setFormData(prev => ({ ...prev, city: '' }));
+            }
+          }
+        } catch (error) {
+          console.error('خطأ في جلب المدن:', error);
+          setAvailableCities([]);
+        }
+      } else {
+        setAvailableCities([]);
+        // لا تقم بإعادة تعيين المدينة إذا كانت موجودة في قاعدة البيانات
+        if (!(user && user.city)) {
           setFormData(prev => ({ ...prev, city: '' }));
         }
       }
-    } else {
-      setAvailableCities([]);
-      // لا تقم بإعادة تعيين المدينة إذا كانت موجودة في قاعدة البيانات
-      if (!(user && user.city)) {
-        setFormData(prev => ({ ...prev, city: '' }));
-      }
-    }
+    };
+    
+    fetchCitiesForGovernorate();
   }, [formData.governorate, user]);
   
   const fetchOrders = async () => {
@@ -483,7 +537,7 @@ const ProfilePage = () => {
                       handleSubmit={handleSubmit}
                       setFormData={setFormData}
                       isUpdating={isUpdating}
-                      egyptianGovernorates={egyptianGovernorates}
+                      egyptianGovernorates={governorates}
                       onLocationChange={handleLocationChange}
                       onLocationClear={handleLocationClear}
                     />
