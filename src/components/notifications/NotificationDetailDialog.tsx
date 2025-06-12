@@ -7,6 +7,7 @@ import {
   Notification as UserNotification,
   BroadcastNotification,
 } from '@/services/notificationService';
+import { translateOrderStatus } from '@/utils/orderStatus';
 
 type NotificationUnion = UserNotification | BroadcastNotification;
 
@@ -71,7 +72,7 @@ const NotificationDetailDialog: React.FC<NotificationDetailDialogProps> = ({
           {/* Order ID */}
           {'order_id' in notification.data && (
             <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-              رقم الطلب: {notification.data.order_id}
+              رقم الطلب: {String(notification.data.order_id).slice(0, 8)}
             </div>
           )}
 
@@ -104,7 +105,7 @@ const NotificationDetailDialog: React.FC<NotificationDetailDialogProps> = ({
             {notification.data.status && (
               <div className="flex items-center">
                 <span className="font-medium w-24">حالة الطلب:</span>
-                <span>{notification.data.status}</span>
+                <span>{translateOrderStatus(notification.data.status)}</span>
               </div>
             )}
 

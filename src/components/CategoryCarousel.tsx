@@ -1,6 +1,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import * as Icons from 'lucide-react';
+import { Category } from '@/types/db';
 import { categoryService } from '@/services/adminService';
 
 interface CategoryCarouselProps {
@@ -9,7 +10,7 @@ interface CategoryCarouselProps {
 }
 
 const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ selectedCategory, onSelectCategory }) => {
-  const { data: categories = [], isLoading } = useQuery({
+  const { data: categories = [], isLoading } = useQuery<Category[]>({
     queryKey: ['categories'],
     queryFn: categoryService.getCategories,
   });
@@ -30,7 +31,7 @@ const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ selectedCategory, o
             !selectedCategory ? 'text-delight-600 font-semibold' : 'text-gray-700'
           }`}>الكل</span>
         </button>
-        {categories.map((cat: any) => (
+        {categories.map((cat: Category) => (
           <button
             key={cat.id}
             onClick={() => onSelectCategory(cat.id)}
@@ -43,12 +44,10 @@ const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ selectedCategory, o
                   alt={cat.name}
                   className="h-8 w-8 object-cover rounded-md"
                 />
-              ) : (
-                (() => {
-                  const IconComp = (cat.icon && (Icons as any)[cat.icon]) ? (Icons as any)[cat.icon] : Icons.Tag;
+              ) : (() => {
+                  const IconComp = (Icons as unknown as Record<string, React.ComponentType<React.SVGProps<SVGSVGElement>>>)[cat.icon] || Icons.Tag;
                   return <IconComp className="h-8 w-8" />;
-                })()
-              )}
+                })()}
             </div>
             <span className={`text-sm whitespace-nowrap transition-colors ${
               selectedCategory === cat.id ? 'text-delight-600 font-semibold' : 'text-gray-700'

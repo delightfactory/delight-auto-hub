@@ -1,7 +1,11 @@
 import { type Config } from "tailwindcss";
+import animate from 'tailwindcss-animate';
+import typography from '@tailwindcss/typography';
+import forms from '@tailwindcss/forms';
+import aspectRatio from '@tailwindcss/aspect-ratio';
 import { fontFamily } from "tailwindcss/defaultTheme";
 
-const config = {
+const config: Config = {
   darkMode: ["class"],
   content: [
     "./index.html",
@@ -153,12 +157,10 @@ const config = {
     },
   },
   plugins: [
-    require('tailwindcss-animate'),
-    require('@tailwindcss/typography'),
-    require('@tailwindcss/forms')({
-      strategy: 'class',
-    }),
-    require('@tailwindcss/aspect-ratio'),
+    animate,
+    typography,
+    forms({ strategy: 'class' }),
+    aspectRatio,
   ],
   safelist: [
     // احتياطي للحفاظ على فئات أنيمشن وموضع Dialog

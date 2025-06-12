@@ -13,8 +13,8 @@ interface CacheItem<T> {
 }
 
 class ApiCache {
-  private cache: Map<string, CacheItem<any>> = new Map();
-  private pendingRequests: Map<string, Promise<any>> = new Map();
+  private cache: Map<string, CacheItem<unknown>> = new Map();
+  private pendingRequests: Map<string, Promise<unknown>> = new Map();
   private defaultOptions: CacheOptions = {
     maxAge: 5 * 60 * 1000, // 5 دقائق
     staleWhileRevalidate: true,
@@ -36,19 +36,19 @@ class ApiCache {
     
     // إذا كانت البيانات موجودة وصالحة، إرجاعها فورًا
     if (cachedItem && now - cachedItem.timestamp < mergedOptions.maxAge) {
-      return cachedItem.data;
+      return cachedItem.data as T;
     }
     
     // إذا كان هناك طلب معلق لنفس الرابط، انتظر نتيجته
     if (this.pendingRequests.has(cacheKey)) {
-      return this.pendingRequests.get(cacheKey);
+      return this.pendingRequests.get(cacheKey)! as Promise<T>;
     }
     
     // إذا كانت البيانات موجودة ولكنها قديمة، وتم تفعيل staleWhileRevalidate
     if (cachedItem && mergedOptions.staleWhileRevalidate) {
       // إرسال طلب جديد في الخلفية وتحديث التخزين المؤقت
       this.fetchAndUpdateCache<T>(url, cacheKey, fetchOptions, mergedOptions);
-      return cachedItem.data;
+      return cachedItem.data as T;
     }
     
     // إذا لم تكن البيانات موجودة أو كانت قديمة، إرسال طلب جديد

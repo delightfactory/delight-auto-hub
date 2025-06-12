@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2 } from 'lucide-react';
+import { Loader2, MapPin } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface PickupSelectorProps {
   cityId: string;
@@ -16,6 +17,8 @@ interface Branch {
   address: string;
   city_id: string;
   is_active: boolean;
+  lat: number | null;
+  lng: number | null;
 }
 
 export default function PickupSelector({
@@ -64,6 +67,14 @@ export default function PickupSelector({
     }
   };
 
+  // فتح الخريطة للاتجاهات
+  const openDirections = (lat: number | null, lng: number | null) => {
+    if (lat && lng) {
+      const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+      window.open(url, '_blank');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-20">
@@ -91,6 +102,17 @@ export default function PickupSelector({
               <div className="font-medium">{branch.name}</div>
               <div className="text-sm text-gray-500">{branch.address}</div>
             </Label>
+            {branch.lat && branch.lng && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-blue-600 hover:text-blue-800"
+                onClick={() => openDirections(branch.lat, branch.lng)}
+              >
+                <MapPin className="h-4 w-4 mr-1" />
+                الاتجاهات
+              </Button>
+            )}
           </div>
         ))}
       </RadioGroup>

@@ -206,7 +206,9 @@ export const orderService = {
       .select(`
         *,
         customer:customers(*),
-        order_items(*)
+        order_items(*),
+        branch:branches!orders_pickup_branch_id_fkey(id, name, address),
+        pickup_point:pickup_points(id, name, address, type)
       `)
       .eq('id', id)
       .single();
@@ -216,19 +218,53 @@ export const orderService = {
       throw error;
     }
 
+    console.log('تم جلب الطلب:', order.id);
+    console.log('عناصر الطلب:', order.order_items?.length || 0);
+
     // جلب تفاصيل المنتجات وربطها بكل عنصر
-    const productIds = order.order_items?.map(item => item.product_id).filter(pid => pid) ?? [];
+    const productIds = order.order_items?.map(item => item.product_id).filter(pid => pid && typeof pid === 'string') ?? [];
+    console.log('معرفات المنتجات المطلوبة:', productIds);
+    
     if (productIds.length) {
-      const { data: products, error: productsError } = await supabase
-        .from('products')
-        .select('id, name, image_url')
-        .in('id', productIds);
-      if (!productsError && products) {
-        const prodMap = products.reduce((acc, p) => ({ ...acc, [p.id]: p }), {} as Record<string, any>);
-        order.order_items = order.order_items.map(item => ({
-          ...item,
-          product: prodMap[item.product_id] ?? null
-        }));
+      try {
+        // استخدام استعلام واحد لجلب جميع المنتجات دفعة واحدة
+        const { data: productsData, error: productsError } = await supabase
+          .from('products')
+          .select('id, name, images, product_code')
+          .in('id', productIds);
+        
+        if (productsError) {
+          console.error(`خطأ في جلب المنتجات:`, productsError);
+        } else if (productsData && productsData.length) {
+          console.log(`تم جلب ${productsData.length} منتج من أصل ${productIds.length} مطلوب`);
+          
+          // تحويل بيانات المنتجات إلى التنسيق المطلوب
+          const products = productsData.map(data => ({
+            id: data.id,
+            name: data.name,
+            product_code: data.product_code,
+            image_url: data.images && data.images.length > 0 ? data.images[0] : '/placeholder.svg'
+          }));
+          
+          // إنشاء خريطة للمنتجات بمعرفاتها
+          const prodMap = products.reduce((acc, p) => {
+            acc[p.id] = p;
+            return acc;
+          }, {} as Record<string, any>);
+          
+          // ربط المنتجات بعناصر الطلب
+          order.order_items = order.order_items.map(item => {
+            const product = item.product_id && prodMap[item.product_id] ? prodMap[item.product_id] : null;
+            console.log(`عنصر الطلب ${item.id}: المنتج=${item.product_id}, كود المنتج=${product?.product_code || 'غير متوفر'}`);
+            return {
+              ...item,
+              product
+            };
+          });
+        }
+      } catch (err) {
+        console.error("خطأ في معالجة بيانات المنتجات:", err);
+        // استمر في إرجاع الطلب حتى لو فشل جلب المنتجات
       }
     }
 

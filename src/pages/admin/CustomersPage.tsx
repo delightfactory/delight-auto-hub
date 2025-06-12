@@ -1,8 +1,8 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Search } from 'lucide-react';
 import { customerService } from '@/services/adminService';
+import { locationService } from '@/services/locationService';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -20,6 +20,16 @@ const CustomersPage = () => {
     queryKey: ['admin-customers'],
     queryFn: customerService.getCustomers,
     staleTime: 1000 * 60 * 5, // 5 minutes
+    refetchOnWindowFocus: true
+  });
+  
+  const {
+    data: cities = [],
+    isLoading: isCitiesLoading
+  } = useQuery({
+    queryKey: ['cities'],
+    queryFn: () => locationService.getCities(),
+    staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: true
   });
   
@@ -70,6 +80,8 @@ const CustomersPage = () => {
       <CustomerList 
         customers={filteredCustomers} 
         isLoading={isLoading}
+        isCitiesLoading={isCitiesLoading}
+        cities={cities}
         handleRoleUpdate={handleRoleUpdate}
         searchTerm={searchTerm}
       />

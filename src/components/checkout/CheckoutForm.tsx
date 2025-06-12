@@ -15,6 +15,9 @@ import { Badge } from "@/components/ui/badge";
 import ShippingForm from '@/components/shipping/ShippingForm';
 import ShippingSummary from '@/components/shipping/ShippingSummary';
 import FreeShippingIndicator from '@/components/shipping/FreeShippingIndicator';
+import DeliveryMethodSelector, { DeliveryMethod } from '@/components/shipping/DeliveryMethodSelector';
+import PickupSelector from '@/components/shipping/PickupSelector';
+import PickupPointSelector from '@/components/shipping/PickupPointSelector';
 import { supabase } from '@/integrations/supabase/client';
 
 interface FormData {
@@ -24,6 +27,9 @@ interface FormData {
   address: string;
   governorate: string;
   city: string;
+  deliveryMethod: DeliveryMethod;
+  selectedBranch: string;
+  selectedPickupPoint: string;
   paymentMethod: 'cod' | 'card';
   notes: string;
 }
@@ -47,13 +53,17 @@ const CheckoutForm: React.FC = () => {
 
   const [step, setStep] = useState<'shipping' | 'payment' | 'confirmation'>('shipping');
   const [formData, setFormData] = useState<FormData>({
-    name: '', email: '', phone: '', address: '', governorate: '', city: '', paymentMethod: 'cod', notes: ''
+    name: '', email: '', phone: '', address: '', governorate: '', city: '', 
+    deliveryMethod: 'shipping', selectedBranch: '', selectedPickupPoint: '',
+    paymentMethod: 'cod', notes: ''
   });
   const [loading, setLoading] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [shippingCost, setShippingCost] = useState(0);
   const [governorateName, setGovernorateName] = useState('');
   const [cityName, setCityName] = useState('');
+  const [hasBranches, setHasBranches] = useState(false);
+  const [hasPickupPoints, setHasPickupPoints] = useState(false);
 
   // التحقق من حالة تسجيل دخول المستخدم واسترجاع بياناته عند تحميل الصفحة
   useEffect(() => {
@@ -69,6 +79,8 @@ const CheckoutForm: React.FC = () => {
           const userData = await getCurrentUserData();
           
           if (userData) {
+            console.log('تم جلب بيانات المستخدم:', userData);
+            console.log('عنوان المستخدم:', userData.address);
             // تعيين بيانات المستخدم المسجل
             setFormData(prev => ({
               ...prev,
@@ -80,9 +92,20 @@ const CheckoutForm: React.FC = () => {
               city: userData.city || ''
             }));
             
-            // إذا كان لدى المستخدم محافظة محفوظة، نقوم بجلب اسمها
+            // إذا كان لدى المستخدم محافظة محفوظة، نجلب اسمها دون إعادة تعيين المدينة
             if (userData.governorate) {
-              handleGovernorateChange(userData.governorate);
+              try {
+                const { data: govData, error: govError } = await supabase
+                  .from('governorates')
+                  .select('name_ar')
+                  .eq('id', userData.governorate)
+                  .single();
+                if (!govError && govData) {
+                  setGovernorateName(govData.name_ar);
+                }
+              } catch (err) {
+                console.error('خطأ في جلب اسم المحافظة:', err);
+              }
             }
             
             // إذا كان لدى المستخدم مدينة محفوظة، نقوم بجلب اسمها وتكلفة الشحن
@@ -100,6 +123,9 @@ const CheckoutForm: React.FC = () => {
                 const fee = total >= FREE_SHIPPING_THRESHOLD ? 0 : cityData.delivery_fee;
                 setShippingCost(fee);
                 console.log(`تم تحميل بيانات المدينة: ${cityData.name_ar} بتكلفة شحن: ${fee}`);
+                
+                // التحقق من وجود فروع ونقاط استلام في هذه المدينة
+                checkAvailableDeliveryOptions(userData.city);
               }
             }
           }
@@ -114,10 +140,14 @@ const CheckoutForm: React.FC = () => {
     checkUserStatus();
   }, []);
 
-  // حساب الإجمالي مع الشحن
+  // حساب الإجمالي مع الشحن (إذا كانت طريقة التسليم هي الشحن)
   const totalWithShipping = useMemo(() => {
+    // إذا كانت طريقة التسليم هي الاستلام من فرع أو نقطة استلام، لا نضيف تكلفة الشحن
+    if (formData.deliveryMethod === 'branch' || formData.deliveryMethod === 'pickup_point') {
+      return total;
+    }
     return total + shippingCost;
-  }, [total, shippingCost]);
+  }, [total, shippingCost, formData.deliveryMethod]);
   
   // تحديث تكلفة الشحن عندما يتغير إجمالي السلة أو عند تغيير المدينة
   useEffect(() => {
@@ -137,7 +167,11 @@ const CheckoutForm: React.FC = () => {
         
         if (city) {
           // تطبيق الشحن المجاني إذا كان الإجمالي أكبر من الحد
-          const actualFee = total >= FREE_SHIPPING_THRESHOLD ? 0 : city.delivery_fee;
+          // أو إذا كانت طريقة التسليم هي الاستلام من فرع أو نقطة استلام
+          const actualFee = (total >= FREE_SHIPPING_THRESHOLD || 
+                            formData.deliveryMethod === 'branch' || 
+                            formData.deliveryMethod === 'pickup_point') 
+                            ? 0 : city.delivery_fee;
           setShippingCost(actualFee);
           
           console.log(`تم تحديث تكلفة الشحن تلقائياً: ${actualFee}`);
@@ -148,7 +182,7 @@ const CheckoutForm: React.FC = () => {
     };
     
     updateShippingCost();
-  }, [total, formData.city, FREE_SHIPPING_THRESHOLD]);
+  }, [total, formData.city, formData.deliveryMethod, FREE_SHIPPING_THRESHOLD]);
 
   const handleChange = useCallback(
     (field: keyof FormData) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -194,7 +228,10 @@ const CheckoutForm: React.FC = () => {
       // تحديث قيمة المدينة في formData
       setFormData(prev => ({
         ...prev,
-        city: cityId
+        city: cityId,
+        // إعادة تعيين الفرع ونقطة الاستلام عند تغيير المدينة
+        selectedBranch: '',
+        selectedPickupPoint: ''
       }));
       
       if (cityId) {
@@ -210,22 +247,110 @@ const CheckoutForm: React.FC = () => {
         if (city) {
           setCityName(city.name_ar);
           
-          // تحديد تكلفة الشحن بناءً على قيمة الطلب وحد الشحن المجاني
-          const actualFee = total >= FREE_SHIPPING_THRESHOLD ? 0 : (city.delivery_fee || fee);
+          // تحديد تكلفة الشحن بناءً على قيمة الطلب وحد الشحن المجاني وطريقة التسليم
+          const actualFee = (total >= FREE_SHIPPING_THRESHOLD || 
+                            formData.deliveryMethod === 'branch' || 
+                            formData.deliveryMethod === 'pickup_point') 
+                            ? 0 : (city.delivery_fee || fee);
           
           // تحديث تكلفة الشحن
           setShippingCost(actualFee);
           
           console.log(`تم تحديث تكلفة الشحن: ${actualFee} - المدينة: ${city.name_ar}`);
+          
+          // التحقق من وجود فروع ونقاط استلام في هذه المدينة
+          checkAvailableDeliveryOptions(cityId);
         }
       } else {
         setCityName('');
         setShippingCost(0); // إعادة تعيين تكلفة الشحن إلى صفر عند إلغاء اختيار المدينة
+        setHasBranches(false);
+        setHasPickupPoints(false);
       }
     } catch (error) {
       console.error('خطأ في الحصول على اسم المدينة:', error);
     }
-  }, [total, FREE_SHIPPING_THRESHOLD]);
+  }, [total, FREE_SHIPPING_THRESHOLD, formData.deliveryMethod]);
+  
+  // التحقق من وجود فروع ونقاط استلام في المدينة المختارة
+  const checkAvailableDeliveryOptions = useCallback(async (cityId: string) => {
+    if (!cityId) return;
+    
+    try {
+      // التحقق من وجود فروع
+      const { data: branchesData, error: branchesError } = await supabase
+        .from('branches')
+        .select('id')
+        .eq('city_id', cityId)
+        .eq('is_active', true);
+        
+      if (!branchesError) {
+        setHasBranches(branchesData && branchesData.length > 0);
+      }
+      
+      // التحقق من وجود نقاط استلام
+      const { data: pickupPointsData, error: pickupPointsError } = await supabase
+        .from('pickup_points')
+        .select('id')
+        .eq('city_id', cityId)
+        .eq('is_active', true);
+        
+      if (!pickupPointsError) {
+        setHasPickupPoints(pickupPointsData && pickupPointsData.length > 0);
+      }
+    } catch (error) {
+      console.error('خطأ في التحقق من خيارات التسليم المتاحة:', error);
+    }
+  }, []);
+
+  // التعامل مع تغيير طريقة التسليم
+  const handleDeliveryMethodChange = useCallback((method: DeliveryMethod) => {
+    setFormData(prev => ({
+      ...prev,
+      deliveryMethod: method
+    }));
+    
+    // إعادة حساب تكلفة الشحن عند تغيير طريقة التسليم
+    if (method === 'branch' || method === 'pickup_point') {
+      setShippingCost(0); // إلغاء تكلفة الشحن عند اختيار الاستلام الذاتي
+    } else if (formData.city) {
+      // إعادة حساب تكلفة الشحن للتوصيل المنزلي
+      const updateShippingCost = async () => {
+        try {
+          const { data: city, error } = await supabase
+            .from('cities')
+            .select('delivery_fee')
+            .eq('id', formData.city)
+            .single();
+            
+          if (!error && city) {
+            const actualFee = total >= FREE_SHIPPING_THRESHOLD ? 0 : city.delivery_fee;
+            setShippingCost(actualFee);
+          }
+        } catch (error) {
+          console.error('خطأ في تحديث تكلفة الشحن:', error);
+        }
+      };
+      
+      updateShippingCost();
+    }
+  }, [formData.city, total, FREE_SHIPPING_THRESHOLD]);
+  
+  // التعامل مع تغيير الفرع المختار
+  const handleBranchChange = useCallback((branchId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      selectedBranch: branchId
+    }));
+  }, []);
+  
+  // التعامل مع تغيير نقطة الاستلام المختارة
+  const handlePickupPointChange = useCallback((pickupPointId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      selectedPickupPoint: pickupPointId
+    }));
+  }, []);
 
   // التحقق من صحة النموذج
   const validateForm = useCallback(() => {
@@ -259,31 +384,41 @@ const CheckoutForm: React.FC = () => {
       return false;
     }
     
-    // التحقق من العنوان
-    if (!formData.address.trim()) {
+    // التحقق من المحافظة والمدينة
+    if (!formData.governorate || !formData.city) {
       toast({
         title: "خطأ في النموذج",
-        description: "يرجى إدخال العنوان",
+        description: "يرجى اختيار المحافظة والمدينة",
         variant: "destructive",
       });
       return false;
     }
     
-    // التحقق من المحافظة
-    if (!formData.governorate) {
+    // التحقق من العنوان إذا كانت طريقة التسليم هي الشحن
+    if (formData.deliveryMethod === 'shipping' && !formData.address.trim()) {
       toast({
         title: "خطأ في النموذج",
-        description: "يرجى اختيار المحافظة",
+        description: "يرجى إدخال العنوان للتوصيل المنزلي",
         variant: "destructive",
       });
       return false;
     }
     
-    // التحقق من المدينة
-    if (!formData.city) {
+    // التحقق من اختيار فرع إذا كانت طريقة التسليم هي الاستلام من فرع
+    if (formData.deliveryMethod === 'branch' && !formData.selectedBranch) {
       toast({
         title: "خطأ في النموذج",
-        description: "يرجى اختيار المدينة",
+        description: "يرجى اختيار فرع للاستلام",
+        variant: "destructive",
+      });
+      return false;
+    }
+    
+    // التحقق من اختيار نقطة استلام إذا كانت طريقة التسليم هي الاستلام من نقطة استلام
+    if (formData.deliveryMethod === 'pickup_point' && !formData.selectedPickupPoint) {
+      toast({
+        title: "خطأ في النموذج",
+        description: "يرجى اختيار نقطة استلام",
         variant: "destructive",
       });
       return false;
@@ -315,6 +450,19 @@ const CheckoutForm: React.FC = () => {
           });
         }
         
+        // إعداد بيانات إضافية حسب طريقة التسليم
+        const additionalOrderData: Record<string, any> = {};
+        
+        if (formData.deliveryMethod === 'branch') {
+          additionalOrderData.pickup_branch_id = formData.selectedBranch;
+          additionalOrderData.delivery_method = 'branch_pickup';
+        } else if (formData.deliveryMethod === 'pickup_point') {
+          additionalOrderData.pickup_point_id = formData.selectedPickupPoint;
+          additionalOrderData.delivery_method = 'pickup_point';
+        } else {
+          additionalOrderData.delivery_method = 'shipping';
+        }
+        
         // إرسال الطلب إلى قاعدة البيانات
         await placeOrder(
           // بيانات العميل
@@ -322,13 +470,14 @@ const CheckoutForm: React.FC = () => {
             name: formData.name,
             email: formData.email,
             phone: formData.phone,
-            address: formData.address,
+            address: formData.deliveryMethod === 'shipping' ? formData.address : '',
             city: formData.city
           },
           // بيانات الطلب
           {
             paymentMethod: formData.paymentMethod,
-            notes: formData.notes
+            notes: formData.notes,
+            ...additionalOrderData
           }
         );
         clearCart();
@@ -460,8 +609,59 @@ const CheckoutForm: React.FC = () => {
               
               <Separator className="my-2 sm:my-3" />
               
+              {/* اختيار طريقة التسليم */}
+              {formData.city && (
+                <div className="mb-4">
+                  <DeliveryMethodSelector
+                    selectedMethod={formData.deliveryMethod}
+                    onMethodChange={handleDeliveryMethodChange}
+                    cityId={formData.city}
+                    hasBranches={hasBranches}
+                    hasPickupPoints={hasPickupPoints}
+                  />
+                </div>
+              )}
+              
+              {/* عرض حقل العنوان فقط إذا كانت طريقة التسليم هي الشحن */}
+              {formData.deliveryMethod === 'shipping' && (
+                <label className="block mb-4">
+                  <span className="text-sm font-medium mb-1 block">العنوان التفصيلي</span>
+                  <Input 
+                    value={formData.address} 
+                    onChange={handleChange('address')} 
+                    placeholder="العنوان بالتفصيل" 
+                    className="h-9 sm:h-10 text-sm" 
+                    required 
+                  />
+                </label>
+              )}
+              
+              {/* عرض اختيار الفرع إذا كانت طريقة التسليم هي الاستلام من فرع */}
+              {formData.deliveryMethod === 'branch' && formData.city && (
+                <div className="mb-4">
+                  <PickupSelector
+                    cityId={formData.city}
+                    selectedBranch={formData.selectedBranch}
+                    onBranchChange={handleBranchChange}
+                  />
+                </div>
+              )}
+              
+              {/* عرض اختيار نقطة الاستلام إذا كانت طريقة التسليم هي الاستلام من نقطة استلام */}
+              {formData.deliveryMethod === 'pickup_point' && formData.city && (
+                <div className="mb-4">
+                  <PickupPointSelector
+                    cityId={formData.city}
+                    selectedPickupPoint={formData.selectedPickupPoint}
+                    onPickupPointChange={handlePickupPointChange}
+                  />
+                </div>
+              )}
+              
+              <Separator className="my-2 sm:my-3" />
+              
               {/* إضافة مؤشر الشحن المجاني */}
-              {total < FREE_SHIPPING_THRESHOLD && (
+              {formData.deliveryMethod === 'shipping' && total < FREE_SHIPPING_THRESHOLD && (
                 <div className="mb-3">
                   <FreeShippingIndicator currentTotal={total} threshold={FREE_SHIPPING_THRESHOLD} />
                 </div>
@@ -471,7 +671,7 @@ const CheckoutForm: React.FC = () => {
               <div className="mt-4">
                 <ShippingSummary 
                   subtotal={total}
-                  shippingCost={shippingCost}
+                  shippingCost={formData.deliveryMethod === 'shipping' ? shippingCost : 0}
                   governorateName={governorateName}
                   cityName={cityName}
                 />
@@ -589,6 +789,15 @@ const CheckoutForm: React.FC = () => {
             <h3 className="text-lg sm:text-xl font-semibold">شكراً لك!</h3>
             <p className="text-sm sm:text-base text-gray-600">تم استلام طلبك بنجاح.</p>
             <p className="text-xs sm:text-sm text-gray-500">سيتم التواصل معك قريباً لتأكيد الطلب.</p>
+            {/* عرض ملخص الشحن في صفحة التأكيد */}
+            <div className="mt-4 mb-4">
+              <ShippingSummary
+                subtotal={total}
+                shippingCost={formData.deliveryMethod === 'shipping' ? shippingCost : 0}
+                governorateName={governorateName}
+                cityName={cityName}
+              />
+            </div>
             <Button 
               onClick={finish} 
               className="w-full h-9 sm:h-10 text-xs sm:text-sm mt-2"

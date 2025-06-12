@@ -751,7 +751,7 @@ export type Database = {
           name: string;
           pickup_slots?: Json | null;
           type: string;
-          updated_at?: string[];
+          updated_at?: string;
         };
         Update: {
           address?: string | null;

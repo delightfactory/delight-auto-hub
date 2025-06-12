@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Json } from '@/integrations/supabase/types';
@@ -101,7 +101,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const { toast } = useToast();
 
   // Function to fetch user profile data
-  const fetchUserProfile = async (userId: string, userEmail: string) => {
+  const fetchUserProfile = useCallback(async (userId: string, userEmail: string) => {
     try {
       const { data, error } = await supabase
         .from('customers')
@@ -141,7 +141,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch (err) {
       console.error("Error in fetchUserProfile:", err);
     }
-  };
+  }, []);
 
   // Function to refresh session - can be called manually if needed
   const refreshSession = async () => {
@@ -202,7 +202,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [fetchUserProfile]);
   
   const signIn = async (email: string, password: string) => {
     setLoading(true);

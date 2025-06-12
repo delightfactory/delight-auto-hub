@@ -5,8 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2 } from 'lucide-react';
 import AdminLayout from '@/components/layouts/AdminLayout';
-import GovernoratesTable from '@/components/admin/GovernoratesTable';
-import CitiesTable from '@/components/admin/CitiesTable';
+import GovernoratesTable from '@/components/admin/shipping/GovernoratesTable';
+import CitiesTable from '@/components/admin/shipping/CitiesTable';
+import BranchesTable from '@/components/admin/shipping/BranchesTable';
+import PickupPointsTable from '@/components/admin/shipping/PickupPointsTable';
 import { supabase } from '@/integrations/supabase/client';
 
 export default function ShippingPage() {
@@ -111,6 +113,8 @@ export default function ShippingPage() {
         <TabsList className="mb-4">
           <TabsTrigger value="governorates">المحافظات</TabsTrigger>
           <TabsTrigger value="cities">المدن</TabsTrigger>
+          <TabsTrigger value="branches">الفروع</TabsTrigger>
+          <TabsTrigger value="pickup_points">نقاط الاستلام</TabsTrigger>
         </TabsList>
         
         <TabsContent value="governorates">
@@ -137,6 +141,34 @@ export default function ShippingPage() {
             </CardHeader>
             <CardContent>
               <CitiesTable />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="branches">
+          <Card>
+            <CardHeader>
+              <CardTitle>إدارة الفروع</CardTitle>
+              <CardDescription>
+                إضافة وتعديل وحذف فروع الشركة
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <BranchesTable />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="pickup_points">
+          <Card>
+            <CardHeader>
+              <CardTitle>إدارة نقاط الاستلام</CardTitle>
+              <CardDescription>
+                إضافة وتعديل وحذف نقاط الاستلام المتاحة للعملاء
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <PickupPointsTable />
             </CardContent>
           </Card>
         </TabsContent>

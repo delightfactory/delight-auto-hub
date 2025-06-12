@@ -46,7 +46,6 @@ export const loadFontsAsync = (fontUrls: string[]): void => {
       document.head.appendChild(style);
 
       // تحميل الخط باستخدام Font Loading API
-      // @ts-ignore
       document.fonts.load('1em AsyncFont').then(() => {
         document.documentElement.classList.add('fonts-loaded');
       });
@@ -72,8 +71,7 @@ export const loadFontsOnDemand = (fontUrls: string[]): void => {
   }
 
   // تحميل الخطوط عندما يكون المتصفح غير مشغول
-  if ('requestIdleCallback' in window) {
-    // @ts-ignore
+  if (window.requestIdleCallback) {
     window.requestIdleCallback(() => {
       loadFontsAsync(fontUrls);
     });

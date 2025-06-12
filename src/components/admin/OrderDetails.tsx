@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { orderService } from '@/services/adminService';
 import { Loader2, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { locationService } from '@/services/locationService';
+import { notificationService } from '@/services/notificationService';
 import {
   Select,
   SelectContent,
@@ -13,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Constants } from '@/integrations/supabase/types';
+import { translateOrderStatus } from '@/utils/orderStatus';
 
 const { order_status_expanded_enum: ORDER_STATUSES } = Constants.public.Enums;
 const [
@@ -36,7 +39,9 @@ interface OrderDetailsProps {
 const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onStatusUpdate }) => {
   const { toast } = useToast();
   const [updatingStatus, setUpdatingStatus] = useState(false);
-  
+  const [cityName, setCityName] = useState<string>('');
+  const [customerCityName, setCustomerCityName] = useState<string>('');
+
   const {
     data: order,
     isLoading,
@@ -46,6 +51,77 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onStatusUpdate }) 
     queryFn: () => orderService.getOrderById(orderId)
   });
   
+  // جلب اسم المدينة إذا كان هناك معرف مدينة
+  useEffect(() => {
+    const fetchCityName = async () => {
+      if (order?.shipping_city) {
+        try {
+          console.log('جاري جلب المدن...');
+          const cities = await locationService.getCities();
+          console.log('تم جلب المدن:', cities.length);
+          console.log('معرف المدينة المطلوب:', order.shipping_city);
+          console.log('نوع معرف المدينة:', typeof order.shipping_city);
+          
+          // محاولة العثور على المدينة بعدة طرق
+          let city = null;
+          
+          // 1. محاولة المطابقة المباشرة
+          city = cities.find(c => c.id === order.shipping_city);
+          
+          // 2. محاولة المطابقة بعد تحويل كلا المعرفين إلى نص
+          if (!city) {
+            city = cities.find(c => String(c.id) === String(order.shipping_city));
+          }
+          
+          // 3. محاولة المطابقة بعد تحويل المعرفين إلى أرقام إذا كانا أرقاماً
+          if (!city && !isNaN(Number(order.shipping_city))) {
+            city = cities.find(c => Number(c.id) === Number(order.shipping_city));
+          }
+          
+          if (city) {
+            console.log('تم العثور على المدينة:', city.name_ar, 'بمعرف:', city.id);
+            setCityName(city.name_ar);
+          } else {
+            console.log('لم يتم العثور على المدينة بالمعرف:', order.shipping_city);
+            console.log('جميع معرفات المدن المتاحة:', cities.map(c => c.id).join(', '));
+            
+            // إذا لم يتم العثور على المدينة، نضع قيمة افتراضية
+            setCityName('غير معروف');
+          }
+        } catch (error) {
+          console.error('خطأ في جلب اسم المدينة:', error);
+          setCityName('غير معروف');
+        }
+      }
+    };
+    
+    fetchCityName();
+  }, [order?.shipping_city]);
+
+  // جلب اسم المدينة الخاصة بالعميل
+  useEffect(() => {
+    const fetchCustomerCityName = async () => {
+      if (order?.customer?.city) {
+        try {
+          const cities = await locationService.getCities();
+          let custCity = cities.find(c => c.id === order.customer.city);
+          if (!custCity) {
+            custCity = cities.find(c => String(c.id) === String(order.customer.city));
+          }
+          if (custCity) {
+            setCustomerCityName(custCity.name_ar);
+          } else {
+            setCustomerCityName('غير معروف');
+          }
+        } catch (error) {
+          console.error('خطأ في جلب اسم مدينة العميل:', error);
+          setCustomerCityName('غير معروف');
+        }
+      }
+    };
+    fetchCustomerCityName();
+  }, [order?.customer?.city]);
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('en-US', {
@@ -73,31 +149,29 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onStatusUpdate }) 
     }
   };
   
-  const translateStatus = (status: string) => {
-    switch (status) {
-      case 'delivered':
-        return 'مكتمل';
-      case 'shipped':
-        return 'تم الشحن';
-      case 'paid':
-        return 'قيد المعالجة';
-      case 'pending':
-        return 'قيد الانتظار';
-      case 'cancelled':
-        return 'ملغي';
-      default:
-        return status;
-    }
-  };
-  
   const handleStatusChange = async (newStatus: string) => {
     setUpdatingStatus(true);
     try {
       await orderService.updateOrderStatus(orderId, newStatus);
       toast({
         title: "تم تحديث الحالة",
-        description: `تم تغيير حالة الطلب إلى "${translateStatus(newStatus)}"`
+        description: `تم تغيير حالة الطلب إلى "${translateOrderStatus(newStatus)}"`
       });
+      // إرسال إشعار للمستخدم بتحديث الحالة
+      try {
+        const shortId = orderId.slice(0, 8);
+        const statusAr = translateOrderStatus(newStatus);
+        await notificationService.sendNotification(
+          order?.customer?.id || '',
+          'order_status_updated',
+          'تحديث حالة الطلب',
+          `تم تغيير حالة طلبك رقم ${shortId} إلى "${statusAr}".`,
+          { orderId, status: newStatus },
+          1
+        );
+      } catch (notifErr) {
+        console.error('خطأ في إرسال إشعار تحديث الحالة:', notifErr);
+      }
       onStatusUpdate();
     } catch (error) {
       console.error("خطأ في تحديث حالة الطلب:", error);
@@ -134,6 +208,27 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onStatusUpdate }) 
       </div>
     );
   }
+
+  // تحديد طريقة التسليم بشكل صحيح
+  const getDeliveryMethodText = () => {
+    // التحقق من وجود delivery_method أولاً
+    if (order.delivery_method) {
+      switch (order.delivery_method) {
+        case 'shipping': return 'توصيل للمنزل';
+        case 'branch_pickup': return 'استلام من الفرع';
+        case 'pickup_point': return 'استلام من نقطة استلام';
+        default: return 'غير محدد';
+      }
+    }
+    
+    // إذا كان delivery_method غير موجود، نحاول تحديد الطريقة من البيانات الأخرى
+    if (order.pickup_branch_id) return 'استلام من الفرع';
+    if (order.pickup_point_id) return 'استلام من نقطة استلام';
+    if (order.shipping_address) return 'توصيل للمنزل';
+    
+    // إذا لم نتمكن من تحديد الطريقة، نعرض "غير محدد"
+    return 'غير محدد';
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -173,13 +268,68 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onStatusUpdate }) 
               <p className="font-medium">{formatDate(order.created_at)}</p>
             </div>
             <div>
-              <p className="text-gray-500">طريقة الدفع</p>
-              <p className="font-medium">{order.payment_method}</p>
+              <p className="text-gray-500">حالة الطلب</p>
+              <p className="font-medium inline-flex items-center">
+                <span className={`px-2 py-1 rounded-md text-xs font-medium mr-2 ${getStatusColor(order.status)}`}>
+                  {translateOrderStatus(order.status)}
+                </span>
+              </p>
             </div>
             <div>
-              <p className="text-gray-500">العنوان</p>
-              <p className="font-medium">{order.shipping_address}, {order.shipping_city}</p>
+              <p className="text-gray-500">آخر تحديث</p>
+              <p className="font-medium">{formatDate(order.updated_at)}</p>
             </div>
+            <div>
+              <p className="text-gray-500">طريقة الدفع</p>
+              <p className="font-medium">{order.payment_method === 'cod' ? 'الدفع عند الاستلام' : 'بطاقة ائتمان'}</p>
+            </div>
+            <div>
+              <p className="text-gray-500">طريقة التسليم</p>
+              <p className="font-medium">{getDeliveryMethodText()}</p>
+            </div>
+            {(order.delivery_method === 'shipping' || (!order.delivery_method && order.shipping_address)) && (
+              <div>
+                <p className="text-gray-500">العنوان</p>
+                <p className="font-medium">
+                  {order.shipping_address}
+                  {cityName ? `, ${cityName}` : order.shipping_city ? `, ${order.shipping_city}` : ''}
+                </p>
+              </div>
+            )}
+            {(order.delivery_method === 'branch_pickup' || (!order.delivery_method && order.pickup_branch_id)) && order.pickup_branch_id && (
+              <div>
+                <p className="text-gray-500">فرع الاستلام</p>
+                <p className="font-medium">{order.branch?.name || 'غير محدد'}</p>
+                <p className="text-sm text-gray-500">{order.branch?.address || ''}</p>
+              </div>
+            )}
+            {(order.delivery_method === 'pickup_point' || (!order.delivery_method && order.pickup_point_id)) && order.pickup_point_id && (
+              <div>
+                <p className="text-gray-500">نقطة الاستلام</p>
+                <p className="font-medium">{order.pickup_point?.name || 'غير محدد'}</p>
+                <p className="text-sm text-gray-500">{order.pickup_point?.address || ''}</p>
+                <p className="text-sm text-gray-500">النوع: {
+                  order.pickup_point?.type === 'locker' ? 'خزانة' :
+                  order.pickup_point?.type === 'partner' ? 'شريك' :
+                  order.pickup_point?.type === 'standard' ? 'قياسي' :
+                  order.pickup_point?.type === 'express' ? 'سريع' :
+                  order.pickup_point?.type === 'premium' ? 'مميز' :
+                  order.pickup_point?.type
+                }</p>
+              </div>
+            )}
+            {order.shipping_cost !== undefined && (
+              <div>
+                <p className="text-gray-500">تكلفة الشحن</p>
+                <p className="font-medium">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'EGP' }).format(order.shipping_cost)}</p>
+              </div>
+            )}
+            {order.created_at !== order.updated_at && (
+              <div>
+                <p className="text-gray-500">آخر تحديث</p>
+                <p className="font-medium">{formatDate(order.updated_at)}</p>
+              </div>
+            )}
           </div>
           {/* Customer Info */}
           <div className="space-y-4">
@@ -194,6 +344,14 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onStatusUpdate }) 
             <div>
               <p className="text-gray-500">الهاتف</p>
               <p className="font-medium">{order.customer?.phone || '-'}</p>
+            </div>
+            <div>
+              <p className="text-gray-500">عنوان العميل</p>
+              <p className="font-medium">{order.customer?.address || '-'}</p>
+            </div>
+            <div>
+              <p className="text-gray-500">المدينة</p>
+              <p className="font-medium">{customerCityName || '-'}</p>
             </div>
             {order.notes && (
               <div>
@@ -231,7 +389,21 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onStatusUpdate }) 
                       <Package className="h-10 w-10 text-gray-400" />
                     )}
                   </TableCell>
-                  <TableCell>{item.product_id || item.temp_product_code}</TableCell>
+                  <TableCell>
+                    {(() => {
+                      // طباعة معلومات المنتج للتصحيح
+                      console.log(`عرض منتج: ${item.product_id}`, item.product);
+                      if (item.product?.product_code) {
+                        console.log(`كود المنتج: ${item.product.product_code}`);
+                        return item.product.product_code;
+                      } else if (item.temp_product_code) {
+                        return item.temp_product_code;
+                      } else {
+                        return item.product_id;
+                      }
+                    })()
+                    }
+                  </TableCell>
                   <TableCell>{item.product?.name || item.product_name}</TableCell>
                   <TableCell>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'EGP' }).format(item.product_price)}</TableCell>
                   <TableCell>{item.quantity}</TableCell>
@@ -252,7 +424,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onStatusUpdate }) 
           </div>
           <div>
             <p className="text-gray-500">تكلفة الشحن</p>
-            <p>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'EGP' }).format(shippingCost)}</p>
+            <p>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'EGP' }).format(order.shipping_cost !== undefined ? order.shipping_cost : shippingCost)}</p>
           </div>
           <div>
             <p className="text-gray-500">الإجمالي الكلي</p>

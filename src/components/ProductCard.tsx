@@ -65,8 +65,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
       try {
         const favs = await WishlistService.getFavorites();
         setIsLiked(favs.includes(id));
-      } catch (e) {
-        console.error('Error fetching favorites:', e);
+      } catch (err: unknown) {
+        console.error('Error fetching favorites:', err);
+        const message = err instanceof Error ? err.message : String(err);
+        toast({ title: "حدث خطأ", description: message, variant: "destructive" });
       }
     })();
   }, [id]);
@@ -124,9 +126,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
         toast({ title: "تمت إزالة من المفضلة", description: `تمت إزالة ${name} من المفضلة.`, duration: 3000 });
       }
       setIsLiked(!isLiked);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error toggling favorite:', err);
-      toast({ title: "حدث خطأ", description: err.message, variant: "destructive" });
+      const message = err instanceof Error ? err.message : String(err);
+      toast({ title: "حدث خطأ", description: message, variant: "destructive" });
     }
   };
 

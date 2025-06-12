@@ -53,8 +53,7 @@ export const lazyLoadPage = (importFunc: () => Promise<any>) => {
  */
 export const preloadRoutes = (routes: string[]) => {
   // تنفيذ التحميل المسبق عندما يكون المتصفح غير مشغول
-  if ('requestIdleCallback' in window) {
-    // @ts-ignore
+  if (window.requestIdleCallback) {
     window.requestIdleCallback(() => {
       routes.forEach(route => {
         const link = document.createElement('link');

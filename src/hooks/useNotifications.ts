@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { notificationService, Notification, BroadcastNotification } from '@/services/notificationService';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,7 +13,7 @@ export const useNotifications = () => {
   const [loading, setLoading] = useState(false);
 
   // جلب الإشعارات
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     if (!user) return;
 
     setLoading(true);
@@ -32,7 +32,7 @@ export const useNotifications = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   // تحديد إشعار كمقروء
   const markAsRead = async (notificationId: string) => {
@@ -121,12 +121,12 @@ export const useNotifications = () => {
       supabase.removeChannel(channel);
       supabase.removeChannel(broadcastChannel);
     };
-  }, [user, toast]);
+  }, [user, toast, fetchNotifications]);
 
   // جلب الإشعارات عند تحميل المكون
   useEffect(() => {
     fetchNotifications();
-  }, [user]);
+  }, [fetchNotifications]);
 
   return {
     notifications,

@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { Constants } from '@/integrations/supabase/types';
+import { translateOrderStatus } from '@/utils/orderStatus';
 
 interface OrdersTabProps {
   orders: any[];
@@ -70,33 +71,6 @@ const getStatusIcon = (status: string) => {
       return <XCircle className="h-6 w-6 text-red-600" />;
     default:
       return null;
-  }
-};
-
-const translateStatus = (status: string) => {
-  switch (status) {
-    case DELIVERED:
-      return 'مكتمل';
-    case SHIPPED:
-      return 'تم الشحن';
-    case OUT_FOR_DELIVERY:
-      return 'في الطريق للتسليم';
-    case FAILED_DELIVERY:
-      return 'فشل التسليم';
-    case READY_FOR_SHIPPING:
-      return 'جاهز للشحن';
-    case READY_FOR_PICKUP:
-      return 'جاهز للاستلام';
-    case PROCESSING:
-      return 'قيد المعالجة';
-    case PAID:
-      return 'تم الدفع';
-    case PENDING:
-      return 'قيد الانتظار';
-    case CANCELLED:
-      return 'ملغي';
-    default:
-      return status;
   }
 };
 
@@ -211,7 +185,7 @@ const OrdersTab: React.FC<OrdersTabProps> = ({ orders, loadingOrders, refreshOrd
                         className={`inline-flex items-center px-3 py-1 text-xs rounded-full font-medium ${getStatusColor(order.status)}`}
                       >
                         {getStatusIcon(order.status)}
-                        {translateStatus(order.status)}
+                        {translateOrderStatus(order.status)}
                       </span>
                     </div>
                   </div>
@@ -276,7 +250,7 @@ const OrdersTab: React.FC<OrdersTabProps> = ({ orders, loadingOrders, refreshOrd
                             <h4 className="font-medium text-gray-700 dark:text-gray-300">
                               حالة الطلب: 
                               <span className="font-normal">
-                                {translateStatus(order.status)}
+                                {translateOrderStatus(order.status)}
                               </span>
                             </h4>
                           </div>

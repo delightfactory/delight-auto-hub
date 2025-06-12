@@ -1,13 +1,15 @@
-
 import React from 'react';
 import { Table, TableBody } from "@/components/ui/table";
 import { FileX, Loader2 } from 'lucide-react';
 import CustomerListHeader from './CustomerListHeader';
 import CustomerListItem from './CustomerListItem';
+import type { City } from '@/types/db';
 
 interface CustomerListProps {
   customers: any[];
   isLoading: boolean;
+  isCitiesLoading: boolean;
+  cities: City[];
   handleRoleUpdate: (id: string, role: 'admin' | 'customer') => Promise<void>;
   searchTerm: string;
 }
@@ -15,6 +17,8 @@ interface CustomerListProps {
 const CustomerList: React.FC<CustomerListProps> = ({ 
   customers,
   isLoading,
+  isCitiesLoading,
+  cities,
   handleRoleUpdate,
   searchTerm
 }) => {
@@ -52,6 +56,8 @@ const CustomerList: React.FC<CustomerListProps> = ({
             <CustomerListItem 
               key={customer.id} 
               customer={customer} 
+              isCitiesLoading={isCitiesLoading}
+              cities={cities}
               handleRoleUpdate={handleRoleUpdate}
             />
           ))}

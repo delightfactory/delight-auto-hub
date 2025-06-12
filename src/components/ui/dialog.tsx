@@ -42,9 +42,14 @@ const DialogContent = React.forwardRef<
       style={{ maxHeight: '90vh', overflowY: 'auto' }}
       // onPointerDownOutside تم إزالته لاستعادة سلوك الإغلاق الافتراضي عند النقر خارج الحوار
       {...props}
+      aria-describedby={props['aria-describedby'] || 'dialog-description'}
     >
       {/* Hidden title for accessibility */}
       <DialogPrimitive.Title className="sr-only">Dialog</DialogPrimitive.Title>
+      {/* Hidden description for accessibility */}
+      <DialogPrimitive.Description id="dialog-description" className="sr-only">
+        محتوى الحوار
+      </DialogPrimitive.Description>
       {children}
       <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
         <X className="h-4 w-4" />

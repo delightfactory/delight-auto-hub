@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Shield, ShoppingBag, Crown, User, Mail, Phone } from 'lucide-react';
+import { Shield, ShoppingBag, Crown, User, Mail, Phone, Loader2 } from 'lucide-react';
 import { TableRow, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,13 +17,16 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { formatDate, translateRole } from '@/lib/utils';
+import type { City } from '@/types/db';
 
 interface CustomerListItemProps {
   customer: any;
+  isCitiesLoading: boolean;
+  cities: City[];
   handleRoleUpdate: (id: string, role: 'admin' | 'customer') => Promise<void>;
 }
 
-const CustomerListItem: React.FC<CustomerListItemProps> = ({ customer, handleRoleUpdate }) => {
+const CustomerListItem: React.FC<CustomerListItemProps> = ({ customer, isCitiesLoading, cities, handleRoleUpdate }) => {
   // إضافة حالة للتحكم في فتح/إغلاق الحوار
   const [dialogOpen, setDialogOpen] = useState(false);
   
@@ -36,6 +38,11 @@ const CustomerListItem: React.FC<CustomerListItemProps> = ({ customer, handleRol
     );
     setDialogOpen(false);
   };
+
+  const cityName = !isCitiesLoading && customer.city
+    ? cities.find(c => c.id === customer.city)?.name_ar || null
+    : null;
+
   return (
     <TableRow>
       <TableCell>
@@ -66,9 +73,11 @@ const CustomerListItem: React.FC<CustomerListItemProps> = ({ customer, handleRol
         </div>
       </TableCell>
       <TableCell>
-        {customer.city ? (
+        {isCitiesLoading ? (
+          <Loader2 className="h-4 w-4 animate-spin text-gray-500" />
+        ) : cityName ? (
           <Badge variant="outline" className="font-normal">
-            {customer.city}
+            {cityName}
           </Badge>
         ) : (
           <span className="text-gray-400">-</span>

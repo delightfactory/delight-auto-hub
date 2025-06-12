@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { notificationService } from './notificationService';
 
 interface CustomerData {
   name: string;
@@ -11,6 +12,9 @@ interface CustomerData {
 interface OrderData {
   paymentMethod: string;
   notes?: string;
+  delivery_method?: 'shipping' | 'branch_pickup' | 'pickup_point';
+  pickup_branch_id?: string;
+  pickup_point_id?: string;
 }
 
 export const placeOrder = async (customerData: CustomerData, orderData: OrderData) => {
@@ -27,7 +31,9 @@ export const placeOrder = async (customerData: CustomerData, orderData: OrderDat
     console.log('User authenticated:', user.id);
 
     // Validate input data
-    if (!customerData.name || !customerData.email || !customerData.phone || !customerData.address || !customerData.city) {
+    if (!customerData.name || !customerData.email || !customerData.phone || 
+        (orderData.delivery_method === 'shipping' && !customerData.address) || 
+        !customerData.city) {
       throw new Error("جميع بيانات العميل مطلوبة");
     }
 
@@ -86,23 +92,55 @@ export const placeOrder = async (customerData: CustomerData, orderData: OrderDat
     
     // حساب السعر الإجمالي عددياً
     const numericTotal = parseInt(cartItems.total?.replace(/\D/g, '')) || 0;
-    const shippingCost = 15;
+    
+    // جلب تكلفة الشحن للمدينة المختارة
+    let shippingCost = 0;
+    
+    // إذا كانت طريقة التسليم هي الشحن، نقوم بجلب تكلفة الشحن للمدينة
+    if (orderData.delivery_method === 'shipping' || !orderData.delivery_method) {
+      const { data: cityData, error: cityError } = await supabase
+        .from('cities')
+        .select('delivery_fee')
+        .eq('id', customerData.city)
+        .single();
+      
+      if (cityError) {
+        console.error("خطأ في جلب تكلفة الشحن للمدينة:", cityError);
+        // استخدام القيمة الافتراضية في حالة الخطأ
+        shippingCost = 0;
+      } else if (cityData) {
+        // التحقق من حد الشحن المجاني
+        const FREE_SHIPPING_THRESHOLD = 1000;
+        shippingCost = numericTotal >= FREE_SHIPPING_THRESHOLD ? 0 : cityData.delivery_fee;
+      }
+    }
+    
     const finalTotal = numericTotal + shippingCost;
     
-    console.log('Order total calculated:', finalTotal);
+    console.log('Order total calculated:', finalTotal, 'with shipping cost:', shippingCost);
     
     // 2. إنشاء الطلب
+    const orderPayload = {
+      customer_id: customerRecord.id,
+      total_amount: finalTotal,
+      status: 'pending',
+      pickup_branch_id: orderData.pickup_branch_id || null,
+      pickup_point_id: orderData.pickup_point_id || null,
+      payment_method: orderData.paymentMethod,
+      shipping_address: customerData.address,
+      shipping_city: customerData.city,
+      notes: orderData.notes || '',
+      shipping_cost: shippingCost
+    };
+    
+    // إذا كانت طريقة التسليم هي الاستلام الذاتي، نقوم بتعديل حالة الطلب
+    if (orderData.delivery_method === 'branch_pickup' || orderData.delivery_method === 'pickup_point') {
+      orderPayload.status = 'processing'; // تغيير الحالة إلى قيد المعالجة مباشرة
+    }
+    
     const { data: order, error: orderError } = await supabase
       .from('orders')
-      .insert({
-        customer_id: customerRecord.id,
-        total_amount: finalTotal,
-        status: 'pending',
-        payment_method: orderData.paymentMethod,
-        shipping_address: customerData.address,
-        shipping_city: customerData.city,
-        notes: orderData.notes || null
-      })
+      .insert(orderPayload)
       .select()
       .single();
 
@@ -147,6 +185,31 @@ export const placeOrder = async (customerData: CustomerData, orderData: OrderDat
       console.warn('Error clearing cart from localStorage:', error);
     }
       
+    // إرسال إشعارات للمستخدم والإدمن عند إنشاء الطلب
+    try {
+      const shortId = order.id.slice(0, 8);
+      // إشعار للمستخدم
+      await notificationService.sendNotification(
+        user.id,
+        'order_created',
+        'تم استلام طلبك',
+        `شكراً لك! تم استلام طلبك رقم ${shortId} بنجاح. يمكنك متابعة حالة طلبك من صفحة طلباتي.`,
+        { orderId: order.id, status: order.status },
+        1
+      );
+      // إشعار للإدمن
+      await notificationService.sendBroadcastNotification(
+        'order_created',
+        'طلب جديد',
+        `تم إنشاء طلب جديد رقم ${shortId} من قبل ${customerData.name}.`,
+        'admin',
+        { orderId: order.id, customerId: user.id },
+        1
+      );
+    } catch (notifError) {
+      console.error('خطأ في إرسال إشعارات الطلب:', notifError);
+    }
+
     return {
       success: true,
       orderId: order.id,

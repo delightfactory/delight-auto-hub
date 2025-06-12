@@ -5,6 +5,7 @@ import { Banner } from '@/types/db';
 import { Loader2, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from '@/components/ui/use-toast';
+import { isExternal } from '@/utils/urlUtils';
 
 interface BannerCarouselProps {
   pageName: string;
@@ -20,22 +21,21 @@ const BannerCarousel: React.FC<BannerCarouselProps> = ({ pageName }) => {
       
       try {
         // استخدام وظيفة RPC للحصول على البانرات النشطة
-        const { data, error } = await supabase.rpc('get_active_banners', { page_name: pageName });
-        
-        if (error) {
-          console.error('خطأ في وظيفة RPC للبانرات:', error);
-          throw error;
+        const rpcResponse = await supabase.rpc('get_active_banners', { page_name: pageName });
+        if (rpcResponse.error) {
+          console.error('خطأ في وظيفة RPC للبانرات:', rpcResponse.error);
+          throw rpcResponse.error;
         }
-        
-        if (data && Array.isArray(data)) {
+        if (rpcResponse.data && Array.isArray(rpcResponse.data)) {
+          const data = rpcResponse.data as Banner[];
           console.log(`تم جلب ${data.length} بانر بنجاح`);
-          return data as Banner[];
+          return data;
         }
         
         // إذا لم يتم العثور على بيانات، نستخدم استعلام مباشر كحل بديل
         console.log('استخدام الاستعلام المباشر كحل بديل');
         const now = new Date().toISOString();
-        const { data: fallbackData, error: fallbackError } = await supabase
+        const fallbackResponse = await supabase
           .from('banners')
           .select('*')
           .or(`start_at.is.null,start_at.lte.${now}`)
@@ -43,13 +43,14 @@ const BannerCarousel: React.FC<BannerCarouselProps> = ({ pageName }) => {
           .eq('is_active', true)
           .order('display_order', { ascending: true });
         
-        if (fallbackError) {
-          console.error('خطأ في الاستعلام المباشر:', fallbackError);
-          throw fallbackError;
+        if (fallbackResponse.error) {
+          console.error('خطأ في الاستعلام المباشر:', fallbackResponse.error);
+          throw fallbackResponse.error;
         }
         
-        console.log(`تم جلب ${fallbackData?.length || 0} بانر بنجاح من الاستعلام المباشر`);
-        return fallbackData as Banner[];
+        const fallbackData = fallbackResponse.data as Banner[];
+        console.log(`تم جلب ${fallbackData.length} بانر بنجاح من الاستعلام المباشر`);
+        return fallbackData;
       } catch (err) {
         console.error('خطأ أثناء جلب البانرات:', err);
         toast({
@@ -152,8 +153,9 @@ const BannerCarousel: React.FC<BannerCarouselProps> = ({ pageName }) => {
 
   // إعادة ضبط current إذا تغيرت قائمة البنرات المفلترة
   useEffect(() => {
-    if (current >= filteredBanners.length) setCurrent(0);
-  }, [filteredBanners]);
+    if (filteredBanners.length === 0) return;
+    setCurrent(prev => prev % filteredBanners.length);
+  }, [filteredBanners.length]);
 
   useEffect(() => {
     if (!filteredBanners.length) return;
@@ -178,17 +180,6 @@ const BannerCarousel: React.FC<BannerCarouselProps> = ({ pageName }) => {
       container.scrollTo({ left, behavior: 'smooth' });
     }
   }, [current]);
-
-  // Helper to check if URL is external (different origin)
-  const isExternal = (url?: string): boolean => {
-    if (!url) return false;
-    try {
-      const link = new URL(url, window.location.origin);
-      return link.origin !== window.location.origin;
-    } catch {
-      return false;
-    }
-  };
 
   // إظهار حالة التحميل
   if (isLoading) {

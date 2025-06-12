@@ -41,8 +41,7 @@ export const lazyLoadResources = () => {
   // تأجيل تحميل الخطوط
   const lazyLoadFonts = () => {
     // تحميل الخطوط بعد تحميل المحتوى الأساسي
-    if ('requestIdleCallback' in window) {
-      // @ts-ignore
+    if (window.requestIdleCallback) {
       window.requestIdleCallback(() => {
         document.querySelectorAll('link[data-font]').forEach(link => {
           if (link instanceof HTMLLinkElement) {
@@ -66,8 +65,7 @@ export const lazyLoadResources = () => {
 
   // تأجيل تحميل الأكواد غير الضرورية
   const lazyLoadScripts = () => {
-    if ('requestIdleCallback' in window) {
-      // @ts-ignore
+    if (window.requestIdleCallback) {
       window.requestIdleCallback(() => {
         document.querySelectorAll('script[data-src]').forEach(script => {
           if (script instanceof HTMLScriptElement) {
@@ -111,8 +109,7 @@ export const prefetchRoutes = (routes: string[]) => {
   if (typeof window === 'undefined') return;
 
   // تحميل مسبق للصفحات عندما يكون المتصفح غير مشغول
-  if ('requestIdleCallback' in window) {
-    // @ts-ignore
+  if (window.requestIdleCallback) {
     window.requestIdleCallback(() => {
       routes.forEach(route => {
         const link = document.createElement('link');
@@ -144,8 +141,7 @@ export const prefetchImages = (imageUrls: string[]) => {
   if (typeof window === 'undefined') return;
 
   // تحميل مسبق للصور عندما يكون المتصفح غير مشغول
-  if ('requestIdleCallback' in window) {
-    // @ts-ignore
+  if (window.requestIdleCallback) {
     window.requestIdleCallback(() => {
       imageUrls.forEach(imageUrl => {
         const link = document.createElement('link');

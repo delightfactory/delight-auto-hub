@@ -16,7 +16,7 @@ export function optimizeScroll(element: HTMLElement | null): void {
   
   // تفعيل تسريع GPU للتمرير على الأجهزة المحمولة
   if ('webkitOverflowScrolling' in document.documentElement.style) {
-    (element.style as any).webkitOverflowScrolling = 'touch';
+    (element.style as CSSStyleDeclaration & { webkitOverflowScrolling?: string }).webkitOverflowScrolling = 'touch';
   }
 }
 

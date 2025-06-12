@@ -62,7 +62,7 @@ interface FormData {
 }
 
 const ProfilePage = () => {
-  const { user, loading, signOut, updateProfile } = useAuth();
+  const { user, loading, signOut, updateProfile, refreshSession } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("profile");
@@ -298,6 +298,9 @@ const ProfilePage = () => {
         throw result.error;
       }
       
+      // تحديث بيانات المستخدم في السياق لإعادة مزامنة النموذج
+      await refreshSession();
+      // عرض رسالة النجاح بعد التحديث
       toast({
         title: "تم تحديث الملف الشخصي",
         description: "تم حفظ التغييرات بنجاح",

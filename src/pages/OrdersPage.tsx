@@ -153,9 +153,37 @@ const OrdersPage: React.FC = () => {
                   <CardContent className="pt-6">
                     <div className="space-y-4">
                       <div>
-                        <h3 className="text-sm font-medium text-gray-500">تفاصيل الشحن</h3>
-                        <p className="mt-1">{order.shipping_address}، {order.shipping_city}</p>
+                        <h3 className="text-sm font-medium text-gray-500">طريقة التسليم</h3>
+                        <p className="mt-1">
+                          {order.delivery_method === 'shipping' && 'توصيل للمنزل'}
+                          {order.delivery_method === 'branch_pickup' && 'استلام من الفرع'}
+                          {order.delivery_method === 'pickup_point' && 'استلام من نقطة استلام'}
+                          {!order.delivery_method && 'توصيل للمنزل'}
+                        </p>
                       </div>
+
+                      {order.delivery_method === 'shipping' && (
+                        <div>
+                          <h3 className="text-sm font-medium text-gray-500">عنوان التوصيل</h3>
+                          <p className="mt-1">{order.shipping_address}، {order.shipping_city}</p>
+                        </div>
+                      )}
+                      
+                      {order.delivery_method === 'branch_pickup' && order.branch_id && (
+                        <div>
+                          <h3 className="text-sm font-medium text-gray-500">فرع الاستلام</h3>
+                          <p className="mt-1">{order.branch?.name || 'غير محدد'}</p>
+                          <p className="text-sm text-gray-500">{order.branch?.address || ''}</p>
+                        </div>
+                      )}
+                      
+                      {order.delivery_method === 'pickup_point' && order.pickup_point_id && (
+                        <div>
+                          <h3 className="text-sm font-medium text-gray-500">نقطة الاستلام</h3>
+                          <p className="mt-1">{order.pickup_point?.name || 'غير محدد'}</p>
+                          <p className="text-sm text-gray-500">{order.pickup_point?.address || ''}</p>
+                        </div>
+                      )}
                       
                       <div>
                         <h3 className="text-sm font-medium text-gray-500">طريقة الدفع</h3>

@@ -13,7 +13,7 @@ const MobileNavigation: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
   const location = useLocation();
   const { items } = useCart();
-  const { theme } = useTheme();
+  const { theme, toggleTheme } = useTheme();
   const { user } = useAuth();
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
   
@@ -206,7 +206,7 @@ const MobileNavigation: React.FC = () => {
                   </div>
                   <Switch
                     checked={theme === 'dark'}
-                    onCheckedChange={() => useTheme().toggleTheme()}
+                    onCheckedChange={toggleTheme}
                     className={`${
                       theme === 'dark' 
                         ? 'bg-delight-600 data-[state=checked]:bg-delight-400' 
