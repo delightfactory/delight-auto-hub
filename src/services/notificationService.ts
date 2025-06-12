@@ -81,13 +81,15 @@ export const notificationService = {
         )
       `)
       .eq('is_active', true)
-      .in('target_role', [userRole, 'all'])
-      .or(`expires_at.gt.${now},expires_at.is.null`)
       .order('priority', { ascending: false })
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return broadcastData as BroadcastNotification[];
+    // تصفية على الخاصّية والمدة على جانب الكليينت لضمان ألا تصل إلا للإدمن أو 'all' وغير منتهية الصلاحية
+    return (broadcastData as BroadcastNotification[]).filter(b =>
+      (b.target_role === userRole || b.target_role === 'all') &&
+      (b.expires_at === null || b.expires_at > now)
+    );
   },
 
   // تحديد إشعار كمقروء
