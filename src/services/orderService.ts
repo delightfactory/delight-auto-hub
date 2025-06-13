@@ -197,15 +197,31 @@ export const placeOrder = async (customerData: CustomerData, orderData: OrderDat
         { orderId: order.id, status: order.status },
         1
       );
-      // إشعار للإدمن
-      await notificationService.sendBroadcastNotification(
-        'order_created',
-        'طلب جديد',
-        `تم إنشاء طلب جديد رقم ${shortId} من قبل ${customerData.name}.`,
-        'admin',
-        { orderId: order.id, customerId: user.id },
-        1
-      );
+      // إشعار للإدمن: إرسال إشعارات مباشرة لكل مستخدم دوره admin
+      try {
+        const { data: admins, error: fetchAdminsError } = await supabase
+          .from('customers')
+          .select('id')
+          .eq('role', 'admin');
+        if (fetchAdminsError) {
+          console.error('خطأ في جلب مستخدمي الإدمن:', fetchAdminsError);
+        } else {
+          await Promise.all(
+            (admins || []).map(admin =>
+              notificationService.sendNotification(
+                admin.id,
+                'order_created',
+                'طلب جديد',
+                `تم إنشاء طلب جديد رقم ${shortId} من قبل ${customerData.name}.`,
+                { orderId: order.id, customerId: user.id },
+                1
+              )
+            )
+          );
+        }
+      } catch (notifError) {
+        console.error('خطأ في إرسال إشعارات الإدمن:', notifError);
+      }
     } catch (notifError) {
       console.error('خطأ في إرسال إشعارات الطلب:', notifError);
     }

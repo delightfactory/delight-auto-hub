@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { locationService } from '@/services/locationService';
 import { notificationService } from '@/services/notificationService';
+import { supabase } from '@/integrations/supabase/client';
 import {
   Select,
   SelectContent,
@@ -161,14 +162,17 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onStatusUpdate }) 
       try {
         const shortId = orderId.slice(0, 8);
         const statusAr = translateOrderStatus(newStatus);
+        const targetUserId = order?.customer?.user_id || order?.customer?.id || '';
+        // إشعار للعميل صاحب الطلب فقط
         await notificationService.sendNotification(
-          order?.customer?.id || '',
+          targetUserId,
           'order_status_updated',
           'تحديث حالة الطلب',
           `تم تغيير حالة طلبك رقم ${shortId} إلى "${statusAr}".`,
           { orderId, status: newStatus },
           1
         );
+        // تم إزالة إرسال الإشعارات للمستخدمين الذين لديهم دور 'admin'
       } catch (notifErr) {
         console.error('خطأ في إرسال إشعار تحديث الحالة:', notifErr);
       }

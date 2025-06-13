@@ -87,6 +87,8 @@ export const notificationService = {
     if (error) throw error;
     // تصفية على الخاصّية والمدة على جانب الكليينت لضمان ألا تصل إلا للإدمن أو 'all' وغير منتهية الصلاحية
     return (broadcastData as BroadcastNotification[]).filter(b =>
+      // استبعاد أي إشعار بُثّ خاص بتحديث حالة الطلب
+      b.notification_types.name !== 'order_status_updated' &&
       (b.target_role === userRole || b.target_role === 'all') &&
       (b.expires_at === null || b.expires_at > now)
     );
@@ -160,18 +162,35 @@ export const notificationService = {
     priority: number = 1,
     expiresAt?: string
   ) {
-    const { data: broadcastResult, error } = await supabase.rpc('send_broadcast_notification', {
-      p_type_name: typeName,
-      p_title: title,
-      p_message: message,
-      p_target_role: targetRole,
-      p_data: broadcastData,
-      p_priority: priority,
-      p_expires_at: expiresAt || null
-    });
-
-    if (error) throw error;
-    return broadcastResult;
+    // إدراج إشعار البث مباشرة في جدول broadcast_notifications
+    // جلب معرف نوع الإشعار
+    const { data: typeRec, error: typeError } = await supabase
+      .from('notification_types')
+      .select('id')
+      .eq('name', typeName)
+      .single();
+    if (typeError || !typeRec) {
+      console.error('sendBroadcastNotification: نوع الإشعار غير موجود', typeError);
+      return null;
+    }
+    // إدراج سجل في broadcast_notifications
+    const { data: inserted, error: insertError } = await supabase
+      .from('broadcast_notifications')
+      .insert([{
+        type_id: typeRec.id,
+        title,
+        message,
+        data: broadcastData,
+        target_role: targetRole,
+        priority,
+        expires_at: expiresAt || null
+      }])
+      .select();
+    if (insertError) {
+      console.error('sendBroadcastNotification: خطأ في إدراج إشعار البث', insertError);
+      return null;
+    }
+    return inserted;
   },
 
   // جلب أنواع الإشعارات
