@@ -25,6 +25,12 @@ export interface Product {
     depth?: number;
     unit?: string;
   };
+  points_earned?: number;
+  points_required?: number;
+  cave_enabled?: boolean;
+  cave_price?: number;
+  cave_required_points?: number;
+  cave_max_quantity?: number;
 }
 
 export type OrderStatus =

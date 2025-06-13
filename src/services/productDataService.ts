@@ -29,6 +29,12 @@ export interface ProductDisplay {
     depth?: number;
     unit?: string;
   };
+  points_earned?: number;
+  points_required?: number;
+  cave_enabled?: boolean;
+  cave_price?: number;
+  cave_required_points?: number;
+  cave_max_quantity?: number;
 }
 
 // تحويل بيانات المنتج من قاعدة البيانات إلى تنسيق العرض
@@ -59,6 +65,12 @@ const transformProductToDisplay = (product: Product): ProductDisplay => {
     country_of_origin: product.country_of_origin || undefined,
     video_url: product.video_url || undefined,
     dimensions: product.dimensions,
+    points_earned: product.points_earned ?? undefined,
+    points_required: product.points_required ?? undefined,
+    cave_enabled: product.cave_enabled ?? false,
+    cave_price: product.cave_price ?? undefined,
+    cave_required_points: product.cave_required_points ?? undefined,
+    cave_max_quantity: product.cave_max_quantity ?? undefined,
   };
 };
 

@@ -47,6 +47,12 @@ const productSchema = z.object({
   images: z.array(z.string()).optional(),
   gallery_images: z.array(z.string().url()).optional(),
   specifications: z.array(z.string()).optional(),
+  points_earned: z.coerce.number().min(0, 'يجب أن تكون النقاط المكتسبة عددًا موجبًا').optional().nullable(),
+  points_required: z.coerce.number().min(0, 'يجب أن تكون النقاط المطلوبة عددًا موجبًا').optional().nullable(),
+  cave_enabled: z.boolean().default(false),
+  cave_price: z.coerce.number().min(0, 'يجب أن يكون سعر المغارة عددًا موجبًا').optional().nullable(),
+  cave_required_points: z.coerce.number().min(0, 'يجب أن تكون نقاط المغارة المطلوبة عددًا موجبًا').optional().nullable(),
+  cave_max_quantity: z.coerce.number().min(0, 'يجب أن تكون الكمية القصوى للمغارة عددًا موجبًا').optional().nullable(),
 });
 
 type ProductFormValues = z.infer<typeof productSchema>;
@@ -79,15 +85,21 @@ const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit, onCanc
       country_of_origin: initialData?.country_of_origin || '',
       video_url: initialData?.video_url || '',
       price: initialData?.price || 0,
-      discount_price: initialData?.discount_price || null,
+      discount_price: initialData?.discount_price ?? undefined,
       stock: initialData?.stock || 0,
-      category: initialData?.category || null,
+      category: initialData?.category ?? undefined,
       is_featured: initialData?.is_featured || false,
       is_new: initialData?.is_new || false,
       features: initialData?.features || [],
       images: initialData?.images || [],
       gallery_images: initialData?.gallery_images || [],
       specifications: initialData?.specifications || [],
+      points_earned: initialData?.points_earned ?? undefined,
+      points_required: initialData?.points_required ?? undefined,
+      cave_enabled: initialData?.cave_enabled ?? false,
+      cave_price: initialData?.cave_price ?? undefined,
+      cave_required_points: initialData?.cave_required_points ?? undefined,
+      cave_max_quantity: initialData?.cave_max_quantity ?? undefined,
     }
   });
   
@@ -383,10 +395,10 @@ const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit, onCanc
                                 placeholder="0"
                                 {...field}
                                 onChange={(e) => {
-                                  const val = e.target.value ? Number(e.target.value) : null;
+                                  const val = e.target.value ? Number(e.target.value) : undefined;
                                   field.onChange(val);
                                 }}
-                                value={field.value === null ? '' : field.value}
+                                value={field.value === undefined ? '' : field.value}
                               />
                               <div className="absolute inset-y-0 left-0 flex items-center px-3 pointer-events-none text-gray-500">
                                 ر.س
@@ -427,7 +439,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit, onCanc
                             <select 
                               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus:ring-1 focus:ring-ring focus:outline-none focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                               value={field.value || ""}
-                              onChange={(e) => field.onChange(e.target.value || null)}
+                              onChange={(e) => field.onChange(e.target.value || undefined)}
                             >
                               <option value="">اختر الفئة</option>
                               {loadingCategories ? (
@@ -617,6 +629,139 @@ const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit, onCanc
                             سيتم وضع علامة "جديد" على المنتج
                           </FormDescription>
                         </div>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="points_earned"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>نقاط مكتسبة</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="0"
+                            {...field}
+                            onChange={(e) => {
+                              const val = e.target.value ? Number(e.target.value) : undefined;
+                              field.onChange(val);
+                            }}
+                            value={field.value === undefined ? '' : field.value}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="points_required"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>نقاط مطلوبة</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="0"
+                            {...field}
+                            onChange={(e) => {
+                              const val = e.target.value ? Number(e.target.value) : undefined;
+                              field.onChange(val);
+                            }}
+                            value={field.value === undefined ? '' : field.value}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="cave_enabled"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={(checked) => field.onChange(checked)}
+                          />
+                        </FormControl>
+                        <FormLabel className="!ml-2">تفعيل المغارة</FormLabel>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="cave_price"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>سعر المغارة (اختياري)</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Input
+                              type="number"
+                              placeholder="0"
+                              {...field}
+                              onChange={(e) => {
+                                const val = e.target.value ? Number(e.target.value) : undefined;
+                                field.onChange(val);
+                              }}
+                              value={field.value === undefined ? '' : field.value}
+                            />
+                            <div className="absolute inset-y-0 left-0 flex items-center px-3 pointer-events-none text-gray-500">
+                              ر.س
+                            </div>
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="cave_required_points"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>نقاط مقابل المغارة (اختياري)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="0"
+                            {...field}
+                            onChange={(e) => {
+                              const val = e.target.value ? Number(e.target.value) : undefined;
+                              field.onChange(val);
+                            }}
+                            value={field.value === undefined ? '' : field.value}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="cave_max_quantity"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>أقصى كمية للمغارة (اختياري)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="0"
+                            {...field}
+                            onChange={(e) => field.onChange(Number(e.target.value))}
+                          />
+                        </FormControl>
+                        <FormMessage />
                       </FormItem>
                     )}
                   />

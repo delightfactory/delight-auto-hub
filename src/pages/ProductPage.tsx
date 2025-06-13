@@ -524,6 +524,38 @@ const ProductPage: React.FC = () => {
                 <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-sm md:text-base">
                   {product.fullDescription || product.description}
                 </p>
+                
+                {(product.points_earned != null || product.points_required != null || product.cave_enabled) && (
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {product.points_earned != null && (
+                      <Badge variant="outline" className="bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
+                        اكسب {product.points_earned} نقطة
+                      </Badge>
+                    )}
+                    {product.points_required != null && (
+                      <Badge variant="outline" className="bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+                        احصل عليه بـ {product.points_required} نقطة
+                      </Badge>
+                    )}
+                    {product.cave_enabled && (
+                      <div className="border border-gray-200 rounded-lg p-3 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800/50 dark:to-gray-900/50">
+                        <h4 className="font-semibold mb-2">معلومات المغارة</h4>
+                        <div className="text-sm space-y-1">
+                          {product.cave_price != null && (
+                            <div>سعر المغارة: <span className="font-medium">{product.cave_price}</span> ج.م</div>
+                          )}
+                          {product.cave_required_points != null && (
+                            <div>نقاط المغارة المطلوبة: <span className="font-medium">{product.cave_required_points}</span></div>
+                          )}
+                          {product.cave_max_quantity != null && (
+                            <div>أقصى كمية متاحة: <span className="font-medium">{product.cave_max_quantity}</span></div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+                
               </div>
               
               {/* Pricing Section - Mobile Version */}

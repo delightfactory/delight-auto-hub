@@ -202,6 +202,12 @@ const ProductsPage = () => {
                     <TableHead>رمز المنتج</TableHead>
                     <TableHead>الوصف</TableHead>
                     <TableHead>السعر</TableHead>
+                    <TableHead>نقاط مكتسبة</TableHead>
+                    <TableHead>نقاط مطلوبة</TableHead>
+                    <TableHead>مغارة</TableHead>
+                    <TableHead>سعر المغارة</TableHead>
+                    <TableHead>نقاط مغارة</TableHead>
+                    <TableHead>أقصى كمية</TableHead>
                     <TableHead>المخزون</TableHead>
                     <TableHead>الحالة</TableHead>
                     <TableHead className="text-left">الإجراءات</TableHead>
@@ -240,26 +246,20 @@ const ProductsPage = () => {
                           <span>{product.price} جنيه</span>
                         )}
                       </TableCell>
+                      <TableCell className="text-gray-600">{product.points_earned ?? '-'}</TableCell>
+                      <TableCell className="text-gray-600">{product.points_required ?? '-'}</TableCell>
+                      <TableCell className="text-gray-600">{product.cave_enabled ? 'نعم' : 'لا'}</TableCell>
+                      <TableCell className="text-gray-600">
+                        {product.cave_price != null ? `${product.cave_price} جنيه` : '-'}
+                      </TableCell>
+                      <TableCell className="text-gray-600">{product.cave_required_points ?? '-'}</TableCell>
+                      <TableCell className="text-gray-600">{product.cave_max_quantity ?? '-'}</TableCell>
                       <TableCell>
                         {product.stock > 0 ? (
                           <span className="text-green-600 font-medium">{product.stock}</span>
                         ) : (
                           <span className="text-red-600">نفذت الكمية</span>
                         )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          {product.is_featured && (
-                            <Badge variant="outline" className="bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-50">
-                              مميز
-                            </Badge>
-                          )}
-                          {product.is_new && (
-                            <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200 hover:bg-green-50">
-                              جديد
-                            </Badge>
-                          )}
-                        </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-2">

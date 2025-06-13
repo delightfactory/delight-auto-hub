@@ -1,269 +1,170 @@
+// صفحة "مصنع ديلايت" - النسخة المطورة بصريًا
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Factory, Truck, Award, CheckCircle, Map } from 'lucide-react';
+import { Factory, FlaskConical, PackageCheck, ShieldCheck, Boxes, Truck, Target, Lightbulb } from 'lucide-react';
 import SectionHeading from '@/components/SectionHeading';
-import { Button } from '@/components/ui/button';
 
 const FactoryPage: React.FC = () => {
   return (
-    <div className="pb-20">
+    <div className="overflow-hidden">
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-delight-800 to-blue-900 py-20 text-white">
-        <div className="container-custom">
+      <section className="relative py-28 bg-cover bg-center text-white shadow-inner" style={{ backgroundImage: "url('/images/factory-hero.jpg')" }}>
+        <div className="absolute inset-0 bg-black bg-opacity-60"></div>
+        <div className="relative z-10 container-custom text-center max-w-5xl mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            <h1 className="text-5xl md:text-6xl font-extrabold mb-6 leading-tight drop-shadow-lg">مصنع ديلايت</h1>
+            <p className="text-xl md:text-2xl text-white/90 leading-relaxed">
+              أكثر من مجرد مصنع... إنها منشأة مصرية فريدة تقود ثورة في عالم منتجات العناية بالسيارات منذ أكثر من 13 عامًا.
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Extended Overview */}
+      <section className="py-24 bg-white">
+        <div className="container-custom space-y-20 max-w-6xl mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
           >
             <SectionHeading
-              title="مصنعنا"
-              subtitle="مركز الإنتاج والابتكار في ديلايت"
-              center
-              className="text-white max-w-xl mx-auto"
+              title="رحلتنا الصناعية... من الطموح إلى الريادة"
+              subtitle="ديلايت... قصة مصنع وُلد من الحاجة وازدهر بالثقة والخبرة"
+            />
+            <div className="text-slate-700 space-y-10 text-lg leading-loose">
+              <div>
+                <h4 className="text-xl font-semibold mb-2 text-delight-700">البداية والتحدي</h4>
+                <p>في عام 2010، انطلقت ديلايت من قلب السوق المصري برؤية جريئة: تأسيس أول مصنع محلي متخصص بالكامل في إنتاج منتجات العناية بالسيارات بجودة تضاهي المستورد، وتُلبي احتياجات بيئتنا المناخية والسلوكية.</p>
+              </div>
+              <div>
+                <h4 className="text-xl font-semibold mb-2 text-delight-700">مرحلة التطوير</h4>
+                <p>بدأنا بمختبر صغير وبحث دائم، نجرب ونُعيد الصياغة، نختبر ونتعلم. لم ننتظر الدعم، بل صنعنا طريقنا بفضل العلم والخبرة والإصرار.</p>
+              </div>
+              <div>
+                <h4 className="text-xl font-semibold mb-2 text-delight-700">التحول الصناعي</h4>
+                <p>في 2013، وُلد المصنع الفعلي. بخط إنتاج صُمم داخليًا، بدأنا أول دفعة حقيقية من منتج مصري 100% للعناية الداخلية والخارجية بالسيارات. ومنذ ذلك الحين، ونحن في نمو مستمر، بخطوط تعبئة أوتوماتيكية، ومختبرات متطورة، ونظام رقابة صارم.</p>
+              </div>
+              <div>
+                <h4 className="text-xl font-semibold mb-2 text-delight-700">رسالة متجددة</h4>
+                <p>نحن لا نصنّع فقط. نحن نعيد تعريف جودة المنتج المصري، نُعلّم السوق أن التميّز ليس حكرًا على الخارج، وأن "صُنع في مصر" يمكن أن يكون فخرًا حقيقيًا.</p>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Mission & Vision */}
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7 }}
+            viewport={{ once: true }}
+            className="grid grid-cols-1 md:grid-cols-2 gap-12"
+          >
+            <div className="bg-white border border-delight-200 p-8 rounded-2xl shadow-md">
+              <div className="flex items-center gap-3 mb-4">
+                <Target className="w-6 h-6 text-delight-600" />
+                <h3 className="text-xl font-bold">مهمتنا</h3>
+              </div>
+              <p className="text-slate-700 leading-loose">
+                أن نُعيد تعريف معايير الجودة في سوق العناية بالسيارات في مصر والشرق الأوسط، من خلال تصنيع محلي متكامل، يعتمد على البحث والابتكار، ويخاطب المستخدم الحقيقي لا الافتراضي.
+              </p>
+            </div>
+            <div className="bg-white border border-yellow-200 p-8 rounded-2xl shadow-md">
+              <div className="flex items-center gap-3 mb-4">
+                <Lightbulb className="w-6 h-6 text-yellow-500" />
+                <h3 className="text-xl font-bold">رؤيتنا</h3>
+              </div>
+              <p className="text-slate-700 leading-loose">
+                أن نصبح المصنع المرجعي في العالم العربي لصناعة منتجات العناية بالسيارات، بمستوى احترافي لا يقل عن الشركات العالمية، وبروح مصرية واعية وفخورة.
+              </p>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            viewport={{ once: true }}
+            className="aspect-video bg-gray-200 rounded-xl overflow-hidden shadow-lg"
+          >
+            <img
+              src="/images/factory-inside.jpg"
+              alt="صورة من داخل المصنع"
+              className="w-full h-full object-cover"
             />
           </motion.div>
         </div>
       </section>
 
-      {/* Factory Overview */}
-      <section className="py-16">
-        <div className="container-custom">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <SectionHeading
-                title="تقنية حديثة بمعايير عالمية"
-                subtitle="نستخدم أحدث التقنيات والمعدات لضمان أعلى مستويات الجودة في منتجاتنا"
-              />
-              <p className="text-slate-600 mb-6">
-                يقع مصنعنا الرئيسي في المدينة الصناعية بالرياض على مساحة تزيد عن 10,000 متر مربع، مجهز بأحدث خطوط الإنتاج والمعدات المتطورة. نحرص على تطبيق أفضل معايير الجودة العالمية في كافة مراحل التصنيع بدءًا من اختيار المواد الخام وحتى تعبئة المنتج النهائي.
-              </p>
-              <p className="text-slate-600 mb-6">
-                يتميز مصنعنا بقدرته الإنتاجية العالية التي تلبي احتياجات السوق المحلي وتفتح آفاقًا واسعة للتصدير إلى الأسواق الإقليمية والعالمية. كما يضم المصنع مختبرًا متطورًا لفحص واختبار المنتجات للتأكد من مطابقتها لأعلى معايير الجودة.
-              </p>
-              <div className="flex gap-4 mt-8">
-                <Button size="lg">
-                  <Factory className="mr-2" />
-                  <span>طلب زيارة المصنع</span>
-                </Button>
-              </div>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="rounded-xl overflow-hidden"
-            >
-              <div className="aspect-video bg-gray-200 rounded-xl">
-                {/* هنا يمكن إضافة صورة حقيقية للمصنع */}
-                <div className="w-full h-full flex items-center justify-center text-gray-500">
-                  صورة المصنع
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* Factory Features */}
-      <section className="py-16 bg-gray-50">
+      {/* Features */}
+      <section className="py-28 bg-gradient-to-b from-gray-50 to-white border-t border-slate-200">
         <div className="container-custom">
           <SectionHeading
-            title="مميزات مصنعنا"
-            subtitle="نفخر بامتلاك مصنع متطور بمواصفات عالمية"
+            title="ما الذي يجعل مصنع ديلايت مختلفًا؟"
+            subtitle="ليست مجرد إمكانيات... بل فلسفة تصنيع كاملة"
             center
           />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-12">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="bg-white p-6 rounded-lg shadow-sm"
-            >
-              <div className="w-12 h-12 bg-delight-50 rounded-full flex items-center justify-center text-delight-600 mb-4">
-                <Factory className="w-6 h-6" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">خطوط إنتاج متطورة</h3>
-              <p className="text-slate-600">
-                نستخدم أحدث التقنيات وخطوط الإنتاج الآلية التي تضمن جودة عالية واتساق في المنتجات.
-              </p>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="bg-white p-6 rounded-lg shadow-sm"
-            >
-              <div className="w-12 h-12 bg-delight-50 rounded-full flex items-center justify-center text-delight-600 mb-4">
-                <CheckCircle className="w-6 h-6" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">مختبر الجودة</h3>
-              <p className="text-slate-600">
-                يضم المصنع مختبرًا متكاملًا لاختبار المنتجات وضمان توافقها مع أعلى معايير الجودة العالمية.
-              </p>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="bg-white p-6 rounded-lg shadow-sm"
-            >
-              <div className="w-12 h-12 bg-delight-50 rounded-full flex items-center justify-center text-delight-600 mb-4">
-                <Award className="w-6 h-6" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">شهادات الجودة</h3>
-              <p className="text-slate-600">
-                حاصلون على شهادات ISO العالمية وشهادات الجودة المحلية من الهيئة السعودية للمواصفات والمقاييس.
-              </p>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              className="bg-white p-6 rounded-lg shadow-sm"
-            >
-              <div className="w-12 h-12 bg-delight-50 rounded-full flex items-center justify-center text-delight-600 mb-4">
-                <Truck className="w-6 h-6" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">مركز لوجستي متكامل</h3>
-              <p className="text-slate-600">
-                نمتلك مركزًا لوجستيًا متطورًا لتخزين وشحن المنتجات بكفاءة عالية داخل المملكة وخارجها.
-              </p>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-              className="bg-white p-6 rounded-lg shadow-sm"
-            >
-              <div className="w-12 h-12 bg-delight-50 rounded-full flex items-center justify-center text-delight-600 mb-4">
-                <Map className="w-6 h-6" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">موقع استراتيجي</h3>
-              <p className="text-slate-600">
-                يقع المصنع في موقع استراتيجي يسهل الوصول إليه ويسمح بسرعة توزيع المنتجات لكافة مناطق المملكة.
-              </p>
-            </motion.div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 mt-16 px-4">
+            {features.map((feature, idx) => (
+              <motion.div
+                key={feature.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: idx * 0.1 }}
+                viewport={{ once: true }}
+                className="bg-white p-6 rounded-xl shadow-sm hover:shadow-xl border border-slate-100 transition-all duration-300"
+              >
+                <div className="w-14 h-14 mb-4 flex items-center justify-center rounded-full bg-delight-100 text-delight-600">
+                  {feature.icon}
+                </div>
+                <h3 className="text-lg font-bold mb-2">{feature.title}</h3>
+                <p className="text-slate-600 text-sm leading-relaxed">{feature.description}</p>
+              </motion.div>
+            ))}
           </div>
-        </div>
-      </section>
-
-      {/* Production Process */}
-      <section className="py-16">
-        <div className="container-custom">
-          <SectionHeading
-            title="عملية الإنتاج"
-            subtitle="نتبع منهجية دقيقة في تصنيع منتجاتنا لضمان أعلى مستويات الجودة"
-            center
-          />
-          <div className="relative mt-16">
-            <div className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-1 bg-gray-200"></div>
-            
-            <div className="space-y-24">
-              {/* خطوة 1 */}
-              <motion.div 
-                initial={{ opacity: 0, x: -50 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5 }}
-                viewport={{ once: true }}
-                className="relative flex items-center"
-              >
-                <div className="flex-1 ml-12">
-                  <div className="bg-white p-6 rounded-lg shadow-sm ml-auto max-w-md">
-                    <h3 className="text-xl font-semibold mb-2">اختيار المواد الخام</h3>
-                    <p className="text-slate-600">
-                      نحرص على اختيار أفضل المواد الخام من مصادر موثوقة ومعتمدة عالميًا لضمان جودة المنتج النهائي.
-                    </p>
-                  </div>
-                </div>
-                <div className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-delight-600 text-white flex items-center justify-center">1</div>
-              </motion.div>
-              
-              {/* خطوة 2 */}
-              <motion.div 
-                initial={{ opacity: 0, x: 50 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5 }}
-                viewport={{ once: true }}
-                className="relative flex items-center"
-              >
-                <div className="flex-1 mr-12">
-                  <div className="bg-white p-6 rounded-lg shadow-sm max-w-md">
-                    <h3 className="text-xl font-semibold mb-2">التصنيع والمعالجة</h3>
-                    <p className="text-slate-600">
-                      تمر المواد الخام بعمليات تصنيع ومعالجة دقيقة باستخدام أحدث التقنيات لتحويلها إلى منتجات ذات جودة عالية.
-                    </p>
-                  </div>
-                </div>
-                <div className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-delight-600 text-white flex items-center justify-center">2</div>
-              </motion.div>
-              
-              {/* خطوة 3 */}
-              <motion.div 
-                initial={{ opacity: 0, x: -50 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5 }}
-                viewport={{ once: true }}
-                className="relative flex items-center"
-              >
-                <div className="flex-1 ml-12">
-                  <div className="bg-white p-6 rounded-lg shadow-sm ml-auto max-w-md">
-                    <h3 className="text-xl font-semibold mb-2">مراقبة الجودة</h3>
-                    <p className="text-slate-600">
-                      تخضع جميع المنتجات لفحوصات دقيقة في مختبرنا المتطور للتأكد من مطابقتها للمواصفات وضمان كفاءتها.
-                    </p>
-                  </div>
-                </div>
-                <div className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-delight-600 text-white flex items-center justify-center">3</div>
-              </motion.div>
-              
-              {/* خطوة 4 */}
-              <motion.div 
-                initial={{ opacity: 0, x: 50 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5 }}
-                viewport={{ once: true }}
-                className="relative flex items-center"
-              >
-                <div className="flex-1 mr-12">
-                  <div className="bg-white p-6 rounded-lg shadow-sm max-w-md">
-                    <h3 className="text-xl font-semibold mb-2">التعبئة والتغليف</h3>
-                    <p className="text-slate-600">
-                      يتم تعبئة المنتجات في عبوات عالية الجودة صديقة للبيئة تحافظ على خصائص المنتج وتضمن سهولة الاستخدام.
-                    </p>
-                  </div>
-                </div>
-                <div className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-delight-600 text-white flex items-center justify-center">4</div>
-              </motion.div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Call to Action */}
-      <section className="bg-delight-600 py-16 text-white">
-        <div className="container-custom text-center">
-          <SectionHeading
-            title="تعرف على منتجاتنا"
-            subtitle="اكتشف مجموعتنا المتكاملة من منتجات العناية بالسيارات المصنوعة بأعلى معايير الجودة"
-            center
-            className="text-white max-w-xl mx-auto"
-          />
-          <Button 
-            variant="outline" 
-            size="lg" 
-            className="mt-8 bg-white text-delight-600 hover:bg-white/90 hover:text-delight-700"
-          >
-            استعرض المنتجات
-          </Button>
         </div>
       </section>
     </div>
   );
 };
+
+const features = [
+  {
+    icon: <Factory className="w-6 h-6" />, 
+    title: 'تصنيع داخلي 100%',
+    description: 'من الخلط إلى التعبئة، كل مرحلة تتم داخل منشآتنا لنضمن السيطرة الكاملة على الجودة والنتائج.'
+  },
+  {
+    icon: <FlaskConical className="w-6 h-6" />, 
+    title: 'مختبر تطوير متقدم',
+    description: 'كل تركيبة تمر بمراحل اختبار مكثفة داخل مختبرنا العلمي، لضمان الفاعلية والسلامة في الظروف الفعلية.'
+  },
+  {
+    icon: <PackageCheck className="w-6 h-6" />, 
+    title: 'رقابة جودة حقيقية',
+    description: 'نعتمد نظامًا صارمًا لمراقبة الجودة عبر نقاط تفتيش متعددة، بدءًا من استلام المواد الخام وحتى تخزين المنتج النهائي.'
+  },
+  {
+    icon: <ShieldCheck className="w-6 h-6" />, 
+    title: 'أمان صناعي وبيئي',
+    description: 'نطبق إجراءات صارمة للسلامة المهنية ونراعي الأثر البيئي في كل عملية إنتاج.'
+  },
+  {
+    icon: <Boxes className="w-6 h-6" />, 
+    title: 'مرونة تشغيلية',
+    description: 'نمتلك القدرة على تخصيص خطوط إنتاج حسب نوع المنتج وحجم الطلب، دون التأثير على وتيرة الجودة.'
+  },
+  {
+    icon: <Truck className="w-6 h-6" />, 
+    title: 'جاهزية للتوزيع الفوري',
+    description: 'موقع المصنع وخطوط التعبئة الأوتوماتيكية تجعلنا قادرين على تلبية الطلبات بكفاءة وسرعة.'
+  },
+];
 
 export default FactoryPage;

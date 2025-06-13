@@ -27,6 +27,12 @@ interface Product {
   isFeatured?: boolean; // إذا كان المنتج مميز
   inStock?: boolean; // توفر المنتج
   stock?: number; // كمية المخزون المتوفرة
+  points_earned?: number; // نقاط مكتسبة
+  points_required?: number; // نقاط مطلوبة
+  cave_enabled?: boolean; // تفعيل نظام المغارة
+  cave_price?: number; // سعر المغارة
+  cave_required_points?: number; // نقاط مغارة مطلوبة
+  cave_max_quantity?: number; // أقصى كمية للمغارة
 }
 
 interface VirtualizedProductGridProps {
@@ -310,17 +316,23 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
                           return null;
                         })()}
 
-                        {/* Quick Features */}
+                        {/* عرض النقاط ونظام المغارة */}
                         <div className="flex flex-wrap gap-1 mt-1">
-                          <span className="feature-item shipping-badge">
-                            شحن سريع
-                          </span>
-                          <span className="feature-item warranty-badge">
-                            ضمان سنة
-                          </span>
-                          <span className="feature-item">
-                            أصلي 100%
-                          </span>
+                          {product.points_earned != null && (
+                            <span className="feature-item points-earned-badge">اكسب {product.points_earned} نقطة</span>
+                          )}
+                          {product.points_required != null && (
+                            <span className="feature-item points-required-badge">احصل عليه بـ {product.points_required} نقطة</span>
+                          )}
+                          {product.cave_price != null && (
+                            <span className="feature-item cave-price-badge">سعر المغارة: {product.cave_price} ج.م</span>
+                          )}
+                          {product.cave_required_points != null && (
+                            <span className="feature-item cave-required-points-badge">نقاط مغارة مطلوبة: {product.cave_required_points}</span>
+                          )}
+                          {product.cave_max_quantity != null && (
+                            <span className="feature-item cave-max-quantity-badge">أقصى كمية للمغارة: {product.cave_max_quantity}</span>
+                          )}
                         </div>
                       </div>
                       

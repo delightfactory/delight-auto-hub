@@ -15,16 +15,22 @@ export interface ProductCardProps {
   description: string;
   image: string;
   className?: string;
-  category?: string; // New: Product category
+  category?: string;
   rating?: number;
-  ratingCount?: number; // New: Number of ratings
+  ratingCount?: number;
   price?: string;
   originalPrice?: string;
   isFeatured?: boolean;
   isNew?: boolean;
-  stock?: number; // Existing: Stock quantity
-  stockStatusText?: string; // New: Descriptive stock status (e.g., "متوفر", "وشيك النفاذ")
-  quickFeatures?: string[]; // New: Array of quick feature strings
+  stock?: number;
+  stockStatusText?: string;
+  quickFeatures?: string[];
+  points_earned?: number;
+  points_required?: number;
+  cave_enabled?: boolean;
+  cave_price?: number;
+  cave_required_points?: number;
+  cave_max_quantity?: number;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({
@@ -43,6 +49,12 @@ const ProductCard: React.FC<ProductCardProps> = ({
   stock = 0,
   stockStatusText,
   quickFeatures = [],
+  points_earned,
+  points_required,
+  cave_enabled = false,
+  cave_price,
+  cave_required_points,
+  cave_max_quantity,
 }) => {
   // تم إزالة تعريف featureIcons لتبسيط البادجات وإزالة الأيقونات
   const { addItem, items } = useCart();
@@ -352,18 +364,28 @@ const ProductCard: React.FC<ProductCardProps> = ({
         ) : price ? (
           <div className="amazon-price mb-0.5 text-sm text-delight-600 dark:text-delight-400 font-bold">{price}</div>
         ) : null}
-        {/* Quick Features */}
-        {quickFeatures && quickFeatures.length > 0 && (
-          <div className="flex flex-wrap gap-x-0.5 gap-y-0.5 mt-0.5 mb-1 items-center">
-            {quickFeatures.map((feature, index) => {
-              return (
-                <span key={index} className="feature-item text-[8px] py-0.5 px-1.5 inline-block">
-                  {feature}
-                </span>
-              );
-            })}
-          </div>
-        )}
+        
+        {/* عرض النقاط ونظام المغارة */}
+        <div className="flex flex-wrap gap-x-0.5 gap-y-0.5 mt-0.5 mb-1 items-center">
+          {points_earned != null && (
+            <span className="feature-item points-earned-badge">نقاط مكتسبة: {points_earned}</span>
+          )}
+          {points_required != null && (
+            <span className="feature-item points-required-badge">نقاط مطلوبة: {points_required}</span>
+          )}
+          {cave_enabled && (
+            <span className="feature-item cave-enabled-badge">مغارة مفعلة</span>
+          )}
+          {cave_price != null && (
+            <span className="feature-item cave-price-badge">سعر المغارة: {cave_price} ج.م</span>
+          )}
+          {cave_required_points != null && (
+            <span className="feature-item cave-required-points-badge">نقاط المغارة: {cave_required_points}</span>
+          )}
+          {cave_max_quantity != null && (
+            <span className="feature-item cave-max-quantity-badge">أقصى كمية: {cave_max_quantity}</span>
+          )}
+        </div>
         
         <div className="flex flex-row justify-between gap-1 mt-auto pt-0.5 border-t border-gray-100 dark:border-gray-700/50 mb-0.5 relative z-10">
           <motion.div className="w-1/2" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
