@@ -60,23 +60,12 @@ export const useCaveAudio = () => {
   const playSound = useCallback((soundName: string, volume: number = 1.0) => {
     if (!initAudio()) return;
 
-    // تحميل وتشغيل الصوت كبلوب لتجنب طلبات Range غير مدعومة
-    fetch(`/sounds/${soundName}.mp3`)
-      .then(res => {
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-        return res.blob();
-      })
-      .then(blob => {
-        const url = URL.createObjectURL(blob);
-        const audio = new Audio(url);
-        audio.volume = volume;
-        audio.play().catch(error => {
-          console.error(`فشل في تشغيل الصوت ${soundName}:`, error);
-        });
-      })
-      .catch(error => {
-        console.error(`خطأ في تشغيل الصوت ${soundName}:`, error);
-      });
+    // تشغيل الصوت مباشرة من public لتجنّب أخطاء Range وNotSupported
+    const audio = new Audio(`/sounds/${soundName}.mp3`);
+    audio.volume = volume;
+    audio.play().catch(error => {
+      console.error(`فشل في تشغيل الصوت ${soundName}:`, error);
+    });
   }, [initAudio]);
 
   // وظائف مساعدة لتشغيل أصوات محددة

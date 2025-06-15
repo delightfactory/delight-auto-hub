@@ -310,7 +310,7 @@ const CaveEventForm: React.FC<CaveEventFormProps> = ({
                   <Input type="number" min="0" {...field} />
                 </FormControl>
                 <FormDescription>
-                  الحد الأقصى لعدد مرات الشراء لكل مستخدم (0 = غير محدود)
+                  الحد الأقصى لقيمة المشتريات من المغارة خلال الجلسة (0 = غير محدود)
                 </FormDescription>
                 <FormMessage />
               </FormItem>

@@ -19,14 +19,34 @@ export const caveService = {
   },
 
   getActiveEvents: async (): Promise<CaveEvent[]> => {
+    const now = new Date().toISOString();
     const { data, error } = await supabase
       .from("cave_events")
       .select("*")
       .eq("is_active", true)
+      .lte("start_time", now)
+      .gt("end_time", now)
       .order("start_time", { ascending: true });
 
     if (error) {
       console.error("خطأ في جلب أحداث المغارة النشطة:", error);
+      throw error;
+    }
+
+    return data || [];
+  },
+
+  getUpcomingEvents: async (): Promise<CaveEvent[]> => {
+    const now = new Date().toISOString();
+    const { data, error } = await supabase
+      .from("cave_events")
+      .select("*")
+      .eq("is_active", true)
+      .gt("start_time", now)
+      .order("start_time", { ascending: true });
+
+    if (error) {
+      console.error("خطأ في جلب الأحداث المجدولة:", error);
       throw error;
     }
 
@@ -260,11 +280,13 @@ export const caveService = {
   },
 
   getActiveUserSession: async (userId: string): Promise<CaveSession | null> => {
+    const now = new Date().toISOString();
     const { data, error } = await supabase
       .from("cave_sessions")
       .select("*")
       .eq("user_id", userId)
       .is("left_at", null)
+      .gt("expires_at", now)
       .maybeSingle();
 
     if (error) {
@@ -278,18 +300,47 @@ export const caveService = {
     return data;
   },
 
-  createSession: async (sessionData: Partial<CaveSession>): Promise<CaveSession> => {
-    const { data, error } = await supabase
+  createSession: async ({ userId, eventId }: { userId: string; eventId: string }): Promise<CaveSession> => {
+    // منع إنشاء أكثر من جلسة واحدة مفتوحة
+    const existing = await caveService.getActiveUserSession(userId);
+    if (existing) {
+      console.warn('جلسة مفتوحة موجودة، إرجاع الجلسة الحالية');
+      return existing;
+    }
+
+    // جلب مدة جلسة الحدث
+    const { data: event, error: eventError } = await supabase
+      .from("cave_events")
+      .select("user_time_limit")
+      .eq("event_id", eventId)
+      .single();
+
+    if (eventError || !event) {
+      console.error(`خطأ في جلب بيانات الحدث لإنشاء الجلسة ${eventId}:`, eventError);
+      throw eventError;
+    }
+
+    const now = new Date().toISOString();
+    const expiresAt = new Date(Date.now() + event.user_time_limit * 60 * 1000).toISOString();
+
+    const { data: sessionData, error } = await supabase
       .from("cave_sessions")
-      .insert([sessionData])
-      .select();
+      .insert({ user_id: userId, event_id: eventId, entered_at: now, expires_at: expiresAt, total_spent: 0 })
+      .select()
+      .single();
 
     if (error) {
+      // معالجة مفتاح مكرر
+      if (error.code === '23505') {
+        console.warn('جلسة مفتوحة موجودة بالفعل:', error);
+        const existingAgain = await caveService.getActiveUserSession(userId);
+        if (existingAgain) return existingAgain;
+      }
       console.error("خطأ في إنشاء جلسة المغارة:", error);
       throw error;
     }
 
-    return data?.[0];
+    return sessionData;
   },
 
   endSession: async (sessionId: string, totalSpent: number): Promise<CaveSession> => {

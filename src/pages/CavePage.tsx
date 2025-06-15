@@ -68,17 +68,22 @@ const CavePage: React.FC = () => {
         enabled: !!user?.id,
     });
 
+    // جلب معلومات الحدث للجلسة النشطة
+    const { data: activeEventDetails } = useQuery({
+        queryKey: ['cave-event', activeSession?.event_id],
+        queryFn: () => activeSession ? caveService.getEventById(activeSession.event_id) : Promise.resolve(null),
+        enabled: !!activeSession?.event_id,
+    });
+
+
+
+
+
     // إنشاء جلسة جديدة
     const createSessionMutation = useMutation({
         mutationFn: (eventId: string) => {
             if (!user?.id) throw new Error('يجب تسجيل الدخول أولاً');
-            return caveService.createSession({
-                event_id: eventId,
-                user_id: user.id,
-                entered_at: new Date().toISOString(),
-                expires_at: new Date(Date.now() + 3600000).toISOString(),
-                total_spent: 0
-            });
+            return caveService.createSession({ userId: user.id, eventId });
         },
         onSuccess: (newSession) => {
             toast({ title: 'تم الدخول بنجاح!', description: 'جاري نقلك إلى صفحة الكنوز...', variant: 'default' });
@@ -162,6 +167,16 @@ const CavePage: React.FC = () => {
             navigate('/auth');
             return;
         }
+        // إذا كانت هناك جلسة نشطة، تعامل بناءً على الحدث
+        if (activeSession) {
+            if (activeSession.event_id === eventId) {
+                caveAudio.playCaveDoor();
+                navigate(`/cave/products/${activeSession.session_id}`);
+            } else {
+                toast({ title: 'لديك جلسة نشطة في حدث آخر', description: `الحدث الحالي: ${activeEventDetails?.title}`, variant: 'warning' });
+            }
+            return;
+        }
         createSessionMutation.mutate(eventId);
     };
 
@@ -180,6 +195,17 @@ const CavePage: React.FC = () => {
     
     return (
         <div className="min-h-screen bg-gray-900 text-white font-cairo" dir="rtl">
+          {activeSession && (
+            <div className="mb-6 p-4 bg-yellow-800/20 border-l-4 border-yellow-500 text-yellow-100 rounded-lg">
+              <h2 className="font-bold text-lg">لديك جلسة نشطة</h2>
+              {activeEventDetails && <p>الحدث: {activeEventDetails.title}</p>}
+              <p>تنتهي عند: {formatDateTime(activeSession.expires_at)}</p>
+              <div className="mt-2 flex gap-2">
+                <Button onClick={() => navigate(`/cave/products/${activeSession.session_id}`)}>الدخول إلى الكنوز</Button>
+                <Button variant="destructive" onClick={handleExitCave}>خروج من المغارة</Button>
+              </div>
+            </div>
+          )}
              <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
                 .font-cairo { font-family: 'Cairo', sans-serif; }
@@ -221,13 +247,13 @@ const CavePage: React.FC = () => {
                         <Button 
                             variant="default" 
                             size="lg"
-                            className="bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white font-bold shadow-lg shadow-amber-500/20"
+                            className="px-4 py-2 rounded-md text-sm bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white font-medium shadow-md"
                             onClick={() => {
                                 document.getElementById('events-section')?.scrollIntoView({ behavior: 'smooth' });
                                 caveAudio.playCoinCollect();
                             }}
                         >
-                            <Gem className="mr-2 h-5 w-5" />
+                            <Gem className="mr-1 h-4 w-4" />
                             استكشف الأحداث
                         </Button>
                     </motion.div>
@@ -236,6 +262,7 @@ const CavePage: React.FC = () => {
                 <AnimatePresence mode="wait">
                     {activeSession ? (
                         <motion.div key="active-session" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}>
+
                             <Card className="max-w-2xl mx-auto bg-gradient-to-b from-gray-800/80 to-gray-900/80 border border-amber-500/20 shadow-xl shadow-amber-500/5">
                                 <CardHeader className="text-center">
                                     <div className="flex justify-center mb-4">
@@ -263,7 +290,7 @@ const CavePage: React.FC = () => {
                                             caveAudio.playCaveDoor();
                                         }}
                                     >
-                                        <LogIn className="mr-2 h-5 w-5"/> اذهب للتسوق
+                                        <LogIn className="mr-1 h-4 w-4"/> اذهب للتسوق
                                     </Button>
                                     <Button 
                                         variant="outline" 
@@ -271,7 +298,7 @@ const CavePage: React.FC = () => {
                                         onClick={handleExitCave} 
                                         disabled={endSessionMutation.isPending}
                                     >
-                                        {endSessionMutation.isPending ? 'جاري الخروج...' : <><LogOut className="mr-2 h-5 w-5"/> إنهاء الجلسة</>}
+                                        {endSessionMutation.isPending ? 'جاري الخروج...' : <><LogOut className="mr-1 h-4 w-4"/> إنهاء الجلسة</>}
                                     </Button>
                                 </CardFooter>
                             </Card>
@@ -335,29 +362,54 @@ const CavePage: React.FC = () => {
                                                                     </div>
                                                                 </CardContent>
                                                                 <CardFooter className="flex flex-col sm:flex-row gap-4 justify-end bg-gray-800/30 border-t border-amber-500/10 py-4">
-                                                                    {event.kind === 'ticketed' ? (
+                                                                    {activeSession ? (
+                                                                        activeSession.event_id === event.event_id ? (
+                                                                            <>
+                                                                                <Button 
+                                                                                    variant="default" 
+                                                                                    className="flex-1 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-bold shadow-lg shadow-purple-500/20"
+                                                                                    onClick={() => {
+                                                                                        navigate(`/cave/products/${activeSession.session_id}`);
+                                                                                        caveAudio.playCaveDoor();
+                                                                                    }}
+                                                                                >
+                                                                                    <LogIn className="mr-1 h-4 w-4"/> الدخول إلى الكنوز
+                                                                                </Button>
+                                                                                <Button 
+                                                                                    variant="destructive" 
+                                                                                    className="flex-1 border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-300"
+                                                                                    onClick={handleExitCave} 
+                                                                                    disabled={endSessionMutation.isPending}
+                                                                                >
+                                                                                    {endSessionMutation.isPending ? 'جاري الخروج...' : <><LogOut className="mr-1 h-4 w-4"/> إنهاء الجلسة</>}
+                                                                                </Button>
+                                                                            </>
+                                                                        ) : (
+                                                                            <Button variant="outline" className="flex-1" disabled>لا يمكنك بدء جلسة جديدة في حدث آخر</Button>
+                                                                        )
+                                                                    ) : event.kind === 'ticketed' ? (
                                                                         <Button 
                                                                             variant="outline" 
-                                                                            className="w-full sm:w-auto border-purple-500/30 text-purple-400 hover:bg-purple-500/10 hover:text-purple-300"
+                                                                            className="px-3 py-1 rounded-md text-sm border-purple-500 text-purple-500 hover:bg-purple-500/10 hover:text-purple-600 font-medium"
                                                                             onClick={() => {
                                                                                 setSelectedEvent(event);
                                                                                 setIsTicketDialogOpen(true);
                                                                                 caveAudio.playCoinCollect();
                                                                             }}
                                                                         >
-                                                                            <Ticket className="mr-2 h-5 w-5"/>استخدم تذكرة
+                                                                            <Ticket className="mr-1 h-4 w-4"/>استخدم تذكرة
                                                                         </Button>
                                                                     ) : (
                                                                         <Button 
                                                                             variant="default" 
-                                                                            className="w-full sm:w-auto bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white font-bold shadow-lg shadow-amber-500/20"
+                                                                            className="px-3 py-1 rounded-md text-sm bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white font-medium shadow-sm"
                                                                             onClick={() => {
                                                                                 handleEnterCave(event.event_id);
                                                                                 caveAudio.playCaveDoor();
                                                                             }}
                                                                             disabled={createSessionMutation.isPending}
                                                                         >
-                                                                            {createSessionMutation.isPending ? 'جاري الدخول...' : <><LogIn className="mr-2 h-5 w-5"/>دخول</>}
+                                                                            {createSessionMutation.isPending ? 'جاري الدخول...' : <><LogIn className="mr-1 h-4 w-4"/>دخول</>}
                                                                         </Button>
                                                                     )}
                                                                 </CardFooter>
@@ -395,7 +447,7 @@ const CavePage: React.FC = () => {
                                                     />
                                                     <Button 
                                                         variant="default" 
-                                                        className="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-bold shadow-lg shadow-purple-500/20"
+                                                        className="px-4 py-2 rounded-md text-sm bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-medium shadow-md"
                                                         onClick={handleValidateTicket} 
                                                         disabled={validateTicketMutation.isPending}
                                                     >
