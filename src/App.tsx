@@ -26,6 +26,7 @@ import AdminUsersPage from './pages/admin/CustomersPage';
 import AdminSettingsPage from './pages/admin/SettingsPage';
 import AdminCommentsPage from './pages/admin/CommentsPage';
 import AdminArticlesPage from './pages/admin/ArticlesPage';
+import AdminCavePage from './pages/admin/CavePage';
 import { ThemeProvider } from "@/context/ThemeContext"
 import { SmoothPageTransition } from "@/components/performance/SmoothPageTransition";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -38,6 +39,8 @@ import AdminAppearancePage from './pages/admin/AppearancePage';
 import AdminBackupsPage from './pages/admin/BackupsPage';
 import AdminBannersPage from './pages/admin/BannersPage';
 import AdminShippingPage from './pages/admin/ShippingPage';
+import CavePage from './pages/CavePage';
+import CaveProductsPage from './pages/CaveProductsPage';
 
 const queryClient = new QueryClient();
 
@@ -66,6 +69,9 @@ function App() {
                   <Route path="/orders" element={<MainLayout><SmoothPageTransition><OrdersPage /></SmoothPageTransition></MainLayout>} />
                   <Route path="/favorites" element={<MainLayout><SmoothPageTransition><FavoritesPage /></SmoothPageTransition></MainLayout>} />
                   <Route path="/best-deals" element={<MainLayout><SmoothPageTransition><BestDealsPage /></SmoothPageTransition></MainLayout>} />
+                  <Route path="/cave" element={<MainLayout><SmoothPageTransition><CavePage /></SmoothPageTransition></MainLayout>} />
+                  <Route path="/cave/products" element={<MainLayout><SmoothPageTransition><CaveProductsPage /></SmoothPageTransition></MainLayout>} />
+                  <Route path="/cave/products/:sessionId" element={<MainLayout><SmoothPageTransition><CaveProductsPage /></SmoothPageTransition></MainLayout>} />
 
                   <Route path="/admin" element={<AdminLayout />}>
                     <Route index element={<AdminDashboardPage />} />
@@ -81,6 +87,7 @@ function App() {
                     <Route path="backups" element={<AdminBackupsPage />} />
                     <Route path="banners" element={<AdminBannersPage />} />
                     <Route path="shipping" element={<AdminShippingPage />} />
+                    <Route path="cave" element={<AdminCavePage />} />
                   </Route>
                   
                   {/* Add notification settings route */}

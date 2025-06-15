@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Product } from "@/types/db";
+import { caveService } from "./caveService";
 
 export interface ProductDisplay {
   id: string;
@@ -263,6 +264,49 @@ export const ProductDataService = {
     } catch (error) {
       console.error('خطأ غير متوقع في جلب المنتجات ذات الصلة:', error);
       return [];
+    }
+  },
+
+  // جلب منتجات المغارة
+  getCaveProducts: async (category?: string): Promise<ProductDisplay[]> => {
+    try {
+      // استخدام خدمة المغارة لجلب المنتجات
+      const products = await caveService.getCaveProducts(category);
+      
+      // تحويل البيانات إلى تنسيق العرض
+      const displays = products.map(transformProductToDisplay);
+      return await Promise.all(displays.map(addRatingsToDisplay));
+    } catch (error) {
+      console.error('خطأ في جلب منتجات المغارة:', error);
+      return [];
+    }
+  },
+
+  // جلب فئات منتجات المغارة
+  getCaveCategories: async (): Promise<string[]> => {
+    try {
+      // استخدام خدمة المغارة لجلب الفئات
+      return await caveService.getCaveCategories();
+    } catch (error) {
+      console.error('خطأ في جلب فئات منتجات المغارة:', error);
+      return [];
+    }
+  },
+
+  // جلب منتج المغارة بواسطة المعرف
+  getCaveProductById: async (productId: string): Promise<ProductDisplay | null> => {
+    try {
+      // استخدام خدمة المغارة لجلب المنتج
+      const product = await caveService.getCaveProductById(productId);
+      
+      if (!product) return null;
+      
+      // تحويل البيانات إلى تنسيق العرض
+      const display = transformProductToDisplay(product);
+      return await addRatingsToDisplay(display);
+    } catch (error) {
+      console.error(`خطأ في جلب منتج المغارة رقم ${productId}:`, error);
+      return null;
     }
   }
 };

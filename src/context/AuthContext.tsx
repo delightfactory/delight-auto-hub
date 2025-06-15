@@ -31,6 +31,8 @@ type AuthContextType = {
   signOut: () => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<{ error: any | null }>;
   refreshSession: () => Promise<void>;
+  resetPassword: (email: string) => Promise<{ error: any | null }>;
+  updatePassword: (password: string) => Promise<{ error: any | null }>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -388,6 +390,70 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
   
+  const resetPassword = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/profile?tab=settings&reset=true`,
+      });
+      
+      if (error) {
+        toast({ 
+          title: "خطأ في إرسال رابط إعادة تعيين كلمة المرور", 
+          description: error.message, 
+          variant: "destructive" 
+        });
+        return { error };
+      }
+      
+      toast({ 
+        title: "تم إرسال رابط إعادة تعيين كلمة المرور", 
+        description: "يرجى التحقق من بريدك الإلكتروني للحصول على تعليمات إعادة تعيين كلمة المرور" 
+      });
+      
+      return { error: null };
+    } catch (error) {
+      console.error("resetPassword error", error);
+      toast({ 
+        title: "خطأ في إرسال رابط إعادة تعيين كلمة المرور", 
+        description: "حدث خطأ غير متوقع", 
+        variant: "destructive" 
+      });
+      return { error };
+    }
+  };
+  
+  const updatePassword = async (password: string) => {
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: password
+      });
+      
+      if (error) {
+        toast({ 
+          title: "خطأ في تحديث كلمة المرور", 
+          description: error.message, 
+          variant: "destructive" 
+        });
+        return { error };
+      }
+      
+      toast({ 
+        title: "تم تحديث كلمة المرور بنجاح", 
+        description: "تم تغيير كلمة المرور الخاصة بك" 
+      });
+      
+      return { error: null };
+    } catch (error) {
+      console.error("updatePassword error", error);
+      toast({ 
+        title: "خطأ في تحديث كلمة المرور", 
+        description: "حدث خطأ غير متوقع", 
+        variant: "destructive" 
+      });
+      return { error };
+    }
+  };
+
   const value = {
     user,
     loading,
@@ -395,7 +461,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     signUp,
     signOut,
     updateProfile,
-    refreshSession
+    refreshSession,
+    resetPassword,
+    updatePassword
   };
   
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

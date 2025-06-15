@@ -23,6 +23,7 @@ const MobileNavigation: React.FC = () => {
     { name: 'عروض خاصة', path: '/best-deals', icon: Zap },
     { name: 'المصنع', path: '/factory', icon: Factory },
     { name: 'المقالات', path: '/articles', icon: Book },
+    { name: 'المغارة', path: '/cave', icon: Package },
     { name: 'من نحن', path: '/about', icon: Info },
     { name: 'اتصل بنا', path: '/contact', icon: Phone },
   ];

@@ -7,9 +7,10 @@ import { ChevronLeft } from 'lucide-react';
 
 interface AdminSidebarLinkProps {
   onLinkClick?: () => void;
+  children?: React.ReactNode;
 }
 
-const AdminSidebarLink: React.FC<AdminSidebarLinkProps> = ({ onLinkClick }) => {
+const AdminSidebarLink: React.FC<AdminSidebarLinkProps> = ({ onLinkClick, children }) => {
   const { user } = useAuth();
   
   const { data: isAdmin = false, isLoading } = useQuery({
@@ -47,7 +48,7 @@ const AdminSidebarLink: React.FC<AdminSidebarLinkProps> = ({ onLinkClick }) => {
         className="text-red-600 hover:underline"
         onClick={() => onLinkClick?.()}
       >
-        لوحة التحكم
+        {children ?? 'لوحة التحكم'}
       </Link>
     </div>
   );

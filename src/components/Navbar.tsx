@@ -29,6 +29,7 @@ const Navbar: React.FC<NavbarProps> = ({ isDarkTheme, toggleTheme }) => {
     { name: "المنتجات", href: "/products" },
     { name: "المقالات", href: "/articles" },
     { name: "المصنع", href: "/factory" },
+    { name: "المغارة", href: "/cave", icon: <ShoppingBag className="h-4 w-4" /> },
     { name: "تتبع الطلبات", href: "/orders", icon: <Package className="h-4 w-4" /> },
     { name: "تواصل معنا", href: "/contact" },
   ];

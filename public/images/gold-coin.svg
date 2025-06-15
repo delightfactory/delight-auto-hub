@@ -1,0 +1,57 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- تعريف التدرجات اللونية والفلاتر -->
+  <defs>
+    <linearGradient id="coinGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFD700" />
+      <stop offset="50%" stop-color="#FFC107" />
+      <stop offset="100%" stop-color="#FF8C00" />
+    </linearGradient>
+    
+    <linearGradient id="coinEdge" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#B8860B" />
+      <stop offset="50%" stop-color="#DAA520" />
+      <stop offset="100%" stop-color="#B8860B" />
+    </linearGradient>
+    
+    <linearGradient id="coinHighlight" x1="30%" y1="30%" x2="70%" y2="70%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.7" />
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+    </linearGradient>
+    
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="10" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#000" flood-opacity="0.5" />
+    </filter>
+  </defs>
+  
+  <!-- العملة الذهبية (منظر جانبي) -->
+  <g filter="url(#shadow)">
+    <!-- حافة العملة -->
+    <ellipse cx="256" cy="256" rx="160" ry="160" fill="url(#coinEdge)" />
+    
+    <!-- وجه العملة -->
+    <circle cx="256" cy="256" r="150" fill="url(#coinGradient)" />
+  </g>
+  
+  <!-- نقوش على العملة -->
+  <g filter="url(#glow)">
+    <!-- دائرة داخلية -->
+    <circle cx="256" cy="256" r="120" stroke="#B8860B" stroke-width="4" fill="none" />
+    
+    <!-- نجمة في المنتصف -->
+    <path d="M256 156L283 229H360L297 276L324 349L256 300L188 349L215 276L152 229H229L256 156Z" fill="#B8860B" opacity="0.7" />
+    
+    <!-- نقوش دائرية حول الحافة -->
+    <circle cx="256" cy="256" r="140" stroke="#B8860B" stroke-width="2" stroke-dasharray="10 5" fill="none" />
+  </g>
+  
+  <!-- انعكاسات الضوء على العملة -->
+  <ellipse cx="210" cy="210" rx="70" ry="50" fill="url(#coinHighlight)" opacity="0.4" transform="rotate(-15 210 210)" />
+  
+  <!-- وهج ذهبي -->
+  <circle cx="256" cy="256" r="170" fill="#FFD700" opacity="0.1" filter="url(#glow)" />
+</svg>

@@ -1,0 +1,31 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- تعريف التدرجات اللونية والفلاتر -->
+  <defs>
+    <linearGradient id="cursorGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFD700" />
+      <stop offset="50%" stop-color="#FFC107" />
+      <stop offset="100%" stop-color="#B8860B" />
+    </linearGradient>
+    
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="1.5" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="1" dy="1" stdDeviation="1" flood-color="#000" flood-opacity="0.5" />
+    </filter>
+  </defs>
+  
+  <!-- المؤشر الذهبي -->
+  <g filter="url(#shadow)">
+    <!-- شكل المؤشر الأساسي -->
+    <path d="M8 30L8 2L24 18H16L8 30Z" fill="url(#cursorGradient)" filter="url(#glow)" />
+    
+    <!-- حدود المؤشر -->
+    <path d="M8 30L8 2L24 18H16L8 30Z" stroke="#8B4513" stroke-width="1" fill="none" />
+    
+    <!-- لمعة على المؤشر -->
+    <path d="M10 6L10 18L16 14L10 6Z" fill="white" opacity="0.3" />
+  </g>
+</svg>

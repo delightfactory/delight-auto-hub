@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -64,6 +64,7 @@ interface FormData {
 const ProfilePage = () => {
   const { user, loading, signOut, updateProfile, refreshSession } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("profile");
   // إضافة متغير حالة لتتبع ما إذا كانت التبويبات جاهزة للعرض
@@ -95,6 +96,15 @@ const ProfilePage = () => {
   
   const [availableCities, setAvailableCities] = useState<City[]>([]);
   const [governorates, setGovernorates] = useState<Governorate[]>([]);
+  
+  // تحقق من معلمة tab في عنوان URL
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const tabParam = searchParams.get('tab');
+    if (tabParam && ['profile', 'orders', 'notifications', 'settings'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [location]);
   
   // Redirect if not logged in
   useEffect(() => {

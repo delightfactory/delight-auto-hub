@@ -191,3 +191,52 @@ export interface Governorate {
   cities: City[];
   is_active?: boolean;
 }
+
+// واجهات نظام المغارة (Treasure Cave)
+export interface CaveEvent {
+  event_id: string;
+  kind: 'scheduled' | 'ticketed';
+  title: string;
+  description: string;
+  start_time: string;
+  end_time: string;
+  is_active: boolean;
+  max_concurrent: number;
+  user_time_limit: number;
+  purchase_cap: number;
+  allowed_pay: 'points' | 'cash' | 'both';
+  created_at: string;
+}
+
+export interface CaveTicket {
+  ticket_id: string;
+  event_id: string;
+  code: string;
+  max_use: number;
+  per_user_limit: number;
+  is_personal: boolean;
+  owner_user?: string;
+  is_active: boolean;
+  expiry?: string;
+  created_at: string;
+}
+
+export interface CaveSession {
+  session_id: string;
+  event_id: string;
+  user_id: string;
+  entered_at: string;
+  expires_at: string;
+  left_at?: string;
+  total_spent: number;
+}
+
+export interface CaveOrder {
+  order_id: string;
+  event_id: string;
+  session_id: string;
+  user_id: string;
+  amount: number;
+  paid_with: 'points' | 'cash' | 'both';
+  created_at: string;
+}

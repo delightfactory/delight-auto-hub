@@ -12,6 +12,12 @@ export interface CartItem {
   image: string;
   quantity: number;
   stock?: number; // كمية المخزون المتوفرة (اختياري)
+  cave_enabled?: boolean; // هل المنتج متاح في المغارة
+  cave_price?: number; // سعر المنتج في المغارة
+  cave_required_points?: number; // النقاط المطلوبة للشراء من المغارة
+  cave_max_quantity?: number; // الحد الأقصى للكمية في المغارة
+  is_cave_purchase?: boolean; // هل تم شراء المنتج من المغارة
+  session_id?: string; // معرف جلسة المغارة إذا تم الشراء من المغارة
 }
 
 interface CartState {
@@ -54,7 +60,14 @@ const formatPrice = (price: number): string => {
 
 const calculateTotal = (items: CartItem[]): string => {
   const total = items.reduce((sum, item) => {
-    return sum + parsePrice(item.price) * item.quantity;
+    // استخدام سعر المغارة إذا كان المنتج من المغارة
+    let itemPrice;
+    if (item.is_cave_purchase && item.cave_price !== undefined) {
+      itemPrice = item.cave_price;
+    } else {
+      itemPrice = parsePrice(item.price);
+    }
+    return sum + itemPrice * item.quantity;
   }, 0);
   return formatPrice(total);
 };
@@ -74,31 +87,39 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       return action.payload;
 
     case 'ADD_ITEM': {
-      // طباعة معلومات المنتج المضاف للتصحيح
-      logDebugInfo('Adding item to cart', action.payload);
-      logDebugInfo('Item has originalPrice', !!action.payload.originalPrice);
-      
+      const newItem = action.payload;
+      // للمنتجات من المغارة، نتحقق من session_id أيضًا
+      const existingItemIndex = state.items.findIndex(item => {
+        if (newItem.is_cave_purchase) {
+          // للمنتجات من المغارة، نتحقق من المعرف وجلسة المغارة
+          return item.id === newItem.id && item.session_id === newItem.session_id && item.is_cave_purchase;
+        } else {
+          // للمنتجات العادية، نتحقق فقط من المعرف وأنها ليست من المغارة
+          return item.id === newItem.id && !item.is_cave_purchase;
+        }
+      });
+
       // التحقق من توفر المنتج في المخزون إذا كانت معلومات المخزون متوفرة
-      if (action.payload.stock !== undefined && action.payload.stock <= 0) {
-        console.warn(`محاولة إضافة منتج غير متوفر في cartReducer: ${action.payload.name}`);
+      if (newItem.stock !== undefined && newItem.stock <= 0) {
+        console.warn(`محاولة إضافة منتج غير متوفر في cartReducer: ${newItem.name}`);
         return state; // لا تغيير في الحالة
       }
-      
-      const existingItemIndex = state.items.findIndex(
-        (item) => item.id === action.payload.id
-      );
 
       if (existingItemIndex !== -1) {
         // المنتج موجود بالفعل، زيادة الكمية فقط
-        
-        // التحقق من أن الكمية المطلوبة لا تتجاوز المخزون المتوفر
         const currentItem = state.items[existingItemIndex];
         const newQuantity = currentItem.quantity + 1;
         
-        // إذا كانت معلومات المخزون متوفرة، تحقق من أن الكمية لا تتجاوز المخزون
-        if (action.payload.stock !== undefined && newQuantity > action.payload.stock) {
-          console.warn(`محاولة إضافة كمية تتجاوز المخزون المتوفر: ${action.payload.name}`);
-          return state; // لا تغيير في الحالة
+        // التحقق من المخزون قبل زيادة الكمية للمنتجات العادية
+        if (!currentItem.is_cave_purchase && currentItem.stock !== undefined && newQuantity > currentItem.stock) {
+          console.warn(`محاولة إضافة كمية تتجاوز المخزون المتوفر: ${currentItem.name}`);
+          return state;
+        }
+        
+        // التحقق من الحد الأقصى للكمية في المغارة
+        if (currentItem.is_cave_purchase && currentItem.cave_max_quantity !== undefined && newQuantity > currentItem.cave_max_quantity) {
+          console.warn(`محاولة إضافة كمية تتجاوز الحد الأقصى في المغارة: ${currentItem.name}`);
+          return state;
         }
         
         const updatedItems = [...state.items];
@@ -107,8 +128,6 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
           quantity: newQuantity,
         };
         
-        logDebugInfo('Updated existing item', updatedItems[existingItemIndex]);
-
         return {
           ...state,
           items: updatedItems,
@@ -118,14 +137,6 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       } else {
         // منتج جديد
         // التأكد من أن المنتج يحتوي على المعلومات المطلوبة
-        const newItem = {
-          ...action.payload,
-          quantity: action.payload.quantity || 1, // التأكد من وجود كمية
-        };
-        
-        // طباعة معلومات المنتج الجديد
-        logDebugInfo('New item added', newItem);
-        
         const updatedItems = [...state.items, newItem];
         return {
           ...state,
@@ -164,10 +175,19 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
         };
       }
 
+      const currentItem = state.items[existingItemIndex];
+      let finalQuantity = action.payload.quantity;
+      
+      // التحقق من الحد الأقصى للكمية في المغارة
+      if (currentItem.is_cave_purchase && currentItem.cave_max_quantity !== undefined && finalQuantity > currentItem.cave_max_quantity) {
+        console.warn(`محاولة تحديث كمية تتجاوز الحد الأقصى في المغارة: ${currentItem.name}`);
+        finalQuantity = currentItem.cave_max_quantity;
+      }
+
       const updatedItems = [...state.items];
       updatedItems[existingItemIndex] = {
         ...updatedItems[existingItemIndex],
-        quantity: action.payload.quantity,
+        quantity: finalQuantity,
       };
 
       return {
@@ -239,9 +259,30 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
     
+    // التحقق من الحد الأقصى للكمية في المغارة إذا كان المنتج من المغارة
+    if (item.is_cave_purchase && item.cave_max_quantity !== undefined) {
+      // التحقق من وجود نفس المنتج في السلة
+      const existingItem = state.items.find(cartItem => cartItem.id === item.id && cartItem.is_cave_purchase);
+      
+      if (existingItem && existingItem.quantity >= item.cave_max_quantity) {
+        console.warn(`تم الوصول للحد الأقصى للكمية في المغارة: ${item.name}`);
+        return;
+      }
+    }
+    
     dispatch({
       type: 'ADD_ITEM',
-      payload: { ...item, quantity: 1 },
+      payload: { 
+        ...item, 
+        quantity: 1,
+        // نحتفظ بخصائص المغارة إذا كانت موجودة
+        cave_enabled: item.cave_enabled,
+        cave_price: item.cave_price,
+        cave_required_points: item.cave_required_points,
+        cave_max_quantity: item.cave_max_quantity,
+        is_cave_purchase: item.is_cave_purchase,
+        session_id: item.session_id
+      },
     });
   };
 

@@ -24,6 +24,7 @@ const Header = () => {
     { name: 'العروض الخاصة', path: '/best-deals' },
     { name: 'المصنع', path: '/factory' },
     { name: 'المقالات', path: '/articles' },
+    { name: 'المغارة', path: '/cave' },
     { name: 'من نحن', path: '/about' },
     { name: 'اتصل بنا', path: '/contact' },
   ];

@@ -45,6 +45,7 @@ export const SidebarMenu: React.FC = () => {
     { path: '/articles', label: 'المقالات', icon: Tag },
     { path: '/about', label: 'عن الشركة', icon: Info },
     { path: '/factory', label: 'المصنع', icon: Factory },
+    { path: '/cave', label: 'المغارة', icon: ShoppingBag },
     { path: '/contact', label: 'اتصل بنا', icon: Phone },
   ];
 
