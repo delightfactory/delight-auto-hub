@@ -36,7 +36,7 @@ const productSchema = z.object({
   subtype: z.string().optional().nullable(),
   vendor: z.string().optional().nullable(),
   country_of_origin: z.string().optional().nullable(),
-  video_url: z.string().url("رابط الفيديو غير صالح").optional().nullable(),
+  video_url: z.union([z.string().url("رابط الفيديو غير صالح"), z.literal("")]).optional(),
   price: z.coerce.number().min(0, "يجب أن يكون السعر عددًا موجبًا"),
   discount_price: z.coerce.number().min(0, "يجب أن يكون سعر الخصم عددًا موجبًا").optional().nullable(),
   stock: z.coerce.number().min(0, "يجب أن تكون الكمية عددًا موجبًا").optional().nullable(),

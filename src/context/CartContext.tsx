@@ -3,6 +3,7 @@
  * يتضمن إضافة وإزالة وتحديث المنتجات وحساب الإجمالي
  */
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import { useToast } from '@/hooks/use-toast';
 
 export interface CartItem {
   id: string;
@@ -58,6 +59,7 @@ const formatPrice = (price: number): string => {
   return `${price.toLocaleString('en-US')} جنيه`;
 };
 
+// ملاحظة: لا تطبق القسائم على منتجات المغارة
 const calculateTotal = (items: CartItem[]): string => {
   const total = items.reduce((sum, item) => {
     // استخدام سعر المغارة إذا كان المنتج من المغارة
@@ -221,6 +223,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
  * يتعامل مع تخزين واسترجاع السلة من التخزين المحلي
  */
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { toast } = useToast();
   // Initialize state from localStorage if available
   const [state, dispatch] = useReducer(cartReducer, initialState, () => {
     try {
@@ -252,6 +255,17 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [state]);
 
   const addItem = (item: Omit<CartItem, 'quantity'>) => {
+    // منع خلط أنواع المنتجات (مغارة vs عام)
+    const hasCave = state.items.some(i => i.is_cave_purchase);
+    const hasGeneral = state.items.some(i => !i.is_cave_purchase);
+    if (item.is_cave_purchase && hasGeneral) {
+      toast({ title: "أولاً أكمل طلب التسوق العام أو قم بإفراغها.", variant: "destructive" });
+      return;
+    }
+    if (!item.is_cave_purchase && hasCave) {
+      toast({ title: "أولاً أكمل طلب المغارة أو قم بإفراغه.", variant: "destructive" });
+      return;
+    }
     // التحقق من توفر المنتج في المخزون (إذا كانت معلومات المخزون متوفرة)
     if (item.stock !== undefined && item.stock <= 0) {
       // لا نضيف المنتج إذا كان غير متوفر في المخزون

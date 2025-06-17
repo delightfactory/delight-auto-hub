@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { CaveEvent, CaveTicket, CaveSession, CaveOrder } from "@/types/db";
+import { CaveEvent, CaveTicket, CaveSession, CaveOrder, Category } from "@/types/db";
 
 // خدمة إدارة نظام المغارة
 export const caveService = {
@@ -302,6 +302,14 @@ export const caveService = {
 
   createSession: async ({ userId, eventId }: { userId: string; eventId: string }): Promise<CaveSession> => {
     // منع إنشاء أكثر من جلسة واحدة مفتوحة
+    // إنهاء الجلسات المنتهية تلقائياً
+    const currentTime = new Date().toISOString();
+    await supabase
+      .from("cave_sessions")
+      .update({ left_at: currentTime })
+      .eq("user_id", userId)
+      .is("left_at", null)
+      .lte("expires_at", currentTime);
     const existing = await caveService.getActiveUserSession(userId);
     if (existing) {
       console.warn('جلسة مفتوحة موجودة، إرجاع الجلسة الحالية');
@@ -311,7 +319,7 @@ export const caveService = {
     // جلب مدة جلسة الحدث
     const { data: event, error: eventError } = await supabase
       .from("cave_events")
-      .select("user_time_limit")
+      .select("user_time_limit, max_participations_per_user")
       .eq("event_id", eventId)
       .single();
 
@@ -322,6 +330,20 @@ export const caveService = {
 
     const now = new Date().toISOString();
     const expiresAt = new Date(Date.now() + event.user_time_limit * 60 * 1000).toISOString();
+
+    // تحقق من حد المشاركات للمستخدم لهذا الحدث
+    const { data: sessionRows, count: participationsCount, error: countError } = await supabase
+      .from("cave_sessions")
+      .select("*", { count: 'exact' })
+      .eq("user_id", userId)
+      .eq("event_id", eventId);
+    if (countError) {
+      console.error(`خطأ في جلب عدد مشاركات المستخدم ${userId} للحدث ${eventId}:`, countError);
+      throw countError;
+    }
+    if (participationsCount !== null && participationsCount >= event.max_participations_per_user) {
+      throw new Error('لقد وصلت إلى الحد الأقصى لعدد المشاركات في هذا الحدث.');
+    }
 
     const { data: sessionData, error } = await supabase
       .from("cave_sessions")
@@ -499,22 +521,39 @@ export const caveService = {
     }
   },
 
-  // جلب فئات منتجات المغارة
-  getCaveCategories: async (): Promise<string[]> => {
+  // جلب فئات منتجات المغارة مع معلوماتها الكاملة
+  getCaveCategories: async (): Promise<Category[]> => {
     try {
-      const { data, error } = await supabase
+      // أولاً، نحصل على معرفات الفئات الفريدة من المنتجات المفعلة للمغارة
+      const { data: productsData, error: productsError } = await supabase
         .from("products")
         .select("category")
         .eq("cave_enabled", true);
 
-      if (error) {
-        console.error("خطأ في جلب فئات منتجات المغارة:", error);
-        throw error;
+      if (productsError) {
+        console.error("خطأ في جلب فئات منتجات المغارة:", productsError);
+        throw productsError;
       }
 
-      // استخراج الفئات الفريدة
-      const categories = [...new Set(data?.map(product => product.category).filter(Boolean))];
-      return categories;
+      // استخراج معرفات الفئات الفريدة
+      const categoryIds = [...new Set(productsData?.map(product => product.category).filter(Boolean))];
+      
+      if (categoryIds.length === 0) {
+        return [];
+      }
+
+      // ثانياً، نحصل على معلومات الفئات الكاملة من جدول الفئات
+      const { data: categoriesData, error: categoriesError } = await supabase
+        .from("categories")
+        .select("*")
+        .in("id", categoryIds);
+
+      if (categoriesError) {
+        console.error("خطأ في جلب معلومات الفئات:", categoriesError);
+        throw categoriesError;
+      }
+
+      return categoriesData || [];
     } catch (error) {
       console.error("خطأ في جلب فئات منتجات المغارة:", error);
       throw error;

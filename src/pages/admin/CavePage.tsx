@@ -426,6 +426,7 @@ const CavePage = () => {
                         <TableHead>الحد الأقصى للمستخدمين</TableHead>
                         <TableHead>وقت المستخدم (دقيقة)</TableHead>
                         <TableHead>حد الشراء</TableHead>
+                        <TableHead>حد المشاركات</TableHead>
                         <TableHead>طرق الدفع</TableHead>
                         <TableHead className="text-left">الإجراءات</TableHead>
                       </TableRow>
@@ -449,6 +450,7 @@ const CavePage = () => {
                           <TableCell className="text-center">{event.max_concurrent}</TableCell>
                           <TableCell className="text-center">{event.user_time_limit}</TableCell>
                           <TableCell className="text-center">{event.purchase_cap}</TableCell>
+                            <TableCell className="text-center">{event.max_participations_per_user}</TableCell>
                           <TableCell>
                             <Badge variant="outline">
                               {event.allowed_pay === 'points' ? 'نقاط' : 

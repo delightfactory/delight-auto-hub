@@ -80,6 +80,12 @@ const CavePage: React.FC = () => {
 
 
     // إنشاء جلسة جديدة
+    // جلب جميع جلسات المستخدم لحساب مشاركاته لكل حدث
+    const { data: userSessions = [] } = useQuery({
+        queryKey: ['cave-user-sessions', user?.id],
+        queryFn: () => user ? caveService.getSessions(undefined, user.id) : Promise.resolve([]),
+        enabled: !!user?.id,
+    });
     const createSessionMutation = useMutation({
         mutationFn: (eventId: string) => {
             if (!user?.id) throw new Error('يجب تسجيل الدخول أولاً');
@@ -247,7 +253,7 @@ const CavePage: React.FC = () => {
                         <Button 
                             variant="default" 
                             size="lg"
-                            className="px-4 py-2 rounded-md text-sm bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white font-medium shadow-md"
+                            className="px-6 py-3 rounded-full text-base bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white font-semibold shadow-lg ring-amber-300 focus:ring-4 transform hover:scale-105 transition-all"
                             onClick={() => {
                                 document.getElementById('events-section')?.scrollIntoView({ behavior: 'smooth' });
                                 caveAudio.playCoinCollect();
@@ -337,9 +343,9 @@ const CavePage: React.FC = () => {
                                                 <ScrollArea className="h-[500px] pr-4">
                                                     <div className="grid gap-6 md:grid-cols-2">
                                                         {activeEvents.map(event => (
-                                                            <Card key={event.event_id} className="bg-gradient-to-b from-gray-800/60 to-gray-900/60 border border-amber-500/20 shadow-lg shadow-amber-500/5 overflow-hidden">
+                                                            <Card key={event.event_id} className="bg-gradient-to-b from-gray-800/60 to-gray-900/60 border border-amber-500/20 shadow-lg shadow-amber-500/5 overflow-hidden rounded-xl transform hover:-translate-y-2 transition-all duration-300">
                                                                 <CardHeader>
-                                                                    <CardTitle className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-600">
+                                                                    <CardTitle className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-600 drop-shadow-lg">
                                                                         {event.title}
                                                                     </CardTitle>
                                                                 </CardHeader>
@@ -359,6 +365,10 @@ const CavePage: React.FC = () => {
                                                                     <div className="flex items-center">
                                                                         <Timer className="w-4 h-4 ml-2 text-purple-400"/> 
                                                                         <span>مدة الجلسة: {event.user_time_limit} دقيقة</span>
+                                                                    <div className="flex items-center">
+                                                                        <Zap className="w-4 h-4 ml-2 text-purple-400" />
+                                                                        <span>المشاركات: {userSessions.filter(s => s.event_id === event.event_id).length}/{event.max_participations_per_user}</span>
+                                                                    </div>
                                                                     </div>
                                                                 </CardContent>
                                                                 <CardFooter className="flex flex-col sm:flex-row gap-4 justify-end bg-gray-800/30 border-t border-amber-500/10 py-4">
@@ -407,7 +417,7 @@ const CavePage: React.FC = () => {
                                                                                 handleEnterCave(event.event_id);
                                                                                 caveAudio.playCaveDoor();
                                                                             }}
-                                                                            disabled={createSessionMutation.isPending}
+                                                                            disabled={createSessionMutation.isPending || (userSessions.filter(s => s.event_id === event.event_id).length >= event.max_participations_per_user)}
                                                                         >
                                                                             {createSessionMutation.isPending ? 'جاري الدخول...' : <><LogIn className="mr-1 h-4 w-4"/>دخول</>}
                                                                         </Button>
@@ -434,7 +444,7 @@ const CavePage: React.FC = () => {
                                                 transition={{ duration: 0.5 }}
                                                 className="max-w-xl mx-auto text-center py-8"
                                             >
-                                                <Ticket className="w-12 h-12 text-purple-400 mx-auto mb-4"/>
+                                                <Ticket className="w-16 h-16 text-purple-400 mx-auto mb-6"/>
                                                 <h3 className="text-2xl font-bold mb-2">هل لديك تذكرة؟</h3>
                                                 <p className="text-gray-400 mb-6">أدخل الرمز الخاص بك هنا للدخول إلى المغارة مباشرة.</p>
                                                 <div className="flex flex-col sm:flex-row items-stretch gap-3">
@@ -443,11 +453,11 @@ const CavePage: React.FC = () => {
                                                         value={ticketCode} 
                                                         onChange={e => setTicketCode(e.target.value)} 
                                                         placeholder="أدخل رمز التذكرة..." 
-                                                        className="flex-grow bg-gray-800/70 border border-purple-500/30 text-center focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                                                        className="flex-grow bg-gray-800/70 border border-purple-600/30 text-center placeholder-gray-400 rounded-full px-4 py-2 focus:outline-none focus:ring-4 focus:ring-purple-500 transform hover:scale-105 transition-all"
                                                     />
                                                     <Button 
                                                         variant="default" 
-                                                        className="px-4 py-2 rounded-md text-sm bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-medium shadow-md"
+                                                        className="px-6 py-3 rounded-full text-base bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-semibold shadow-lg transform hover:scale-105 transition-all duration-300"
                                                         onClick={handleValidateTicket} 
                                                         disabled={validateTicketMutation.isPending}
                                                     >
@@ -469,12 +479,12 @@ const CavePage: React.FC = () => {
                             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="themed-card rounded-2xl p-8 max-w-lg w-full relative">
                                 <button onClick={() => setIsTicketDialogOpen(false)} className="absolute top-4 left-4 text-gray-500 hover:text-white"><X/></button>
                                 <div className="text-center">
-                                    <Ticket className="w-12 h-12 text-purple-400 mx-auto mb-4"/>
+                                    <Ticket className="w-16 h-16 text-purple-400 mx-auto mb-6"/>
                                     <h2 className="text-2xl font-bold mb-2">تذكرة الدخول لحدث:</h2>
                                     <p className="cave-gradient-text text-xl font-bold mb-6">{selectedEvent?.title}</p>
                                     <div className="flex items-stretch gap-3">
-                                        <input type="text" value={ticketCode} onChange={e => setTicketCode(e.target.value)} placeholder="أدخل رمز التذكرة..." className="flex-grow bg-gray-800/70 border border-purple-500/30 rounded-lg px-4 text-center focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition"/>
-                                        <button onClick={handleValidateTicket} disabled={validateTicketMutation.isPending} className="bg-purple-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-purple-700 transition-colors duration-300">
+                                        <input type="text" value={ticketCode} onChange={e => setTicketCode(e.target.value)} placeholder="أدخل رمز التذكرة..." className="flex-grow bg-gray-800/70 border border-purple-600/30 text-center rounded-full px-4 py-2 focus:outline-none focus:ring-4 focus:ring-purple-500 transform hover:scale-105 transition-all"/>
+                                        <button onClick={handleValidateTicket} disabled={validateTicketMutation.isPending} className="px-6 py-3 rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-semibold shadow-lg transform hover:scale-105 transition-all duration-300">
                                             {validateTicketMutation.isPending ? "جاري التحقق..." : "تأكيد"}
                                         </button>
                                     </div>
@@ -488,23 +498,23 @@ const CavePage: React.FC = () => {
 
                 <div className="grid md:grid-cols-3 gap-8 text-center">
                      <motion.div initial={{opacity:0, y:20}} whileInView={{opacity:1, y:0}} transition={{delay:0.1, duration:0.5}} viewport={{ once: true }}>
-                        <div className="themed-card p-8 rounded-2xl h-full">
-                            <HelpCircle className="w-12 h-12 text-purple-400 mx-auto mb-4"/>
-                            <h3 className="text-xl font-bold mb-2">كيف تعمل المغارة؟</h3>
+                        <div className="themed-card p-8 rounded-2xl h-full transform hover:-translate-y-2 hover:scale-105 shadow-lg transition-all duration-300">
+                            <HelpCircle className="w-16 h-16 text-purple-400 mx-auto mb-6"/>
+                            <h3 className="text-2xl md:text-3xl font-extrabold mb-4 cave-gradient-text">كيف تعمل المغارة؟</h3>
                             <p className="text-gray-400">المغارة هي مساحة خاصة تتيح لك الوصول إلى منتجات حصرية وعروض خاصة. يمكنك الدخول إليها من خلال الأحداث المجدولة أو باستخدام تذكرة خاصة.</p>
                         </div>
                     </motion.div>
                      <motion.div initial={{opacity:0, y:20}} whileInView={{opacity:1, y:0}} transition={{delay:0.2, duration:0.5}} viewport={{ once: true }}>
-                        <div className="themed-card p-8 rounded-2xl h-full">
-                            <Zap className="w-12 h-12 text-purple-400 mx-auto mb-4"/>
-                            <h3 className="text-xl font-bold mb-2">الأحداث المجدولة</h3>
+                        <div className="themed-card p-8 rounded-2xl h-full transform hover:-translate-y-2 hover:scale-105 shadow-lg transition-all duration-300">
+                            <Zap className="w-16 h-16 text-purple-400 mx-auto mb-6"/>
+                            <h3 className="text-2xl md:text-3xl font-extrabold mb-4 cave-gradient-text">الأحداث المجدولة</h3>
                             <p className="text-gray-400">الأحداث المجدولة هي فترات زمنية محددة يمكن للجميع الدخول فيها إلى المغارة. تأكد من الالتزام بالوقت المحدد للاستفادة من العروض.</p>
                         </div>
                     </motion.div>
                      <motion.div initial={{opacity:0, y:20}} whileInView={{opacity:1, y:0}} transition={{delay:0.3, duration:0.5}} viewport={{ once: true }}>
-                        <div className="themed-card p-8 rounded-2xl h-full">
-                            <KeyRound className="w-12 h-12 text-purple-400 mx-auto mb-4"/>
-                            <h3 className="text-xl font-bold mb-2">التذاكر الخاصة</h3>
+                        <div className="themed-card p-8 rounded-2xl h-full transform hover:-translate-y-2 hover:scale-105 shadow-lg transition-all duration-300">
+                            <KeyRound className="w-16 h-16 text-purple-400 mx-auto mb-6"/>
+                            <h3 className="text-2xl md:text-3xl font-extrabold mb-4 cave-gradient-text">التذاكر الخاصة</h3>
                             <p className="text-gray-400">التذاكر الخاصة تتيح لك الدخول إلى أحداث محددة. يمكنك الحصول عليها من خلال العروض الترويجية أو كمكافأة على مشترياتك.</p>
                         </div>
                     </motion.div>

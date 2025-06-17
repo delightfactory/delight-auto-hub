@@ -204,6 +204,8 @@ export interface CaveEvent {
   max_concurrent: number;
   user_time_limit: number;
   purchase_cap: number;
+  /** الحد الأقصى لمرات دخول المستخدم */
+  max_participations_per_user: number;
   allowed_pay: 'points' | 'cash' | 'both';
   created_at: string;
 }

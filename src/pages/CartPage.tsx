@@ -55,8 +55,8 @@ const CartPage: React.FC = () => {
     
     // حساب التوفير لكل منتج
     const itemSavingsMap = items.map(item => {
-      const curr = parse(item.price);
-      const orig = item.originalPrice ? parse(item.originalPrice) : curr;
+      let curr = item.is_cave_purchase && item.cave_price !== undefined ? item.cave_price : parse(item.price);
+      let orig = item.originalPrice ? parse(item.originalPrice) : parse(item.price);
       const itemOriginalTotal = orig * item.quantity;
       originalTotal += itemOriginalTotal;
       
@@ -176,7 +176,7 @@ const CartPage: React.FC = () => {
                       <div className="flex items-center border rounded overflow-hidden h-7 md:h-8">
                         <button onClick={() => handleQuantity(item.id, item.quantity - 1)} className="px-1.5 md:px-2 h-full flex items-center justify-center"><Minus className="h-3 w-3 md:h-4 md:w-4" /></button>
                         <span className="px-2 md:px-3 text-sm md:text-base">{item.quantity}</span>
-                        <button onClick={() => handleQuantity(item.id, item.quantity + 1)} className="px-1.5 md:px-2 h-full flex items-center justify-center"><Plus className="h-3 w-3 md:h-4 md:w-4" /></button>
+                        <button onClick={() => handleQuantity(item.id, item.quantity + 1)} disabled={item.is_cave_purchase} className={`px-1.5 md:px-2 h-full flex items-center justify-center ${item.is_cave_purchase ? 'opacity-50 cursor-not-allowed' : ''}`}><Plus className="h-3 w-3 md:h-4 md:w-4" /></button>
                       </div>
                       <div className="text-right">
                         {(() => {
@@ -184,7 +184,7 @@ const CartPage: React.FC = () => {
                           return (
                             <>
                               <div className="font-semibold text-sm md:text-base lg:text-lg text-delight-900">
-                                {formatCurrency((parseFloat(item.price.replace(/[^\d.]/g, '')) || 0) * item.quantity)}
+                                {formatCurrency((item.is_cave_purchase && item.cave_price !== undefined ? item.cave_price : parseFloat(item.price.replace(/[^\d.]/g, '')) || 0) * item.quantity)}
                               </div>
                               {itemSaving && itemSaving.saving > 0 && (
                                 <div className="text-xs md:text-sm text-gray-500 line-through">
@@ -192,7 +192,7 @@ const CartPage: React.FC = () => {
                                 </div>
                               )}
                               <div className="text-xs md:text-sm text-gray-500">
-                                {formatCurrency(parseFloat(item.price.replace(/[^\d.]/g, '')) || 0)} / قطعة
+                                {formatCurrency(item.is_cave_purchase && item.cave_price !== undefined ? item.cave_price : item.is_cave_purchase && item.cave_price !== undefined ? item.cave_price : parseFloat(item.price.replace(/[^\d.]/g, '')) || 0)} / قطعة
                               </div>
                             </>
                           );
@@ -219,7 +219,7 @@ const CartPage: React.FC = () => {
                   <div key={item.id} className="flex flex-col text-xs md:text-sm mb-2">
                     <div className="flex justify-between">
                       <span className="truncate ml-2">{item.name} × {item.quantity}</span>
-                      <span className="flex-shrink-0">{formatCurrency((parseFloat(item.price.replace(/[^\d.]/g, '')) || 0) * item.quantity)}</span>
+                      <span className="flex-shrink-0">{formatCurrency((item.is_cave_purchase && item.cave_price !== undefined ? item.cave_price : item.is_cave_purchase && item.cave_price !== undefined ? item.cave_price : parseFloat(item.price.replace(/[^\d.]/g, '')) || 0) * item.quantity)}</span>
                     </div>
                     {itemSaving && itemSaving.saving > 0 && (
                       <div className="flex justify-between text-green-600 text-xs">

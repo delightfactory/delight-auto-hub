@@ -153,7 +153,7 @@ export const placeOrder = async (customerData: CustomerData, orderData: OrderDat
 
     // 3. إنشاء قائمة عناصر الطلب
     const orderItems = cartItems.items.map((item: any) => {
-      const itemPrice = parseInt(item.price?.replace(/\D/g, '')) || 0;
+      const itemPrice = item.is_cave_purchase && item.cave_price !== undefined ? item.cave_price : parseInt(item.price?.replace(/\D/g, '')) || 0;
       return {
         order_id: order.id,
         product_id: item.id,

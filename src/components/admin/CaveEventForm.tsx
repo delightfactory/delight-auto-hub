@@ -50,6 +50,7 @@ const eventFormSchema = z.object({
   max_concurrent: z.coerce.number().int().min(1, { message: 'يجب أن يكون الحد الأقصى للمستخدمين 1 على الأقل' }),
   user_time_limit: z.coerce.number().int().min(1, { message: 'يجب أن يكون حد وقت المستخدم 1 دقيقة على الأقل' }),
   purchase_cap: z.coerce.number().int().min(0, { message: 'يجب أن يكون حد الشراء 0 على الأقل' }),
+  max_participations_per_user: z.coerce.number().int().min(1, { message: 'يجب أن يكون الحد الأقصى للمشاركات 1 على الأقل' }),
   allowed_pay: z.enum(['points', 'cash', 'both'], {
     required_error: 'يرجى اختيار طرق الدفع المسموح بها',
   }),
@@ -84,6 +85,7 @@ const CaveEventForm: React.FC<CaveEventFormProps> = ({
       max_concurrent: initialData.max_concurrent,
       user_time_limit: initialData.user_time_limit,
       purchase_cap: initialData.purchase_cap,
+      max_participations_per_user: initialData.max_participations_per_user,
       allowed_pay: initialData.allowed_pay as 'points' | 'cash' | 'both',
       is_active: initialData.is_active,
     } : {
@@ -95,6 +97,7 @@ const CaveEventForm: React.FC<CaveEventFormProps> = ({
       max_concurrent: 10,
       user_time_limit: 30,
       purchase_cap: 0,
+      max_participations_per_user: 1,
       allowed_pay: 'both',
       is_active: true,
     }
@@ -300,6 +303,22 @@ const CaveEventForm: React.FC<CaveEventFormProps> = ({
           />
           
           {/* حقل حد الشراء */}
+          <FormField
+            control={form.control}
+            name="max_participations_per_user"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>حد المشاركات</FormLabel>
+                <FormControl>
+                  <Input type="number" min="1" {...field} />
+                </FormControl>
+                <FormDescription>
+                  الحد الأقصى لعدد مرات دخول المستخدمين للحدث (1 على الأقل)
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           <FormField
             control={form.control}
             name="purchase_cap"

@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { Product } from "@/types/db";
+import { Product, Category } from "@/types/db";
 import { caveService } from "./caveService";
 
 export interface ProductDisplay {
@@ -283,7 +283,7 @@ export const ProductDataService = {
   },
 
   // جلب فئات منتجات المغارة
-  getCaveCategories: async (): Promise<string[]> => {
+  getCaveCategories: async (): Promise<Category[]> => {
     try {
       // استخدام خدمة المغارة لجلب الفئات
       return await caveService.getCaveCategories();

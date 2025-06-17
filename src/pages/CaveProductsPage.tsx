@@ -1,6 +1,6 @@
 import React, { useState, useEffect, Fragment } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { AlertCircle, ShoppingCart, Star, Filter, Package, Gem, ShieldCheck, Clock, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -11,6 +11,7 @@ import { useCart } from '@/context/CartContext';
 import CaveParticles from '@/components/cave/CaveParticles';
 import { useCaveAudio } from '@/components/cave/CaveAudioEffects';
 import { CaveTitle, CaveIcon, CaveCard, CaveBadge, CaveButton } from '@/components/cave/CaveUI';
+import CaveFilterDialog from '@/components/cave/CaveFilterDialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { CardContent } from '@/components/ui/card';
@@ -46,9 +47,13 @@ const CaveProductsPage: React.FC = () => {
     const { toast } = useToast();
     const navigate = useNavigate();
     const { user } = useAuth();
-    const { addItem } = useCart();
+    const { addItem, items: cartItems } = useCart();
+    const queryClient = useQueryClient();
     const { sessionId } = useParams<{ sessionId: string }>();
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+    const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000]);
+    const [pointsRange, setPointsRange] = useState<[number, number]>([0, 1000]);
+    const [selectedRarity, setSelectedRarity] = useState<string | null>(null);
     const { playSound } = useCaveAudio();
 
     const { data: activeSession, isLoading: isLoadingSession } = useQuery({
@@ -58,43 +63,86 @@ const CaveProductsPage: React.FC = () => {
     });
 
     const { data: caveProducts, isLoading: isLoadingProducts } = useQuery({
-        queryKey: ['cave-products', selectedCategory],
+        queryKey: ['cave-products', selectedCategory, priceRange, pointsRange, selectedRarity],
         queryFn: () => ProductDataService.getCaveProducts(selectedCategory || undefined),
         enabled: !!activeSession,
     });
     
-    const { data: caveCategories } = useQuery({
+    const { data: caveCategories = [] } = useQuery({
         queryKey: ['cave-categories'],
         queryFn: () => ProductDataService.getCaveCategories(),
+        enabled: !!activeSession,
+    });
+    // جلب بيانات الحدث المرتبط بالجلسة للتحقق من سقف الشراء
+    const { data: activeEvent } = useQuery({
+        queryKey: ['cave-event', activeSession?.event_id],
+        queryFn: () => activeSession ? caveService.getEventById(activeSession.event_id) : Promise.resolve(null),
         enabled: !!activeSession,
     });
 
     const [remainingTime, setRemainingTime] = useState({ hours: 0, minutes: 0, seconds: 0 });
 
+    const endSessionMutation = useMutation({
+        mutationFn: () => caveService.endSession(activeSession!.session_id, activeSession!.total_spent),
+        onSuccess: () => {
+            toast({ title: 'انتهت الجلسة', description: 'انتهى الوقت. جاري إعادة التوجيه...', variant: 'default' });
+            queryClient.invalidateQueries({ queryKey: ['cave-active-session'] });
+            navigate('/cave');
+        },
+        onError: (error: any) => {
+            toast({ title: 'خطأ عند إنهاء الجلسة', description: (error as Error).message || 'حدث خطأ غير متوقع.', variant: 'destructive' });
+            navigate('/cave');
+        },
+    });
+
     useEffect(() => {
         if (!activeSession) return;
         const timer = setInterval(() => {
             const expiryTime = new Date(activeSession.expires_at).getTime();
-            const remaining = Math.max(0, expiryTime - Date.now());
+            const now = Date.now();
+            const remainingMs = expiryTime - now;
+            if (remainingMs <= 0) {
+                clearInterval(timer);
+                endSessionMutation.mutate();
+                return;
+            }
             setRemainingTime({
-                hours: Math.floor(remaining / 3600000),
-                minutes: Math.floor((remaining % 3600000) / 60000),
-                seconds: Math.floor((remaining % 60000) / 1000),
+                hours: Math.floor(remainingMs / 3600000),
+                minutes: Math.floor((remainingMs % 3600000) / 60000),
+                seconds: Math.floor((remainingMs % 60000) / 1000),
             });
         }, 1000);
         return () => clearInterval(timer);
-    }, [activeSession]);
+    }, [activeSession, endSessionMutation]);
 
     const handleAddToCart = (product: any) => {
         playSound('cart-add', 0.3);
-        
-        if (product.cave_max_quantity <= 0) {
-            toast({ title: "المنتج غير متوفر", variant: "destructive" });
+        // تحقق من حد الكمية لكل منتج
+        const existingQty = cartItems
+            .filter(i => i.is_cave_purchase && i.id === product.id && i.session_id === sessionId)
+            .reduce((sum, i) => sum + i.quantity, 0);
+        if (product.cave_max_quantity !== undefined && existingQty >= product.cave_max_quantity) {
+            toast({ title: `لا يمكنك إضافة أكثر من ${product.cave_max_quantity} قطع من هذا المنتج.`, variant: 'destructive' });
             return;
         }
-        addItem(product);
-        toast({ title: "تمت الإضافة إلى السلة", description: `تمت إضافة ${product.name} بنجاح.` });
+        // تحقق من سقف قيمة الشراء للجلسة
+        const currentTotal = cartItems
+            .filter(i => i.is_cave_purchase && i.session_id === sessionId)
+            .reduce((sum, i) => sum + (i.cave_price || 0) * i.quantity, 0);
+        if (activeEvent && currentTotal + (product.cave_price || 0) > (activeEvent.purchase_cap || 0)) {
+            const remaining = (activeEvent.purchase_cap || 0) - currentTotal;
+            toast({ title: `رصيدك المتبقي: ${remaining} ج.م فقط.`, variant: 'destructive' });
+            return;
+        }
+        // إضافة المنتج
+        addItem({
+            ...product,
+            is_cave_purchase: true,
+            session_id: sessionId || undefined,
+        });
+        toast({ title: 'تمت الإضافة إلى سلة المغارة', description: `تمت إضافة ${product.name} بنجاح.` });
     };
+
 
     if (isLoadingSession) {
         return (
@@ -161,34 +209,61 @@ const CaveProductsPage: React.FC = () => {
                     </div>
                 </motion.div>
 
-                {caveCategories && (
-                    <div className="pb-4 mb-8">
-                        <div className="flex flex-wrap justify-center items-center gap-3 mb-4 px-4">
+                <div className="flex items-center justify-between pb-4 mb-8">
+                    {/* عرض الفلتر الحالي للشاشات الكبيرة */}
+                    <div className="hidden md:flex flex-wrap items-center gap-3 mb-4 px-4">
+                        <CaveButton
+                            onClick={() => setSelectedCategory(null)}
+                            variant={!selectedCategory ? 'primary' : 'outline'}
+                            size="md"
+                            icon={<Filter className="w-4 h-4" />}
+                            iconPosition="start"
+                            className={!selectedCategory ? 'shadow-lg shadow-yellow-400/20' : ''}
+                        >
+                            كل الكنوز
+                        </CaveButton>
+                        {caveCategories && caveCategories.map((category) => (
                             <CaveButton
-                                onClick={() => setSelectedCategory(null)}
-                                variant={!selectedCategory ? 'primary' : 'outline'}
+                                key={category.id}
+                                onClick={() => setSelectedCategory(category.id)}
+                                variant={selectedCategory === category.id ? 'primary' : 'outline'}
                                 size="md"
-                                icon={<Filter className="w-4 h-4" />}
-                                iconPosition="start"
-                                className={!selectedCategory ? 'shadow-lg shadow-yellow-400/20' : ''}
+                                className={`flex items-center gap-2 ${selectedCategory === category.id ? 'shadow-lg shadow-yellow-400/20' : ''}`}
                             >
-                                كل الكنوز
+                                {category.icon && <span className="text-yellow-400">{category.icon}</span>}
+                                {category.name}
                             </CaveButton>
-                            {caveCategories.filter(cat => cat.length < 30).map((category: string) => (
-                                <CaveButton
-                                    key={category}
-                                    onClick={() => setSelectedCategory(category)}
-                                    variant={selectedCategory === category ? 'primary' : 'outline'}
-                                    size="md"
-                                    className={selectedCategory === category ? 'shadow-lg shadow-yellow-400/20' : ''}
-                                >
-                                    {category}
-                                </CaveButton>
-                            ))}
-                        </div>
-                        <Separator className="bg-gradient-to-r from-transparent via-yellow-500/30 to-transparent my-4" />
+                        ))}
                     </div>
-                )}
+                    
+                    {/* زر فتح مربع حوار الفلتر للشاشات الصغيرة */}
+                    <div className="md:hidden w-full flex justify-center">
+                        <CaveFilterDialog
+                            selected={selectedCategory}
+                            onSelect={setSelectedCategory}
+                            categories={caveCategories}
+                            priceRange={priceRange}
+                            onPriceChange={setPriceRange}
+                            minPrice={0}
+                            maxPrice={5000}
+                            pointsRange={pointsRange}
+                            onPointsChange={setPointsRange}
+                            minPoints={0}
+                            maxPoints={1000}
+                            rarities={['common', 'rare', 'epic', 'legendary']}
+                            selectedRarity={selectedRarity}
+                            onRaritySelect={setSelectedRarity}
+                            resetFilters={() => {
+                                setSelectedCategory(null);
+                                setPriceRange([0, 5000]);
+                                setPointsRange([0, 1000]);
+                                setSelectedRarity(null);
+                            }}
+                        />
+                    </div>
+                    
+                    <Separator className="bg-gradient-to-r from-transparent via-yellow-500/30 to-transparent my-4" />
+                </div>
 
                 <AnimatePresence>
                     {isLoadingProducts ? (
@@ -199,7 +274,28 @@ const CaveProductsPage: React.FC = () => {
                         </div>
                     ) : (
                         <motion.div layout className="w-full grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                            {caveProducts?.map((product: any, index: number) => {
+                            {caveProducts?.filter((product: any) => {
+                                // تطبيق فلتر السعر
+                                if (product.cave_price < priceRange[0] || product.cave_price > priceRange[1]) {
+                                    return false;
+                                }
+                                
+                                // تطبيق فلتر النقاط المطلوبة
+                                const requiredPoints = product.cave_required_points || 0;
+                                if (requiredPoints < pointsRange[0] || requiredPoints > pointsRange[1]) {
+                                    return false;
+                                }
+                                
+                                // تطبيق فلتر الندرة
+                                if (selectedRarity) {
+                                    const productRarity = getRarity(product);
+                                    if (productRarity.class !== selectedRarity) {
+                                        return false;
+                                    }
+                                }
+                                
+                                return true;
+                            }).map((product: any, index: number) => {
                                 const rarity = getRarity(product);
                                 const stockStatus = getStockStatus(product.cave_max_quantity);
                                 const discount = product.originalPrice ? Math.round(100 - (product.cave_price / parseFloat(product.originalPrice.replace(/[^0-9.]/g, ''))) * 100) : 0;
@@ -248,7 +344,23 @@ const CaveProductsPage: React.FC = () => {
                                                             {product.cave_price}
                                                         </div>
                                                         {discount > 0 && (
-                                                            <div className="text-xs text-gray-400 line-through">{product.price} ج.م</div>
+                                                            <>
+                                                                <div className="text-xs text-gray-400 line-through">{originalPrice} ج.م</div>
+                                                                <div className="flex flex-wrap gap-2 mt-1">
+                                                                    {product.cave_required_points !== undefined && (
+                                                                        <Badge variant="outline" className="flex items-center px-2 py-0.5 text-xs text-blue-200 bg-blue-900/30 border border-blue-500/30">
+                                                                            <Gem className="w-3 h-3 ml-1 text-blue-200" />
+                                                                            {product.cave_required_points} نقطة
+                                                                        </Badge>
+                                                                    )}
+                                                                    {product.cave_max_quantity !== undefined && (
+                                                                        <Badge variant="outline" className="flex items-center px-2 py-0.5 text-xs text-green-200 bg-green-900/30 border border-green-500/30">
+                                                                            <ShieldCheck className="w-3 h-3 ml-1 text-green-200" />
+                                                                            حد: {product.cave_max_quantity}
+                                                                        </Badge>
+                                                                    )}
+                                                                </div>
+                                                            </>
                                                         )}
                                                         </div>
                                                         
