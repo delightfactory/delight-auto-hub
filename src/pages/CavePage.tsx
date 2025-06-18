@@ -9,7 +9,12 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs';
 import { ScrollArea } from '../components/ui/scroll-area';
 import { Input } from '../components/ui/input';
+import { Badge } from '../components/ui/badge';
+
+
 import { motion, AnimatePresence } from 'framer-motion';
+import CaveCountdown from '../components/cave/CaveCountdown';
+
 
 // Hooks & services
 import { useToast } from '@/hooks/use-toast';
@@ -192,43 +197,50 @@ const CavePage: React.FC = () => {
 
     if (isLoadingSession) {
         return (
-            <div className="flex flex-col justify-center items-center h-screen bg-gray-900 text-white font-cairo">
-                <Gem className="w-16 h-16 text-purple-400 animate-pulse" />
+            <div className="flex flex-col justify-center items-center h-screen cave-enhanced-bg text-white font-cairo">
+                <Gem className="w-16 h-16 text-purple-400 animate-pulse cave-enhanced-glow" />
                 <p className="mt-4 text-xl tracking-wider">جاري استكشاف المغارة...</p>
             </div>
         );
     }
     
     return (
-        <div className="min-h-screen bg-gray-900 text-white font-cairo" dir="rtl">
+        <div className="min-h-screen cave-enhanced-bg text-white font-cairo" dir="rtl">
           {activeSession && (
-            <div className="mb-6 p-4 bg-yellow-800/20 border-l-4 border-yellow-500 text-yellow-100 rounded-lg">
-              <h2 className="font-bold text-lg">لديك جلسة نشطة</h2>
-              {activeEventDetails && <p>الحدث: {activeEventDetails.title}</p>}
-              <p>تنتهي عند: {formatDateTime(activeSession.expires_at)}</p>
-              <div className="mt-2 flex gap-2">
-                <Button onClick={() => navigate(`/cave/products/${activeSession.session_id}`)}>الدخول إلى الكنوز</Button>
-                <Button variant="destructive" onClick={handleExitCave}>خروج من المغارة</Button>
+            <div className="cave-enhanced-header mb-6 mx-auto max-w-4xl">
+              <div className="cave-enhanced-header-container">
+                <div className="cave-enhanced-header-section">
+                  <div className="cave-enhanced-icon-hourglass"></div>
+                  <span className="text-sm font-bold">جلسة نشطة</span>
+                </div>
+                <div className="cave-enhanced-header-section">
+                  {activeEventDetails && <span className="text-sm">{activeEventDetails.title}</span>}
+                </div>
+                <div className="cave-enhanced-timer-display">
+                  <div className="cave-enhanced-icon-hourglass"></div>
+                  <span className="text-xs">تنتهي: {formatDateTime(activeSession.expires_at)}</span>
+                </div>
+              </div>
+              <div className="cave-enhanced-progress-container">
+                <div className="cave-enhanced-progress-bar" style={{ width: '50%' }}></div>
+              </div>
+              <div className="mt-2 flex gap-2 justify-center">
+                <button 
+                  className="cave-enhanced-buy-button"
+                  onClick={() => navigate(`/cave/products/${activeSession.session_id}`)}
+                >
+                  <LogIn className="mr-1 h-4 w-4"/> الدخول إلى الكنوز
+                </button>
+                <button 
+                  className="cave-enhanced-buy-button bg-red-600 hover:bg-red-700"
+                  onClick={handleExitCave}
+                >
+                  <LogOut className="mr-1 h-4 w-4"/> خروج من المغارة
+                </button>
               </div>
             </div>
           )}
-             <style>{`
-                @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
-                .font-cairo { font-family: 'Cairo', sans-serif; }
-                .cave-gradient-text { background: linear-gradient(to right, #a78bfa, #c4b5fd); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-                .themed-card { background-color: rgba(31, 41, 55, 0.4); border: 1px solid rgba(167, 139, 250, 0.2); backdrop-filter: blur(10px); transition: all 0.3s ease; }
-                .themed-card-hover:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(167, 139, 250, 0.1); border-color: rgba(167, 139, 250, 0.4); }
-
-                /* خلفية متدرجة متحركة */
-                .cave-bg { position: fixed; inset: 0; z-index: -10; background: radial-gradient(circle at 50% 100%, rgba(255,215,0,0.05) 0%, transparent 60%), linear-gradient(135deg,#1e1b4b 0%, #2e1065 50%, #0f172a 100%); overflow:hidden; }
-                .cave-bg::before { content: ''; position: absolute; inset: 0; background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='1' cy='1' r='1' fill='%23ffffff' fill-opacity='0.2'/%3E%3C/svg%3E"); opacity:0.15; animation:bgMove 60s linear infinite; }
-                @keyframes bgMove { from{transform:translateY(0)} to{transform:translateY(-100%)} }
-
-                /* عنوان ديناميكي */
-                .treasure-title { font-size: 3rem; background: linear-gradient(90deg,#facc15,#eab308,#a855f7,#9333ea); background-size:400% 100%; -webkit-background-clip:text; -webkit-text-fill-color:transparent; animation:gradientShift 8s ease infinite; }
-                @keyframes gradientShift {0%{background-position:0%}100%{background-position:100%}}
-             `}</style>
-            <div className="cave-bg" aria-hidden="true"></div>
+            <div className="cave-enhanced-bg" aria-hidden="true"></div>
             <div className="container mx-auto px-4 py-12 relative">
                 {/* قسم البطل */}
                 <div className="relative flex flex-col items-center text-center pt-24 pb-32">
@@ -237,7 +249,7 @@ const CavePage: React.FC = () => {
                         initial={{ opacity: 0, scale: 0.8 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.8 }}
-                        className="treasure-title drop-shadow-xl mb-6"
+                        className="treasure-title drop-shadow-xl mb-6 cave-enhanced-glow"
                     >
                         كنوز المغارة
                     </motion.h1>
@@ -250,10 +262,8 @@ const CavePage: React.FC = () => {
                         استعد لرحلة فريدة بين أندر العروض والخصومات الأسطورية. جهّز عتادك وانطلق!
                     </motion.p>
                     <motion.div whileHover={{ scale: 1.05 }}>
-                        <Button 
-                            variant="default" 
-                            size="lg"
-                            className="px-6 py-3 rounded-full text-base bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white font-semibold shadow-lg ring-amber-300 focus:ring-4 transform hover:scale-105 transition-all"
+                        <button 
+                            className="cave-enhanced-buy-button px-6 py-3 rounded-full text-base"
                             onClick={() => {
                                 document.getElementById('events-section')?.scrollIntoView({ behavior: 'smooth' });
                                 caveAudio.playCoinCollect();
@@ -261,7 +271,7 @@ const CavePage: React.FC = () => {
                         >
                             <Gem className="mr-1 h-4 w-4" />
                             استكشف الأحداث
-                        </Button>
+                        </button>
                     </motion.div>
                 </div>
 
@@ -269,206 +279,206 @@ const CavePage: React.FC = () => {
                     {activeSession ? (
                         <motion.div key="active-session" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}>
 
-                            <Card className="max-w-2xl mx-auto bg-gradient-to-b from-gray-800/80 to-gray-900/80 border border-amber-500/20 shadow-xl shadow-amber-500/5">
-                                <CardHeader className="text-center">
-                                    <div className="flex justify-center mb-4">
-                                        <div className="p-3 bg-green-500/20 rounded-full">
-                                            <Gem className="w-8 h-8 text-green-400"/>
+                            <div className="cave-enhanced-card max-w-2xl mx-auto">
+                                <div className="cave-enhanced-card-inner">
+                                    <div className="text-center">
+                                        <div className="flex justify-center mb-4">
+                                            <div className="p-3 bg-green-500/20 rounded-full">
+                                                <Gem className="w-8 h-8 text-green-400 cave-enhanced-float"/>
+                                            </div>
                                         </div>
+                                        <h2 className="cave-enhanced-title text-3xl font-bold">أهلاً بك في الداخل!</h2>
+                                        <p className="text-gray-700 mb-2 text-sm">دخلت في: {formatDateTime(activeSession.entered_at)}</p>
+                                        <p className="text-gray-700 text-sm">استمتع بالتسوق قبل انتهاء الوقت.</p>
                                     </div>
-                                    <CardTitle className="text-3xl font-bold">أهلاً بك في الداخل!</CardTitle>
-                                    <CardDescription>
-                                        <p className="text-gray-400 mb-2">دخلت في: {formatDateTime(activeSession.entered_at)}</p>
-                                        <p className="text-gray-300">استمتع بالتسوق قبل انتهاء الوقت.</p>
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="text-lg font-semibold bg-gray-800/60 p-4 rounded-lg text-center">
+                                    <div className="text-lg font-semibold bg-gray-800/20 p-4 rounded-lg text-center mt-4 text-amber-800">
                                         تنتهي الجلسة في: {formatDateTime(activeSession.expires_at)}
                                     </div>
-                                </CardContent>
-                                <CardFooter className="flex flex-col sm:flex-row gap-4">
-                                    <Button 
-                                        variant="default" 
-                                        className="flex-1 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-bold shadow-lg shadow-purple-500/20"
-                                        onClick={() => {
-                                            navigate(`/cave/products/${activeSession.session_id}`);
-                                            caveAudio.playCaveDoor();
-                                        }}
-                                    >
-                                        <LogIn className="mr-1 h-4 w-4"/> اذهب للتسوق
-                                    </Button>
-                                    <Button 
-                                        variant="outline" 
-                                        className="flex-1 border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-300"
-                                        onClick={handleExitCave} 
-                                        disabled={endSessionMutation.isPending}
-                                    >
-                                        {endSessionMutation.isPending ? 'جاري الخروج...' : <><LogOut className="mr-1 h-4 w-4"/> إنهاء الجلسة</>}
-                                    </Button>
-                                </CardFooter>
-                            </Card>
+                                    <div className="flex flex-col sm:flex-row gap-4 mt-4 justify-center">
+                                        <button 
+                                            className="cave-enhanced-buy-button flex-1"
+                                            onClick={() => {
+                                                navigate(`/cave/products/${activeSession.session_id}`);
+                                                caveAudio.playCaveDoor();
+                                            }}
+                                        >
+                                            <LogIn className="mr-1 h-4 w-4"/> اذهب للتسوق
+                                        </button>
+                                        <button 
+                                            className="cave-enhanced-buy-button flex-1 bg-red-600 hover:bg-red-700"
+                                            onClick={handleExitCave} 
+                                            disabled={endSessionMutation.isPending}
+                                        >
+                                            {endSessionMutation.isPending ? 'جاري الخروج...' : <><LogOut className="mr-1 h-4 w-4"/> إنهاء الجلسة</>}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </motion.div>
                     ) : (
                         <motion.div key="no-session" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                            <Card id="events-section" className="max-w-4xl mx-auto bg-gradient-to-b from-gray-800/80 to-gray-900/80 border border-purple-500/20 shadow-xl shadow-purple-500/5">
-                                <CardContent className="p-2 sm:p-4">
-                                    <Tabs defaultValue="events" value={activeTab} onValueChange={(value) => {
-                                        setActiveTab(value);
-                                        caveAudio.playCoinCollect();
-                                    }}>
-                                        <div className="flex justify-center mb-6">
-                                            <TabsList className="bg-gray-800/70 border border-purple-500/20">
-                                                <TabsTrigger 
-                                                    value="events" 
-                                                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-yellow-600 data-[state=active]:text-white"
-                                                >
-                                                    الأحداث المتاحة
-                                                </TabsTrigger>
-                                                <TabsTrigger 
-                                                    value="ticket" 
-                                                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white"
-                                                >
-                                                    استخدم تذكرة
-                                                </TabsTrigger>
-                                            </TabsList>
-                                        </div>
-                                        
-                                        <TabsContent value="events" className="px-2 sm:px-6 pb-4">
-                                            {isLoadingEvents ? (
-                                                <div className="text-center py-12">
-                                                    <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-purple-400 mx-auto"></div>
-                                                </div>
-                                            ) : activeEvents && activeEvents.length > 0 ? (
-                                                <ScrollArea className="h-[500px] pr-4">
-                                                    <div className="grid gap-6 md:grid-cols-2">
+                            <div id="events-section" className="max-w-4xl mx-auto">
+                                <Tabs defaultValue="events" value={activeTab} onValueChange={(value) => {
+                                    setActiveTab(value);
+                                    caveAudio.playCoinCollect();
+                                }}>
+                                    <div className="flex justify-center mb-6">
+                                        <TabsList className="sticky top-0 bg-amber-50/20 border border-amber-500/20 shadow-sm z-10">
+                                            <TabsTrigger 
+                                                value="events" 
+                                                className="text-white hover:opacity-80 transition-opacity data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-yellow-600 data-[state=active]:text-white"
+                                            >
+                                                الأحداث المتاحة
+                                            </TabsTrigger>
+                                            <TabsTrigger 
+                                                value="ticket" 
+                                                className="text-white hover:opacity-80 transition-opacity data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white"
+                                            >
+                                                استخدم تذكرة
+                                            </TabsTrigger>
+                                        </TabsList>
+                                    </div>
+                                    
+                                    <TabsContent value="events" className="px-2 sm:px-6 pb-4 transition-opacity transform duration-500 ease-in-out data-[state=inactive]:opacity-0 data-[state=inactive]:translate-y-4 data-[state=active]:opacity-100 data-[state=active]:translate-y-0">
+  
+                                        {isLoadingEvents ? (
+                                            <div className="text-center py-12">
+                                                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-purple-400 mx-auto"></div>
+                                            </div>
+                                        ) : activeEvents && activeEvents.length > 0 ? (
+                                            <div className="cave-events-container">
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                                         {activeEvents.map(event => (
-                                                            <Card key={event.event_id} className="bg-gradient-to-b from-gray-800/60 to-gray-900/60 border border-amber-500/20 shadow-lg shadow-amber-500/5 overflow-hidden rounded-xl transform hover:-translate-y-2 transition-all duration-300">
-                                                                <CardHeader>
-                                                                    <CardTitle className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-600 drop-shadow-lg">
-                                                                        {event.title}
-                                                                    </CardTitle>
-                                                                </CardHeader>
-                                                                <CardContent className="space-y-3 text-gray-300 text-sm">
-                                                                    <div className="flex items-center">
-                                                                        <Calendar className="w-4 h-4 ml-2 text-purple-400"/> 
-                                                                        <span>يبدأ: {formatDateTime(event.start_time)}</span>
+                                                            <div key={event.event_id} className="overflow-hidden rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-1 hover:scale-105 transition-all duration-300 cave-event-card">
+                                                                <div className="bg-amber-50/90 p-6 rounded-lg shadow-md space-y-4">
+                                                                    <div>
+                                                                        <h3 className="cave-enhanced-title text-xl sm:text-2xl md:text-3xl font-extrabold">
+                                                                            {event.title}
+                                                                        </h3>
                                                                     </div>
-                                                                    <div className="flex items-center">
-                                                                        <Clock className="w-4 h-4 ml-2 text-purple-400"/> 
-                                                                        <span>ينتهي: {formatDateTime(event.end_time)}</span>
+                                                                    <div className="flex flex-wrap gap-2 mt-3">
+                                                                        <div className="flex items-center">
+                                                                            <div className="bg-amber-100 p-1 rounded-full ml-2"><Calendar className="w-4 h-4 text-purple-400"/></div> 
+                                                                            <Badge variant="outline" className="flex items-center gap-1 bg-amber-100 text-amber-800 border-amber-200"><Calendar className="w-4 h-4 text-purple-400" aria-hidden="true"/> هيبتدي: {formatDateTime(event.start_time)}</Badge>
+                                                                        </div>
+                                                                        <div className="flex items-center">
+                                                                            <div className="bg-amber-100 p-1 rounded-full ml-2"><Clock className="w-4 h-4 text-purple-400"/></div> 
+                                                                            <Badge variant="outline" className="flex items-center gap-1 bg-amber-100 text-amber-800 border-amber-200"><Clock className="w-4 h-4 text-purple-400" aria-hidden="true"/> هيخلص: {formatDateTime(event.end_time)}</Badge>
+                                                                        </div>
+                                                                        <Badge variant="outline" className="flex items-center gap-1 bg-amber-100 text-amber-800 border-amber-200">
+                                                                            
+                                                                            <CaveCountdown 
+                                                                                endTime={event.end_time} 
+                                                                                className="font-bold"
+                                                                                showLabel={false}
+                                                                            />
+                                                                            فاضلك
+                                                                        </Badge>
+                                                                        <Badge variant="outline" className="flex items-center gap-1 bg-amber-100 text-amber-800 border-amber-200">
+                                                                            <Users className="w-4 h-4 text-purple-400" aria-hidden="true"/> 
+                                                                            أقصى مستخدمين: {event.max_concurrent}
+                                                                        </Badge>
+                                                                        <Badge variant="outline" className="flex items-center gap-1 bg-amber-100 text-amber-800 border-amber-200">
+                                                                            <Timer className="w-4 h-4 text-purple-400" aria-hidden="true"/> 
+                                                                            مدتها: {event.user_time_limit} دقيقة
+                                                                        </Badge>
+                                                                        <Badge variant="outline" className="flex items-center gap-1 bg-amber-100 text-amber-800 border-amber-200">
+                                                                            <Zap className="w-4 h-4 text-purple-400" aria-hidden="true"/> 
+                                                                            محاولاتك: {userSessions.filter(s => s.event_id === event.event_id).length}/{event.max_participations_per_user}
+                                                                        </Badge>
                                                                     </div>
-                                                                    <div className="flex items-center">
-                                                                        <Users className="w-4 h-4 ml-2 text-purple-400"/> 
-                                                                        <span>الحد الأقصى: {event.max_concurrent} مستخدم</span>
-                                                                    </div>
-                                                                    <div className="flex items-center">
-                                                                        <Timer className="w-4 h-4 ml-2 text-purple-400"/> 
-                                                                        <span>مدة الجلسة: {event.user_time_limit} دقيقة</span>
-                                                                    <div className="flex items-center">
-                                                                        <Zap className="w-4 h-4 ml-2 text-purple-400" />
-                                                                        <span>المشاركات: {userSessions.filter(s => s.event_id === event.event_id).length}/{event.max_participations_per_user}</span>
-                                                                    </div>
-                                                                    </div>
-                                                                </CardContent>
-                                                                <CardFooter className="flex flex-col sm:flex-row gap-4 justify-end bg-gray-800/30 border-t border-amber-500/10 py-4">
-                                                                    {activeSession ? (
-                                                                        activeSession.event_id === event.event_id ? (
-                                                                            <>
-                                                                                <Button 
-                                                                                    variant="default" 
-                                                                                    className="flex-1 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-bold shadow-lg shadow-purple-500/20"
-                                                                                    onClick={() => {
-                                                                                        navigate(`/cave/products/${activeSession.session_id}`);
-                                                                                        caveAudio.playCaveDoor();
-                                                                                    }}
-                                                                                >
-                                                                                    <LogIn className="mr-1 h-4 w-4"/> الدخول إلى الكنوز
-                                                                                </Button>
-                                                                                <Button 
-                                                                                    variant="destructive" 
-                                                                                    className="flex-1 border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-300"
-                                                                                    onClick={handleExitCave} 
-                                                                                    disabled={endSessionMutation.isPending}
-                                                                                >
-                                                                                    {endSessionMutation.isPending ? 'جاري الخروج...' : <><LogOut className="mr-1 h-4 w-4"/> إنهاء الجلسة</>}
-                                                                                </Button>
-                                                                            </>
+                                                                    <div className="flex flex-col sm:flex-row gap-4 justify-end mt-4 border-t border-amber-500/10 pt-4">
+                                                                        {activeSession ? (
+                                                                            activeSession.event_id === event.event_id ? (
+                                                                                <>
+                                                                                    <button 
+                                                                                        className="cave-enhanced-buy-button flex-1"
+                                                                                        onClick={() => {
+                                                                                            navigate(`/cave/products/${activeSession.session_id}`);
+                                                                                            caveAudio.playCaveDoor();
+                                                                                        }}
+                                                                                    >
+                                                                                        <LogIn className="mr-1 h-4 w-4"/> الدخول إلى الكنوز
+                                                                                    </button>
+                                                                                    <button 
+                                                                                        className="cave-enhanced-buy-button flex-1 bg-red-600 hover:bg-red-700"
+                                                                                        onClick={handleExitCave} 
+                                                                                        disabled={endSessionMutation.isPending}
+                                                                                    >
+                                                                                        {endSessionMutation.isPending ? 'جاري الخروج...' : <><LogOut className="mr-1 h-4 w-4"/> إنهاء الجلسة</>}
+                                                                                    </button>
+                                                                                </>
+                                                                            ) : (
+                                                                                <button className="cave-enhanced-buy-button flex-1 opacity-50" disabled>لا يمكنك بدء جلسة جديدة في حدث آخر</button>
+                                                                            )
+                                                                        ) : event.kind === 'ticketed' ? (
+                                                                            <button 
+                                                                                className="cave-enhanced-buy-button bg-purple-600 hover:bg-purple-700"
+                                                                                onClick={() => {
+                                                                                    setSelectedEvent(event);
+                                                                                    setIsTicketDialogOpen(true);
+                                                                                    caveAudio.playCoinCollect();
+                                                                                }}
+                                                                            >
+                                                                                <Ticket className="mr-1 h-4 w-4"/>استخدم تذكرة
+                                                                            </button>
                                                                         ) : (
-                                                                            <Button variant="outline" className="flex-1" disabled>لا يمكنك بدء جلسة جديدة في حدث آخر</Button>
-                                                                        )
-                                                                    ) : event.kind === 'ticketed' ? (
-                                                                        <Button 
-                                                                            variant="outline" 
-                                                                            className="px-3 py-1 rounded-md text-sm border-purple-500 text-purple-500 hover:bg-purple-500/10 hover:text-purple-600 font-medium"
-                                                                            onClick={() => {
-                                                                                setSelectedEvent(event);
-                                                                                setIsTicketDialogOpen(true);
-                                                                                caveAudio.playCoinCollect();
-                                                                            }}
-                                                                        >
-                                                                            <Ticket className="mr-1 h-4 w-4"/>استخدم تذكرة
-                                                                        </Button>
-                                                                    ) : (
-                                                                        <Button 
-                                                                            variant="default" 
-                                                                            className="px-3 py-1 rounded-md text-sm bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white font-medium shadow-sm"
-                                                                            onClick={() => {
-                                                                                handleEnterCave(event.event_id);
-                                                                                caveAudio.playCaveDoor();
-                                                                            }}
-                                                                            disabled={createSessionMutation.isPending || (userSessions.filter(s => s.event_id === event.event_id).length >= event.max_participations_per_user)}
-                                                                        >
-                                                                            {createSessionMutation.isPending ? 'جاري الدخول...' : <><LogIn className="mr-1 h-4 w-4"/>دخول</>}
-                                                                        </Button>
-                                                                    )}
-                                                                </CardFooter>
-                                                            </Card>
+                                                                            <button 
+                                                                                className="cave-enhanced-buy-button"
+                                                                                onClick={() => {
+                                                                                    handleEnterCave(event.event_id);
+                                                                                    caveAudio.playCaveDoor();
+                                                                                }}
+                                                                                disabled={createSessionMutation.isPending || (userSessions.filter(s => s.event_id === event.event_id).length >= event.max_participations_per_user)}
+                                                                            >
+                                                                                {createSessionMutation.isPending ? 'جاري الدخول...' : <><LogIn className="mr-1 h-4 w-4"/>دخول</>}
+                                                                            </button>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
                                                         ))}
                                                     </div>
-                                                </ScrollArea>
+                                                </div>
                                             ) : (
-                                                <Card className="bg-gray-800/50 border border-gray-700 text-center py-12">
-                                                    <CardContent className="flex flex-col items-center">
-                                                        <AlertCircle className="h-12 w-12 mb-4 text-gray-400"/>
-                                                        <h3 className="text-xl font-medium text-gray-400">لا توجد أحداث متاحة حالياً</h3>
-                                                    </CardContent>
-                                                </Card>
+                                                <div className="flex flex-col items-center justify-center py-12 bg-white p-6 rounded-lg shadow-lg space-y-4">
+                                                    <AlertCircle className="h-16 w-16 text-purple-400"/>
+                                                    <h3 className="cave-enhanced-title text-2xl text-gray-700">لا توجد أحداث متاحة حالياً</h3>
+                                                    <p className="text-gray-500">نعتذر ولكن لا توجد أحداث في الوقت الحالي. يرجى العودة لاحقاً.</p>
+                                                </div>
                                             )}
                                         </TabsContent>
                                         
-                                        <TabsContent value="ticket" className="px-2 sm:px-6 pb-4">
+                                        <TabsContent value="ticket" className="px-2 sm:px-6 pb-4 transition-opacity transform duration-500 ease-in-out data-[state=inactive]:opacity-0 data-[state=inactive]:translate-y-4 data-[state=active]:opacity-100 data-[state=active]:translate-y-0">
                                             <motion.div 
                                                 initial={{ opacity: 0, y: 20 }}
                                                 animate={{ opacity: 1, y: 0 }}
                                                 transition={{ duration: 0.5 }}
-                                                className="max-w-xl mx-auto text-center py-8"
+                                                className="max-w-xl mx-auto bg-white p-8 rounded-lg shadow-md text-center"
                                             >
-                                                <Ticket className="w-16 h-16 text-purple-400 mx-auto mb-6"/>
-                                                <h3 className="text-2xl font-bold mb-2">هل لديك تذكرة؟</h3>
-                                                <p className="text-gray-400 mb-6">أدخل الرمز الخاص بك هنا للدخول إلى المغارة مباشرة.</p>
-                                                <div className="flex flex-col sm:flex-row items-stretch gap-3">
+                                                <Ticket className="w-16 h-16 text-purple-400 mx-auto mb-6 cave-enhanced-float"/>
+                                                <h3 className="cave-enhanced-title text-2xl mb-2">هل لديك تذكرة؟</h3>
+                                                <p className="text-gray-700 mb-6">أدخل الرمز الخاص بك هنا للدخول إلى المغارة مباشرة.</p>
+                                                <div className="flex flex-col sm:flex-row items-stretch gap-4">
                                                     <Input 
                                                         type="text" 
                                                         value={ticketCode} 
                                                         onChange={e => setTicketCode(e.target.value)} 
                                                         placeholder="أدخل رمز التذكرة..." 
-                                                        className="flex-grow bg-gray-800/70 border border-purple-600/30 text-center placeholder-gray-400 rounded-full px-4 py-2 focus:outline-none focus:ring-4 focus:ring-purple-500 transform hover:scale-105 transition-all"
+                                                        className="flex-grow bg-amber-50/10 border border-amber-600/30 text-center placeholder-gray-500 rounded-lg px-6 py-3 focus:outline-none focus:ring-4 focus:ring-amber-500 transition-all"
                                                     />
-                                                    <Button 
-                                                        variant="default" 
-                                                        className="px-6 py-3 rounded-full text-base bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-semibold shadow-lg transform hover:scale-105 transition-all duration-300"
+                                                    <button 
+                                                        className="cave-enhanced-buy-button px-6 py-3 rounded-full text-base"
                                                         onClick={handleValidateTicket} 
                                                         disabled={validateTicketMutation.isPending}
                                                     >
                                                         {validateTicketMutation.isPending ? 'جاري التحقق...' : 'تحقق'}
-                                                    </Button>
+                                                    </button>
                                                 </div>
                                             </motion.div>
                                         </TabsContent>
                                     </Tabs>
-                                </CardContent>
-                            </Card>
+                            </div>
                         </motion.div>
                     )}
                 </AnimatePresence>
@@ -476,19 +486,19 @@ const CavePage: React.FC = () => {
                  <AnimatePresence>
                     {isTicketDialogOpen && (
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="themed-card rounded-2xl p-8 max-w-lg w-full relative">
-                                <button onClick={() => setIsTicketDialogOpen(false)} className="absolute top-4 left-4 text-gray-500 hover:text-white"><X/></button>
-                                <div className="text-center">
-                                    <Ticket className="w-16 h-16 text-purple-400 mx-auto mb-6"/>
-                                    <h2 className="text-2xl font-bold mb-2">تذكرة الدخول لحدث:</h2>
-                                    <p className="cave-gradient-text text-xl font-bold mb-6">{selectedEvent?.title}</p>
-                                    <div className="flex items-stretch gap-3">
-                                        <input type="text" value={ticketCode} onChange={e => setTicketCode(e.target.value)} placeholder="أدخل رمز التذكرة..." className="flex-grow bg-gray-800/70 border border-purple-600/30 text-center rounded-full px-4 py-2 focus:outline-none focus:ring-4 focus:ring-purple-500 transform hover:scale-105 transition-all"/>
-                                        <button onClick={handleValidateTicket} disabled={validateTicketMutation.isPending} className="px-6 py-3 rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-semibold shadow-lg transform hover:scale-105 transition-all duration-300">
-                                            {validateTicketMutation.isPending ? "جاري التحقق..." : "تأكيد"}
-                                        </button>
+                            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="cave-enhanced-card max-w-lg w-full relative">
+                                <div className="cave-enhanced-card-inner p-8">
+                                    <button onClick={() => setIsTicketDialogOpen(false)} className="absolute top-4 left-4 text-gray-500 hover:text-gray-800"><X/></button>
+                                        <Ticket className="w-16 h-16 text-purple-400 mx-auto mb-6 cave-enhanced-float"/>
+                                        <h2 className="cave-enhanced-title text-2xl mb-4">تذكرة الدخول لحدث:</h2>
+                                        <p className="cave-enhanced-price text-xl font-bold mb-6">{selectedEvent?.title}</p>
+                                        <div className="flex items-stretch gap-4">
+                                            <input type="text" value={ticketCode} onChange={e => setTicketCode(e.target.value)} placeholder="أدخل رمز التذكرة..." className="flex-grow bg-amber-50/10 border border-amber-600/30 text-center placeholder-gray-500 rounded-lg px-6 py-3 focus:outline-none focus:ring-4 focus:ring-amber-500 transition-all"/>
+                                            <button onClick={handleValidateTicket} disabled={validateTicketMutation.isPending} className="cave-enhanced-buy-button px-6 py-3 rounded-full">
+                                                {validateTicketMutation.isPending ? "جاري التحقق..." : "تأكيد"}
+                                            </button>
+                                        </div>
                                     </div>
-                                </div>
                             </motion.div>
                         </motion.div>
                     )}
@@ -498,24 +508,30 @@ const CavePage: React.FC = () => {
 
                 <div className="grid md:grid-cols-3 gap-8 text-center">
                      <motion.div initial={{opacity:0, y:20}} whileInView={{opacity:1, y:0}} transition={{delay:0.1, duration:0.5}} viewport={{ once: true }}>
-                        <div className="themed-card p-8 rounded-2xl h-full transform hover:-translate-y-2 hover:scale-105 shadow-lg transition-all duration-300">
-                            <HelpCircle className="w-16 h-16 text-purple-400 mx-auto mb-6"/>
-                            <h3 className="text-2xl md:text-3xl font-extrabold mb-4 cave-gradient-text">كيف تعمل المغارة؟</h3>
-                            <p className="text-gray-400">المغارة هي مساحة خاصة تتيح لك الوصول إلى منتجات حصرية وعروض خاصة. يمكنك الدخول إليها من خلال الأحداث المجدولة أو باستخدام تذكرة خاصة.</p>
+                        <div className="cave-enhanced-card h-full transform hover:-translate-y-2 hover:scale-105 transition-all duration-300">
+                            <div className="cave-enhanced-card-inner p-8">
+                                <HelpCircle className="w-16 h-16 text-purple-400 mx-auto mb-6 cave-enhanced-float"/>
+                                <h3 className="cave-enhanced-title text-2xl md:text-3xl font-extrabold mb-4">كيف تعمل المغارة؟</h3>
+                                <p className="text-gray-700">المغارة هي مساحة خاصة تتيح لك الوصول إلى منتجات حصرية وعروض خاصة. يمكنك الدخول إليها من خلال الأحداث المجدولة أو باستخدام تذكرة خاصة.</p>
+                            </div>
                         </div>
                     </motion.div>
                      <motion.div initial={{opacity:0, y:20}} whileInView={{opacity:1, y:0}} transition={{delay:0.2, duration:0.5}} viewport={{ once: true }}>
-                        <div className="themed-card p-8 rounded-2xl h-full transform hover:-translate-y-2 hover:scale-105 shadow-lg transition-all duration-300">
-                            <Zap className="w-16 h-16 text-purple-400 mx-auto mb-6"/>
-                            <h3 className="text-2xl md:text-3xl font-extrabold mb-4 cave-gradient-text">الأحداث المجدولة</h3>
-                            <p className="text-gray-400">الأحداث المجدولة هي فترات زمنية محددة يمكن للجميع الدخول فيها إلى المغارة. تأكد من الالتزام بالوقت المحدد للاستفادة من العروض.</p>
+                        <div className="cave-enhanced-card h-full transform hover:-translate-y-2 hover:scale-105 transition-all duration-300">
+                            <div className="cave-enhanced-card-inner p-8">
+                                <Zap className="w-16 h-16 text-purple-400 mx-auto mb-6 cave-enhanced-float"/>
+                                <h3 className="cave-enhanced-title text-2xl md:text-3xl font-extrabold mb-4">الأحداث المجدولة</h3>
+                                <p className="text-gray-700">الأحداث المجدولة هي فترات زمنية محددة يمكن للجميع الدخول فيها إلى المغارة. تأكد من الالتزام بالوقت المحدد للاستفادة من العروض.</p>
+                            </div>
                         </div>
                     </motion.div>
                      <motion.div initial={{opacity:0, y:20}} whileInView={{opacity:1, y:0}} transition={{delay:0.3, duration:0.5}} viewport={{ once: true }}>
-                        <div className="themed-card p-8 rounded-2xl h-full transform hover:-translate-y-2 hover:scale-105 shadow-lg transition-all duration-300">
-                            <KeyRound className="w-16 h-16 text-purple-400 mx-auto mb-6"/>
-                            <h3 className="text-2xl md:text-3xl font-extrabold mb-4 cave-gradient-text">التذاكر الخاصة</h3>
-                            <p className="text-gray-400">التذاكر الخاصة تتيح لك الدخول إلى أحداث محددة. يمكنك الحصول عليها من خلال العروض الترويجية أو كمكافأة على مشترياتك.</p>
+                        <div className="cave-enhanced-card h-full transform hover:-translate-y-2 hover:scale-105 transition-all duration-300">
+                            <div className="cave-enhanced-card-inner p-8">
+                                <KeyRound className="w-16 h-16 text-purple-400 mx-auto mb-6 cave-enhanced-float"/>
+                                <h3 className="cave-enhanced-title text-2xl md:text-3xl font-extrabold mb-4">التذاكر الخاصة</h3>
+                                <p className="text-gray-700">التذاكر الخاصة تتيح لك الدخول إلى أحداث محددة. يمكنك الحصول عليها من خلال العروض الترويجية أو كمكافأة على مشترياتك.</p>
+                            </div>
                         </div>
                     </motion.div>
                 </div>

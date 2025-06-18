@@ -17,6 +17,10 @@ import { Separator } from '@/components/ui/separator';
 import { CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
+// Styles
+import '@/styles/cave-game.css';
+import '@/styles/cave-game-enhanced.css';
+
 // Services
 import { caveService } from '@/services/caveService';
 import { ProductDataService } from '@/services/productDataService';
@@ -73,14 +77,22 @@ const CaveProductsPage: React.FC = () => {
         queryFn: () => ProductDataService.getCaveCategories(),
         enabled: !!activeSession,
     });
-    // جلب بيانات الحدث المرتبط بالجلسة للتحقق من سقف الشراء
+    // جلب بيانات الحدث المرتبط بالجلسة للتحقف الشراء
+    const currentTotal = cartItems.filter(i => i.is_cave_purchase && i.session_id === sessionId).reduce((sum, i) => sum + (i.cave_price || 0) * i.quantity, 0);
+    
+    const sessionSpent = activeSession?.total_spent || 0;
+     // existing spent from session
+
     const { data: activeEvent } = useQuery({
         queryKey: ['cave-event', activeSession?.event_id],
         queryFn: () => activeSession ? caveService.getEventById(activeSession.event_id) : Promise.resolve(null),
         enabled: !!activeSession,
     });
 
-    const [remainingTime, setRemainingTime] = useState({ hours: 0, minutes: 0, seconds: 0 });
+    const totalSpent = sessionSpent + currentTotal;
+    const remainingCap = activeEvent ? activeEvent.purchase_cap - totalSpent : 0;
+    const percentRemaining = activeEvent ? (remainingCap / activeEvent.purchase_cap) * 100 : 0;
+    const [remainingTime, setRemainingTime] = useState<{ hours: number; minutes: number; seconds: number; total: number }>({ hours: 0, minutes: 0, seconds: 0, total: 0 });
 
     const endSessionMutation = useMutation({
         mutationFn: () => caveService.endSession(activeSession!.session_id, activeSession!.total_spent),
@@ -110,6 +122,7 @@ const CaveProductsPage: React.FC = () => {
                 hours: Math.floor(remainingMs / 3600000),
                 minutes: Math.floor((remainingMs % 3600000) / 60000),
                 seconds: Math.floor((remainingMs % 60000) / 1000),
+                total: Math.floor(remainingMs / 1000) // إضافة إجمالي الثواني المتبقية
             });
         }, 1000);
         return () => clearInterval(timer);
@@ -154,60 +167,54 @@ const CaveProductsPage: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-900 text-white font-cairo relative overflow-x-hidden" dir="rtl">
-            <div className="fixed inset-0 z-0 bg-[url('/images/cave-bg-dark.jpg')] bg-cover bg-center opacity-30"></div>
+        <div className="min-h-screen bg-gray-900 text-white font-cairo relative overflow-x-hidden cave-enhanced-bg" dir="rtl">
+            <div className="fixed inset-0 z-0 bg-[url('/images/cave-bg-dark.jpg')] bg-cover bg-center opacity-40"></div>
             <div className="fixed inset-0 z-0 bg-gradient-to-b from-gray-900/80 via-gray-900/60 to-gray-900/90"></div>
-            <CaveParticles count={30} colors={['#FFD700', '#FDE047', '#FBBF24', '#F59E0B']} />
+            <CaveParticles count={40} colors={['#FFD700', '#FDE047', '#FBBF24', '#F59E0B', '#FACC15']} />
             
-            <div className="w-full px-4 sm:px-6 lg:px-8 py-6 relative z-10">
-                <header className="text-center mb-12 overflow-hidden">
-                    <motion.div 
-                        initial={{ opacity: 0, y: -30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.7 }}
-                        className="relative inline-block"
-                    >
-                        <CaveTitle level={1} className="text-4xl md:text-5xl font-black mb-2">
-                            كنوز المغارة
-                        </CaveTitle>
-                        <div className="absolute -top-6 -right-6 rotate-12 hidden sm:block">
-                            <CaveIcon type="gem" size="lg" animate={true} />
-                        </div>
-                    </motion.div>
-                    <motion.p 
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.3, duration: 0.7 }}
-                        className="text-base text-yellow-200/80 max-w-3xl mx-auto"
-                    >
-                        مجموعة حصرية من المنتجات النفيسة، متاحة لفترة محدودة وبأسعار لا تضاهى. استكشف العروض قبل أن تختفي!
-                    </motion.p>
-                </header>
-
-                {/* --- Countdown Timer Improved --- */}
-                <motion.div 
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.5, duration: 0.5 }}
-                    className="mb-12 max-w-2xl mx-auto"
-                >
-                    <div className="w-full p-4 flex items-center justify-between rounded-2xl border border-yellow-500/20 bg-gray-900/50 backdrop-blur-sm">
-                        <div className="flex items-center">
-                            <ShieldCheck className="w-8 h-8 text-yellow-400" />
-                            <div className="mr-3">
-                                <h2 className="font-bold text-base text-yellow-100">جلستك محمية</h2>
-                                <p className="text-xs text-yellow-200/70">العروض تنتهي خلال:</p>
+            <div className="w-full px-4 sm:px-6 lg:px-8 py-6 relative cave-enhanced-content">
+                <header className="cave-enhanced-header">
+                    <div className="cave-enhanced-header-container">
+                        <div className="cave-enhanced-header-section">
+                            <div className="cave-enhanced-purchase-limit">
+                                
+                                <div className="cave-enhanced-limit-progress">
+                                    <div 
+                                        className="cave-enhanced-limit-bar" 
+                                        style={{ 
+                                            width: `${percentRemaining}%` 
+                                        }}
+                                    ></div>
+                                </div>
+                                <span className="text-xs font-bold">
+                                    {activeEvent ? `${remainingCap}/${activeEvent.purchase_cap}` : `0/${activeEvent?.purchase_cap || 0}`}
+                                </span>
+                                <div className="cave-enhanced-icon cave-enhanced-icon-coin"></div>
                             </div>
                         </div>
-                        <div className="flex items-center justify-center gap-1.5 font-mono text-xl font-bold text-white bg-black/20 px-4 py-2 rounded-lg border border-yellow-500/30" dir="ltr">
-                            <span>{String(remainingTime.hours).padStart(2, '0')}</span>
-                            <span className="text-yellow-400/80 -mt-1">:</span>
-                            <span>{String(remainingTime.minutes).padStart(2, '0')}</span>
-                            <span className="text-yellow-400/80 -mt-1">:</span>
-                            <span>{String(remainingTime.seconds).padStart(2, '0')}</span>
+                        
+                        <div className="cave-enhanced-header-section">
+                            <div className="cave-enhanced-gems-display">
+                                <div className="cave-enhanced-icon cave-enhanced-icon-gem"></div>
+                                <span className="cave-enhanced-points text-sm font-bold">200</span>
+                            </div>
+                            
+                            <div className="cave-enhanced-timer-display px-1 py-0.5">
+                                <div className="cave-enhanced-icon cave-enhanced-icon-hourglass cave-enhanced-float"></div>
+                                <div className="cave-enhanced-glow flex items-center justify-center gap-1 font-mono text-sm font-bold text-white" dir="ltr">
+                                    <span>{String(remainingTime.hours).padStart(2, '0')}</span>
+                                    <span className="cave-enhanced-price -mt-1">:</span>
+                                    <span>{String(remainingTime.minutes).padStart(2, '0')}</span>
+                                    <span className="cave-enhanced-price -mt-1">:</span>
+                                    <span>{String(remainingTime.seconds).padStart(2, '0')}</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </motion.div>
+                    
+                    
+                        
+                </header>
 
                 <div className="flex items-center justify-between pb-4 mb-8">
                     {/* عرض الفلتر الحالي للشاشات الكبيرة */}
@@ -313,49 +320,48 @@ const CaveProductsPage: React.FC = () => {
                                     >
                                         <div 
                                             className={`
-                                                group w-full flex flex-row overflow-hidden rounded-2xl border border-yellow-500/30 bg-gradient-to-br 
-                                                from-gray-800/90 to-gray-900/90 transition-all duration-300
-                                                ${rarity.class === 'legendary' || rarity.class === 'epic' ? 'hover:shadow-lg hover:shadow-yellow-400/20' : ''}
-                                                ${rarity.class === 'legendary' ? 'hover:-translate-y-1' : ''}
+                                                cave-enhanced-card group w-full flex flex-row overflow-hidden transition-all duration-300
+                                                ${rarity.class === 'legendary' ? 'cave-enhanced-float' : ''}
+                                                ${rarity.class === 'epic' ? 'cave-enhanced-glow' : ''}
                                             `}
                                         >
                                             {/* --- قسم المحتوى (الجانب الأيمن) --- */}
-                                            <div className="p-2 flex flex-col flex-grow w-2/3">
+                                            <div className="cave-enhanced-card-inner flex flex-col flex-grow w-2/3">
                                                 <div className='flex-grow'>
-                                                    <h3 className="text-sm font-bold text-yellow-100 cave-game-text-glow line-clamp-1">{product.name}</h3>
-                                                    <p className="text-xs text-gray-400 mt-1 line-clamp-2 h-8">{product.description}</p>
+                                                    <h3 className="cave-enhanced-title font-bold line-clamp-1">{product.name}</h3>
+                                                    <p className="text-xs text-gray-800 mt-0.5 mb-1 line-clamp-2 h-7">{product.description}</p>
                                                 </div>
                                                 
                                                 <div className="mt-auto">
-                                                    <div className="flex justify-end items-center my-1.5">
-                                                        <Badge variant="outline" className={`flex items-center ${stockStatus.color} ${stockStatus.bgColor} ${stockStatus.borderColor} px-2 py-0.5 text-xs`}>
-                                                            <Package className="w-2.5 h-2.5 ml-1"/>
+                                                    <div className="flex justify-end items-center my-0.25">
+                                                        <Badge variant="outline" className={`flex items-center ${stockStatus.color} ${stockStatus.bgColor} ${stockStatus.borderColor} px-1 py-0.25 text-xs`}>
+                                                            <Package className="w-1.5 h-1.5 ml-0.5"/>
                                                             {stockStatus.text}
                                                         </Badge>
                                                     </div>
                                                     
-                                                    <Separator className="bg-gradient-to-r from-transparent via-yellow-500/30 to-transparent my-1.5" />
+                                                    <Separator className="bg-gradient-to-r from-transparent via-yellow-500/30 to-transparent my-0.25" />
 
                                                     <div className="flex-shrink-0 flex items-end justify-between">
                                                         <div className="flex flex-col items-start">
-                                                        <span className="text-xs text-yellow-200/70">السعر</span>
-                                                        <div className="text-lg font-black text-yellow-400 cave-game-text-glow flex items-center">
-                                                            <CaveIcon type="coin" size="sm" className="ml-1" />
+                                                        <span className="text-xs text-yellow-950 font-medium">السعر</span>
+                                                        <div className="cave-enhanced-price text-lg font-black flex items-center">
+                                                            <div className="cave-enhanced-icon cave-enhanced-icon-coin ml-1"></div>
                                                             {product.cave_price}
                                                         </div>
                                                         {discount > 0 && (
                                                             <>
-                                                                <div className="text-xs text-gray-400 line-through">{originalPrice} ج.م</div>
-                                                                <div className="flex flex-wrap gap-2 mt-1">
+                                                                <div className="text-xs text-gray-700 line-through font-semibold">{originalPrice} ج.م</div>
+                                                                <div className="flex flex-wrap gap-0.25 mt-0.25">
                                                                     {product.cave_required_points !== undefined && (
-                                                                        <Badge variant="outline" className="flex items-center px-2 py-0.5 text-xs text-blue-200 bg-blue-900/30 border border-blue-500/30">
-                                                                            <Gem className="w-3 h-3 ml-1 text-blue-200" />
+                                                                        <Badge variant="outline" className="flex items-center px-1 py-0.25 text-xs text-blue-700 bg-blue-100 border border-blue-300">
+                                                                            <div className="cave-enhanced-icon cave-enhanced-icon-gem w-2 h-2 ml-0.5"></div>
                                                                             {product.cave_required_points} نقطة
                                                                         </Badge>
                                                                     )}
                                                                     {product.cave_max_quantity !== undefined && (
-                                                                        <Badge variant="outline" className="flex items-center px-2 py-0.5 text-xs text-green-200 bg-green-900/30 border border-green-500/30">
-                                                                            <ShieldCheck className="w-3 h-3 ml-1 text-green-200" />
+                                                                        <Badge variant="outline" className="flex items-center px-1 py-0.25 text-xs text-green-700 bg-green-100 border border-green-300">
+                                                                            <ShieldCheck className="w-2 h-2 ml-0.5 text-green-700" />
                                                                             حد: {product.cave_max_quantity}
                                                                         </Badge>
                                                                     )}
@@ -364,40 +370,39 @@ const CaveProductsPage: React.FC = () => {
                                                         )}
                                                         </div>
                                                         
-                                                        <CaveButton 
+                                                        <button 
                                                             onClick={() => handleAddToCart(product)}
                                                             disabled={product.cave_max_quantity <= 0}
-                                                            icon={<ShoppingCart className="w-4 h-4" />}
-                                                            soundEffect="coin"
-                                                            glowEffect
-                                                            size="sm"
-                                                            className="transition-all duration-300 group-hover:translate-y-[-2px] text-sm"
+                                                            className="cave-enhanced-buy-button"
                                                         >
+                                                            <ShoppingCart className="w-2.5 h-2.5" />
                                                             إضافة
-                                                        </CaveButton>
+                                                        </button>
                                                     </div>
                                                 </div>
                                             </div>
 
                                             {/* --- قسم الصورة (الجانب الأيسر) --- */}
-                                            <div className="relative w-1/3 flex-shrink-0 aspect-square">
-                                                <img 
-                                                    src={product.image} 
-                                                    alt={product.name} 
-                                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
-                                                    onError={(e) => { e.currentTarget.src = 'https://placehold.co/400/1a1a1a/333?text=خطأ'; }} 
-                                                />
+                                            <div className="relative w-1/3 flex-shrink-0">
+                                                <div className="w-full h-full flex flex-col items-center justify-center">
+                                                    <img 
+                                                        src={product.image} 
+                                                        alt={product.name} 
+                                                        className="cave-enhanced-product-image" 
+                                                        onError={(e) => { e.currentTarget.src = 'https://placehold.co/400/1a1a1a/333?text=خطأ'; }} 
+                                                    />
+                                                </div>
                                                 
                                                 {/* شارة الخصم المحسنة */}
                                                 {discount > 0 && (
-                                                    <div className="absolute top-2 right-2 bg-gradient-to-r from-red-500 to-orange-400 text-white font-bold py-1 px-2 text-xs shadow-lg rounded-md z-10 transform transition-transform group-hover:scale-110">
+                                                    <div className="cave-enhanced-discount-badge">
                                                         خصم {discount}%
                                                     </div>
                                                 )}
 
                                                 {/* التقييم في الأسفل */}
-                                                <div className="absolute bottom-1.5 right-1.5 z-10 flex items-center gap-1 bg-gray-900/60 backdrop-blur-sm px-1.5 py-0.5 rounded-full border border-yellow-500/30">
-                                                    <Star className="w-3.5 h-3.5 text-yellow-400" />
+                                                <div className="absolute bottom-1 right-1 z-10 flex items-center gap-0.25 bg-gray-900/80 backdrop-blur-sm px-0.5 py-0.25 rounded-full border border-yellow-500/50">
+                                                    <Star className="w-3 h-3 text-yellow-400" />
                                                     <span className="font-bold text-xs text-white">{product.rating}</span>
                                                 </div>
                                             </div>

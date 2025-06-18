@@ -24,83 +24,88 @@ interface CaveButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> 
   glowEffect?: boolean;
 }
 
-export const CaveButton: React.FC<CaveButtonProps> = ({
-  children,
-  variant = 'primary',
-  size = 'md',
-  icon,
-  iconPosition = 'start',
-  soundEffect = 'click',
-  glowEffect = false,
-  className = '',
-  onClick,
-  ...props
-}) => {
-  const { playSound, playCoinCollect, playTreasureFound } = useCaveAudio();
+export const CaveButton = React.forwardRef<HTMLButtonElement, CaveButtonProps>(
+  ({ 
+    children,
+    variant = 'primary',
+    size = 'md',
+    icon,
+    iconPosition = 'start',
+    soundEffect = 'click',
+    glowEffect = false,
+    className = '',
+    onClick,
+    ...props 
+  }, ref) => {
+    const { playSound, playCoinCollect, playTreasureFound } = useCaveAudio();
 
-  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    // تشغيل المؤثر الصوتي المناسب
-    if (soundEffect === 'click') {
-      playSound('cart-add', 0.3);
-    } else if (soundEffect === 'coin') {
-      playCoinCollect();
-    } else if (soundEffect === 'treasure') {
-      playTreasureFound();
-    }
+    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+      // تشغيل المؤثر الصوتي المناسب
+      if (soundEffect === 'click') {
+        playSound('cart-add', 0.3);
+      } else if (soundEffect === 'coin') {
+        playCoinCollect();
+      } else if (soundEffect === 'treasure') {
+        playTreasureFound();
+      }
 
-    // استدعاء معالج النقر الأصلي إن وجد
-    if (onClick) {
-      onClick(e);
-    }
-  };
+      // استدعاء معالج النقر الأصلي إن وجد
+      if (onClick) {
+        onClick(e);
+      }
+    };
 
-  // تحويل الأنماط إلى أنماط shadcn UI
-  const getVariantClasses = () => {
-    switch (variant) {
-      case 'primary':
-        return 'default';
-      case 'secondary':
-        return 'secondary';
-      case 'outline':
-        return 'outline';
-      case 'ghost':
-        return 'ghost';
-      default:
-        return 'default';
-    }
-  };
+    // تحويل الأنماط إلى أنماط shadcn UI
+    const getVariantClasses = () => {
+      switch (variant) {
+        case 'primary':
+          return 'default';
+        case 'secondary':
+          return 'secondary';
+        case 'outline':
+          return 'outline';
+        case 'ghost':
+          return 'ghost';
+        default:
+          return 'default';
+      }
+    };
 
-  const getSizeClasses = () => {
-    switch (size) {
-      case 'sm':
-        return 'sm';
-      case 'md':
-        return 'default';
-      case 'lg':
-        return 'lg';
-      default:
-        return 'default';
-    }
-  };
+    const getSizeClasses = () => {
+      switch (size) {
+        case 'sm':
+          return 'sm';
+        case 'md':
+          return 'default';
+        case 'lg':
+          return 'lg';
+        default:
+          return 'default';
+      }
+    };
 
-  return (
-    <Button
-      variant={getVariantClasses()}
-      size={getSizeClasses()}
-      className={cn(
-        'font-cinzel font-semibold',
-        glowEffect && 'cave-game-glow',
-        className
-      )}
-      onClick={handleClick}
-      {...props}
-    >
-      {icon && iconPosition === 'start' && <span className="mr-2">{icon}</span>}
-      {children}
-      {icon && iconPosition === 'end' && <span className="ml-2">{icon}</span>}
-    </Button>
-  );
-};
+    return (
+      <Button
+        variant={getVariantClasses()}
+        size={getSizeClasses()}
+        className={cn(
+          'font-cinzel font-semibold',
+          glowEffect && 'cave-game-glow',
+          className
+        )}
+        onClick={handleClick}
+        ref={ref}
+        {...props}
+      >
+        {icon && iconPosition === 'start' && <span className="mr-2">{icon}</span>}
+        {children}
+        {icon && iconPosition === 'end' && <span className="ml-2">{icon}</span>}
+      </Button>
+    );
+  }
+);
+
+CaveButton.displayName = 'CaveButton';
 
 // بطاقة المغارة المخصصة
 interface CaveCardProps {
