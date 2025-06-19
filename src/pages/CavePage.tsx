@@ -210,14 +210,14 @@ const CavePage: React.FC = () => {
             <div className="cave-enhanced-header mb-6 mx-auto max-w-4xl">
               <div className="cave-enhanced-header-container">
                 <div className="cave-enhanced-header-section">
-                  <div className="cave-enhanced-icon-hourglass"></div>
+                  <div className="cave-enhanced-icon cave-enhanced-icon-hourglass"></div>
                   <span className="text-sm font-bold">جلسة نشطة</span>
                 </div>
                 <div className="cave-enhanced-header-section">
                   {activeEventDetails && <span className="text-sm">{activeEventDetails.title}</span>}
                 </div>
                 <div className="cave-enhanced-timer-display">
-                  <div className="cave-enhanced-icon-hourglass"></div>
+                  <div className="cave-enhanced-icon cave-enhanced-icon-hourglass"></div>
                   <span className="text-xs">تنتهي: {formatDateTime(activeSession.expires_at)}</span>
                 </div>
               </div>
@@ -257,7 +257,7 @@ const CavePage: React.FC = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.3, duration: 0.8 }}
-                        className="max-w-2xl text-lg text-gray-300 mb-10"
+                        className="max-w-2xl text-lg text-gray-100 mb-10"
                     >
                         استعد لرحلة فريدة بين أندر العروض والخصومات الأسطورية. جهّز عتادك وانطلق!
                     </motion.p>
