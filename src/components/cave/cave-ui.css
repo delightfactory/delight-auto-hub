@@ -12,6 +12,59 @@
   --cave-dark: #1c1917;
   --cave-shadow: rgba(0, 0, 0, 0.5);
   --cave-glow: rgba(255, 215, 0, 0.3);
+
+  /* لوحة ألوان محسنة */
+  --cave-primary: #d4af37;
+  --cave-primary-dark: #b8860b;
+  --cave-primary-light: #ffd700;
+
+  --cave-secondary: #8b4513;
+  --cave-secondary-dark: #654321;
+  --cave-secondary-light: #a0522d;
+
+  --cave-bg-primary: #1a0f1d;
+  --cave-bg-secondary: #2d1a30;
+  --cave-bg-card: rgba(30, 20, 10, 0.9);
+
+  --cave-text-primary: #f5e5d5;
+  --cave-text-secondary: #d4c4b4;
+  --cave-text-accent: #ffd700;
+
+  --cave-success: #22c55e;
+  --cave-warning: #f59e0b;
+  --cave-error: #ef4444;
+  --cave-info: #3b82f6;
+
+  --cave-border-radius: 12px;
+  --cave-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Layout utilities */
+.cave-container {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  max-width: 1200px;
+}
+
+.cave-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.cave-spacing-sm {
+  padding: 0.5rem;
+}
+
+.cave-spacing-md {
+  padding: 1rem;
+}
+
+.cave-spacing-lg {
+  padding: 2rem;
 }
 
 /* Custom Cursor */
