@@ -237,7 +237,7 @@ const CavePage: React.FC = () => {
     }
     
     return (
-        <div className="min-h-screen cave-enhanced-bg text-white font-cairo" dir="rtl">
+        <div className="min-h-screen cave-enhanced-bg bg-fixed text-white font-cairo" dir="rtl">
           {activeSession && (
             <>
               <EnhancedCaveHeader
@@ -270,8 +270,8 @@ const CavePage: React.FC = () => {
               </div>
             </>
           )}
-            <div className="cave-enhanced-bg" aria-hidden="true"></div>
-            <div className="container mx-auto px-4 py-12 relative">
+            <div className="absolute inset-0 -z-10 cave-enhanced-bg" aria-hidden="true"></div>
+            <div className="cave-container cave-spacing-md py-12 relative">
                 {/* قسم البطل */}
                 <div className="relative flex flex-col items-center text-center pt-24 pb-32">
                     <CaveParticles count={15} duration={10} colors={['#FFD700', '#FFA500', '#B8860B']} />
@@ -377,7 +377,7 @@ const CavePage: React.FC = () => {
                                             </div>
                                         ) : activeEvents && activeEvents.length > 0 ? (
                                             <div className="cave-events-container">
-                                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                                <div className="cave-grid">
                                                         {activeEvents.map(event => (
                                                             <div key={event.event_id} className="overflow-hidden rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-1 hover:scale-105 transition-all duration-300 cave-event-card">
                                                                 <div className="bg-amber-50/90 p-6 rounded-lg shadow-md space-y-4">
@@ -536,7 +536,7 @@ const CavePage: React.FC = () => {
                 
                 <div className="my-16 border-t border-purple-500/10"></div>
 
-                <div className="grid md:grid-cols-3 gap-8 text-center">
+                <div className="cave-grid md:grid-cols-3 gap-8 text-center">
                      <motion.div initial={{opacity:0, y:20}} whileInView={{opacity:1, y:0}} transition={{delay:0.1, duration:0.5}} viewport={{ once: true }}>
                         <div className="cave-enhanced-card h-full transform hover:-translate-y-2 hover:scale-105 transition-all duration-300">
                             <div className="cave-enhanced-card-inner p-8">

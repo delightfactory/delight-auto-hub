@@ -170,8 +170,8 @@ const CaveProductsPage: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-900 text-white cave-font-secondary relative overflow-x-hidden cave-enhanced-bg" dir="rtl">
-            <div className="fixed inset-0 z-0 bg-[url('/images/cave-bg-dark.jpg')] bg-cover bg-center opacity-40"></div>
+        <div className="min-h-screen bg-gray-900 text-white cave-font-secondary relative overflow-x-hidden cave-enhanced-bg bg-fixed" dir="rtl">
+            <div className="fixed inset-0 z-0 bg-[url('/images/cave-texture.svg')] bg-cover bg-center opacity-30"></div>
             <div className="fixed inset-0 z-0 bg-gradient-to-b from-gray-900/80 via-gray-900/60 to-gray-900/90"></div>
             <CaveParticles count={40} colors={['#FFD700', '#FDE047', '#FBBF24', '#F59E0B', '#FACC15']} />
             
