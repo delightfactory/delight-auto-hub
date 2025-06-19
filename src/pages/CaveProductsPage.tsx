@@ -1,7 +1,7 @@
 import React, { useState, useEffect, Fragment } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { AlertCircle, ShoppingCart, Star, Filter, Package, Gem, ShieldCheck, Clock, Sparkles } from 'lucide-react';
+import { AlertCircle, ShoppingCart, Star, Filter, Package, Gem, ShieldCheck, Clock, Sparkles, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Hooks & context
@@ -11,6 +11,9 @@ import { useCart } from '@/context/CartContext';
 import CaveParticles from '@/components/cave/CaveParticles';
 import { useCaveAudio } from '@/components/cave/CaveAudioEffects';
 import { CaveTitle, CaveIcon, CaveCard, CaveBadge, CaveButton } from '@/components/cave/CaveUI';
+import EnhancedCaveHeader from '@/components/cave/EnhancedCaveHeader';
+import EnhancedProductCard from '@/components/cave/EnhancedProductCard';
+import { caveAnimations } from '@/components/cave/caveAnimations';
 import CaveFilterDialog from '@/components/cave/CaveFilterDialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
@@ -159,7 +162,7 @@ const CaveProductsPage: React.FC = () => {
 
     if (isLoadingSession) {
         return (
-            <div className="flex flex-col justify-center items-center h-screen bg-gray-900 text-white font-cairo">
+            <div className="flex flex-col justify-center items-center h-screen bg-gray-900 text-white cave-font-secondary">
                 <Gem className="w-16 h-16 text-yellow-400 animate-pulse" />
                 <p className="mt-4 text-lg tracking-wider">جاري فتح بوابات المغارة...</p>
             </div>
@@ -167,54 +170,26 @@ const CaveProductsPage: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-900 text-white font-cairo relative overflow-x-hidden cave-enhanced-bg" dir="rtl">
-            <div className="fixed inset-0 z-0 bg-[url('/images/cave-bg-dark.jpg')] bg-cover bg-center opacity-40"></div>
+        <div className="min-h-screen bg-gray-900 text-white cave-font-secondary relative overflow-x-hidden cave-enhanced-bg bg-fixed" dir="rtl">
+            <div className="fixed inset-0 z-0 bg-[url('/images/cave-texture.svg')] bg-cover bg-center opacity-30"></div>
             <div className="fixed inset-0 z-0 bg-gradient-to-b from-gray-900/80 via-gray-900/60 to-gray-900/90"></div>
             <CaveParticles count={40} colors={['#FFD700', '#FDE047', '#FBBF24', '#F59E0B', '#FACC15']} />
             
-            <div className="w-full px-4 sm:px-6 lg:px-8 py-6 relative cave-enhanced-content">
-                <header className="cave-enhanced-header">
-                    <div className="cave-enhanced-header-container">
-                        <div className="cave-enhanced-header-section">
-                            <div className="cave-enhanced-purchase-limit">
-                                
-                                <div className="cave-enhanced-limit-progress">
-                                    <div 
-                                        className="cave-enhanced-limit-bar" 
-                                        style={{ 
-                                            width: `${percentRemaining}%` 
-                                        }}
-                                    ></div>
-                                </div>
-                                <span className="text-xs font-bold">
-                                    {activeEvent ? `${remainingCap}/${activeEvent.purchase_cap}` : `0/${activeEvent?.purchase_cap || 0}`}
-                                </span>
-                                <div className="cave-enhanced-icon cave-enhanced-icon-coin"></div>
-                            </div>
-                        </div>
-                        
-                        <div className="cave-enhanced-header-section">
-                            <div className="cave-enhanced-gems-display">
-                                <div className="cave-enhanced-icon cave-enhanced-icon-gem"></div>
-                                <span className="cave-enhanced-points text-sm font-bold">200</span>
-                            </div>
-                            
-                            <div className="cave-enhanced-timer-display px-1 py-0.5">
-                                <div className="cave-enhanced-icon cave-enhanced-icon-hourglass cave-enhanced-float"></div>
-                                <div className="cave-enhanced-glow flex items-center justify-center gap-1 font-mono text-sm font-bold text-white" dir="ltr">
-                                    <span>{String(remainingTime.hours).padStart(2, '0')}</span>
-                                    <span className="cave-enhanced-price -mt-1">:</span>
-                                    <span>{String(remainingTime.minutes).padStart(2, '0')}</span>
-                                    <span className="cave-enhanced-price -mt-1">:</span>
-                                    <span>{String(remainingTime.seconds).padStart(2, '0')}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    
-                        
-                </header>
+            <div className="cave-container cave-spacing-md relative cave-enhanced-content">
+                <EnhancedCaveHeader
+                    session={activeSession}
+                    event={activeEvent}
+                    remainingTime={{
+                        hours: remainingTime.hours,
+                        minutes: remainingTime.minutes,
+                        seconds: remainingTime.seconds
+                    }}
+                    purchaseLimit={{
+                        remaining: remainingCap,
+                        total: activeEvent?.purchase_cap || 0
+                    }}
+                    userPoints={200}
+                />
 
                 <div className="flex items-center justify-between pb-4 mb-8">
                     {/* عرض الفلتر الحالي للشاشات الكبيرة */}
@@ -270,17 +245,44 @@ const CaveProductsPage: React.FC = () => {
                     </div>
                     
                     <Separator className="bg-gradient-to-r from-transparent via-yellow-500/30 to-transparent my-4" />
+
+                    <div className="flex flex-wrap gap-2 mb-4">
+                        {selectedCategory && (
+                            <Badge variant="secondary" className="flex items-center gap-1">
+                                {caveCategories.find(c => c.id === selectedCategory)?.name || selectedCategory}
+                                <X className="w-3 h-3 cursor-pointer" onClick={() => setSelectedCategory(null)} />
+                            </Badge>
+                        )}
+                        {(priceRange[0] !== 0 || priceRange[1] !== 5000) && (
+                            <Badge variant="secondary" className="flex items-center gap-1">
+                                {`السعر: ${priceRange[0]}-${priceRange[1]}`}
+                                <X className="w-3 h-3 cursor-pointer" onClick={() => setPriceRange([0, 5000])} />
+                            </Badge>
+                        )}
+                        {(pointsRange[0] !== 0 || pointsRange[1] !== 1000) && (
+                            <Badge variant="secondary" className="flex items-center gap-1">
+                                {`النقاط: ${pointsRange[0]}-${pointsRange[1]}`}
+                                <X className="w-3 h-3 cursor-pointer" onClick={() => setPointsRange([0, 1000])} />
+                            </Badge>
+                        )}
+                        {selectedRarity && (
+                            <Badge variant="secondary" className="flex items-center gap-1">
+                                {selectedRarity}
+                                <X className="w-3 h-3 cursor-pointer" onClick={() => setSelectedRarity(null)} />
+                            </Badge>
+                        )}
+                    </div>
                 </div>
 
                 <AnimatePresence>
                     {isLoadingProducts ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                        <div className="cave-grid">
                             {Array.from({length:9}).map((_,i)=>(
                                 <div key={i} className="animate-pulse bg-gray-800/50 rounded-2xl h-40 border border-yellow-500/10"></div>
                             ))}
                         </div>
                     ) : (
-                        <motion.div layout className="w-full grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                        <motion.div layout className="cave-grid">
                             {caveProducts?.filter((product: any) => {
                                 // تطبيق فلتر السعر
                                 if (product.cave_price < priceRange[0] || product.cave_price > priceRange[1]) {
@@ -303,111 +305,28 @@ const CaveProductsPage: React.FC = () => {
                                 
                                 return true;
                             }).map((product: any, index: number) => {
-                                const rarity = getRarity(product);
-                                const stockStatus = getStockStatus(product.cave_max_quantity);
-                                const discount = product.originalPrice ? Math.round(100 - (product.cave_price / parseFloat(product.originalPrice.replace(/[^0-9.]/g, ''))) * 100) : 0;
-                                const originalPrice = product.originalPrice ? parseFloat(product.originalPrice.replace(/[^0-9.]/g, '')) : product.price;
-                                const savings = originalPrice - product.cave_price;
-                                
-                                return (
-                                    <motion.div
-                                        key={product.id}
-                                        layout
-                                        initial={{ opacity: 0, y: 50, scale: 0.9 }}
-                                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                                        exit={{ opacity: 0, scale: 0.9 }}
-                                        transition={{ duration: 0.4, delay: index * 0.05 }}
-                                    >
-                                        <div 
-                                            className={`
-                                                cave-enhanced-card group w-full flex flex-row overflow-hidden transition-all duration-300
-                                                ${rarity.class === 'legendary' ? 'cave-enhanced-float' : ''}
-                                                ${rarity.class === 'epic' ? 'cave-enhanced-glow' : ''}
-                                            `}
-                                        >
-                                            {/* --- قسم المحتوى (الجانب الأيمن) --- */}
-                                            <div className="cave-enhanced-card-inner flex flex-col flex-grow w-2/3">
-                                                <div className='flex-grow'>
-                                                    <h3 className="cave-enhanced-title font-bold line-clamp-1">{product.name}</h3>
-                                                    <p className="text-xs text-gray-800 mt-0.5 mb-1 line-clamp-2 h-7">{product.description}</p>
-                                                </div>
-                                                
-                                                <div className="mt-auto">
-                                                    <div className="flex justify-end items-center my-0.25">
-                                                        <Badge variant="outline" className={`flex items-center ${stockStatus.color} ${stockStatus.bgColor} ${stockStatus.borderColor} px-1 py-0.25 text-xs`}>
-                                                            <Package className="w-1.5 h-1.5 ml-0.5"/>
-                                                            {stockStatus.text}
-                                                        </Badge>
-                                                    </div>
-                                                    
-                                                    <Separator className="bg-gradient-to-r from-transparent via-yellow-500/30 to-transparent my-0.25" />
-
-                                                    <div className="flex-shrink-0 flex items-end justify-between">
-                                                        <div className="flex flex-col items-start">
-                                                        <span className="text-xs text-yellow-950 font-medium">السعر</span>
-                                                        <div className="cave-enhanced-price text-lg font-black flex items-center">
-                                                            <div className="cave-enhanced-icon cave-enhanced-icon-coin ml-1"></div>
-                                                            {product.cave_price}
-                                                        </div>
-                                                        {discount > 0 && (
-                                                            <>
-                                                                <div className="text-xs text-gray-700 line-through font-semibold">{originalPrice} ج.م</div>
-                                                                <div className="flex flex-wrap gap-0.25 mt-0.25">
-                                                                    {product.cave_required_points !== undefined && (
-                                                                        <Badge variant="outline" className="flex items-center px-1 py-0.25 text-xs text-blue-700 bg-blue-100 border border-blue-300">
-                                                                            <div className="cave-enhanced-icon cave-enhanced-icon-gem w-2 h-2 ml-0.5"></div>
-                                                                            {product.cave_required_points} نقطة
-                                                                        </Badge>
-                                                                    )}
-                                                                    {product.cave_max_quantity !== undefined && (
-                                                                        <Badge variant="outline" className="flex items-center px-1 py-0.25 text-xs text-green-700 bg-green-100 border border-green-300">
-                                                                            <ShieldCheck className="w-2 h-2 ml-0.5 text-green-700" />
-                                                                            حد: {product.cave_max_quantity}
-                                                                        </Badge>
-                                                                    )}
-                                                                </div>
-                                                            </>
-                                                        )}
-                                                        </div>
-                                                        
-                                                        <button 
-                                                            onClick={() => handleAddToCart(product)}
-                                                            disabled={product.cave_max_quantity <= 0}
-                                                            className="cave-enhanced-buy-button"
-                                                        >
-                                                            <ShoppingCart className="w-2.5 h-2.5" />
-                                                            إضافة
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* --- قسم الصورة (الجانب الأيسر) --- */}
-                                            <div className="relative w-1/3 flex-shrink-0">
-                                                <div className="w-full h-full flex flex-col items-center justify-center">
-                                                    <img 
-                                                        src={product.image} 
-                                                        alt={product.name} 
-                                                        className="cave-enhanced-product-image" 
-                                                        onError={(e) => { e.currentTarget.src = 'https://placehold.co/400/1a1a1a/333?text=خطأ'; }} 
-                                                    />
-                                                </div>
-                                                
-                                                {/* شارة الخصم المحسنة */}
-                                                {discount > 0 && (
-                                                    <div className="cave-enhanced-discount-badge">
-                                                        خصم {discount}%
-                                                    </div>
-                                                )}
-
-                                                {/* التقييم في الأسفل */}
-                                                <div className="absolute bottom-1 right-1 z-10 flex items-center gap-0.25 bg-gray-900/80 backdrop-blur-sm px-0.5 py-0.25 rounded-full border border-yellow-500/50">
-                                                    <Star className="w-3 h-3 text-yellow-400" />
-                                                    <span className="font-bold text-xs text-white">{product.rating}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </motion.div>
+                                const cartQty = cartItems
+            .filter(i => i.is_cave_purchase && i.id === product.id && i.session_id === sessionId)
+            .reduce((sum, i) => sum + i.quantity, 0);
+            return (
+                <motion.div
+                    key={product.id}
+                    layout
+                    initial={caveAnimations.fadeInUp.initial}
+                    animate={caveAnimations.fadeInUp.animate}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{
+                        ...caveAnimations.fadeInUp.transition,
+                        delay: index * 0.05
+                    }}
+                >
+                    <EnhancedProductCard
+                        product={product}
+                        onAddToCart={() => handleAddToCart(product)}
+                        isInCart={cartQty > 0}
+                        cartQuantity={cartQty}
+                    />
+                </motion.div>
                                 );
                             })}
                         </motion.div>

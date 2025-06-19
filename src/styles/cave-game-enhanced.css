@@ -7,7 +7,11 @@
 .cave-enhanced-bg {
   /* مساحة لتموضع الهيدر الخشبي أسفل الهيدر الرئيسي (mobile: main header 3.5rem + wood header 6.25rem = 9.75rem) */
   padding-top: 9.75rem; /* mobile: header (3.5rem) + wood header (6.25rem) */
-  background: linear-gradient(to bottom, #1a0f1d 0%, #2d1a30 100%);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(253, 186, 116, 0.1), transparent 70%),
+    radial-gradient(circle at 20% 30%, rgba(217, 119, 6, 0.1), transparent 70%),
+    linear-gradient(to bottom, #1a0f1d 0%, #2d1a30 100%);
+  background-attachment: fixed;
   position: relative;
   overflow: hidden;
 }
@@ -21,7 +25,7 @@
   bottom: 0;
   background-image: url('/images/cave-texture.svg');
   background-size: 200px;
-  opacity: 0.15;
+  opacity: 0.2;
   pointer-events: none;
 }
 
