@@ -10,6 +10,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs'
 import { ScrollArea } from '../components/ui/scroll-area';
 import { Input } from '../components/ui/input';
 import { Badge } from '../components/ui/badge';
+import CaveGameLayout from '../components/cave/CaveGameLayout';
 
 
 import { motion, AnimatePresence } from 'framer-motion';
@@ -197,15 +198,17 @@ const CavePage: React.FC = () => {
 
     if (isLoadingSession) {
         return (
-            <div className="flex flex-col justify-center items-center h-screen cave-enhanced-bg text-white font-cairo">
-                <Gem className="w-16 h-16 text-purple-400 animate-pulse cave-enhanced-glow" />
-                <p className="mt-4 text-xl tracking-wider">جاري استكشاف المغارة...</p>
-            </div>
+            <CaveGameLayout>
+                <div className="flex flex-col items-center justify-center h-screen">
+                    <Gem className="w-16 h-16 text-purple-400 animate-pulse cave-enhanced-glow" />
+                    <p className="mt-4 text-xl tracking-wider">جاري استكشاف المغارة...</p>
+                </div>
+            </CaveGameLayout>
         );
     }
-    
+
     return (
-        <div className="min-h-screen cave-enhanced-bg text-white font-cairo" dir="rtl">
+        <CaveGameLayout>
           {activeSession && (
             <div className="cave-enhanced-header mb-6 mx-auto max-w-4xl">
               <div className="cave-enhanced-header-container">
@@ -241,15 +244,15 @@ const CavePage: React.FC = () => {
             </div>
           )}
             <div className="cave-enhanced-bg" aria-hidden="true"></div>
-            <div className="container mx-auto px-4 py-12 relative">
+            <div className="container mx-auto px-4 py-12 relative max-w-5xl">
                 {/* قسم البطل */}
-                <div className="relative flex flex-col items-center text-center pt-24 pb-32">
+                <div className="relative flex flex-col items-center text-center py-20">
                     <CaveParticles count={15} duration={10} colors={['#FFD700', '#FFA500', '#B8860B']} />
                     <motion.h1
                         initial={{ opacity: 0, scale: 0.8 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.8 }}
-                        className="treasure-title drop-shadow-xl mb-6 cave-enhanced-glow"
+                        className="treasure-title drop-shadow-xl mb-6 cave-enhanced-glow text-4xl sm:text-5xl"
                     >
                         كنوز المغارة
                     </motion.h1>
@@ -257,7 +260,7 @@ const CavePage: React.FC = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.3, duration: 0.8 }}
-                        className="max-w-2xl text-lg text-gray-100 mb-10"
+                        className="max-w-2xl text-gray-200 text-lg md:text-xl mb-10"
                     >
                         استعد لرحلة فريدة بين أندر العروض والخصومات الأسطورية. جهّز عتادك وانطلق!
                     </motion.p>
@@ -347,7 +350,7 @@ const CavePage: React.FC = () => {
                                             </div>
                                         ) : activeEvents && activeEvents.length > 0 ? (
                                             <div className="cave-events-container">
-                                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                                <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                                                         {activeEvents.map(event => (
                                                             <div key={event.event_id} className="overflow-hidden rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-1 hover:scale-105 transition-all duration-300 cave-event-card">
                                                                 <div className="bg-amber-50/90 p-6 rounded-lg shadow-md space-y-4">
@@ -450,11 +453,11 @@ const CavePage: React.FC = () => {
                                         </TabsContent>
                                         
                                         <TabsContent value="ticket" className="px-2 sm:px-6 pb-4 transition-opacity transform duration-500 ease-in-out data-[state=inactive]:opacity-0 data-[state=inactive]:translate-y-4 data-[state=active]:opacity-100 data-[state=active]:translate-y-0">
-                                            <motion.div 
+                                            <motion.div
                                                 initial={{ opacity: 0, y: 20 }}
                                                 animate={{ opacity: 1, y: 0 }}
                                                 transition={{ duration: 0.5 }}
-                                                className="max-w-xl mx-auto bg-white p-8 rounded-lg shadow-md text-center"
+                                                className="mx-auto max-w-md rounded-xl bg-white/90 p-6 shadow-md text-center space-y-4"
                                             >
                                                 <Ticket className="w-16 h-16 text-purple-400 mx-auto mb-6 cave-enhanced-float"/>
                                                 <h3 className="cave-enhanced-title text-2xl mb-2">هل لديك تذكرة؟</h3>
@@ -537,7 +540,7 @@ const CavePage: React.FC = () => {
                 </div>
 
             </div>
-        </div>
+        </CaveGameLayout>
     );
 };
 
