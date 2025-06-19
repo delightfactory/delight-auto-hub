@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Calendar, Clock, Users, Timer, Ticket, AlertCircle, Gem, LogIn, LogOut, X, HelpCircle, Zap, KeyRound, ArrowDown } from 'lucide-react';
+import { Calendar, Clock, Users, Timer, Ticket, AlertCircle, Gem, LogIn, LogOut, X, HelpCircle, Zap, KeyRound, ArrowDown, MapPin, ArrowLeft } from 'lucide-react';
 import { useCaveAudio } from '../components/cave/CaveAudioEffects';
 import CaveParticles from '../components/cave/CaveParticles';
 import { Button } from '../components/ui/button';
@@ -10,6 +10,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs'
 import { ScrollArea } from '../components/ui/scroll-area';
 import { Input } from '../components/ui/input';
 import { Badge } from '../components/ui/badge';
+import CaveGameLayout from '../components/cave/CaveGameLayout';
 
 
 import { motion, AnimatePresence } from 'framer-motion';
@@ -197,15 +198,17 @@ const CavePage: React.FC = () => {
 
     if (isLoadingSession) {
         return (
-            <div className="flex flex-col justify-center items-center h-screen cave-enhanced-bg text-white font-cairo">
-                <Gem className="w-16 h-16 text-purple-400 animate-pulse cave-enhanced-glow" />
-                <p className="mt-4 text-xl tracking-wider">جاري استكشاف المغارة...</p>
-            </div>
+            <CaveGameLayout>
+                <div className="flex flex-col items-center justify-center h-screen">
+                    <Gem className="w-16 h-16 text-purple-400 animate-pulse cave-enhanced-glow" />
+                    <p className="mt-4 text-xl tracking-wider">جاري استكشاف المغارة...</p>
+                </div>
+            </CaveGameLayout>
         );
     }
-    
+
     return (
-        <div className="min-h-screen cave-enhanced-bg text-white font-cairo" dir="rtl">
+        <CaveGameLayout>
           {activeSession && (
             <div className="cave-enhanced-header mb-6 mx-auto max-w-4xl">
               <div className="cave-enhanced-header-container">
@@ -241,15 +244,15 @@ const CavePage: React.FC = () => {
             </div>
           )}
             <div className="cave-enhanced-bg" aria-hidden="true"></div>
-            <div className="container mx-auto px-4 py-12 relative">
+            <div className="container mx-auto px-4 py-12 relative max-w-5xl">
                 {/* قسم البطل */}
-                <div className="relative flex flex-col items-center text-center pt-24 pb-32">
+                <div className="relative flex flex-col items-center text-center pt-12 pb-20">
                     <CaveParticles count={15} duration={10} colors={['#FFD700', '#FFA500', '#B8860B']} />
                     <motion.h1
                         initial={{ opacity: 0, scale: 0.8 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.8 }}
-                        className="treasure-title drop-shadow-xl mb-6 cave-enhanced-glow"
+                        className="treasure-title drop-shadow-xl mb-4 cave-enhanced-glow text-4xl sm:text-5xl"
                     >
                         كنوز المغارة
                     </motion.h1>
@@ -257,22 +260,22 @@ const CavePage: React.FC = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.3, duration: 0.8 }}
-                        className="max-w-2xl text-lg text-gray-100 mb-10"
+                        className="max-w-2xl text-gray-200 text-lg md:text-xl mb-10"
                     >
                         استعد لرحلة فريدة بين أندر العروض والخصومات الأسطورية. جهّز عتادك وانطلق!
                     </motion.p>
-                    <motion.div whileHover={{ scale: 1.05 }}>
-                        <button 
-                            className="cave-enhanced-buy-button px-6 py-3 rounded-full text-base"
-                            onClick={() => {
-                                document.getElementById('events-section')?.scrollIntoView({ behavior: 'smooth' });
-                                caveAudio.playCoinCollect();
-                            }}
-                        >
-                            <Gem className="mr-1 h-4 w-4" />
-                            استكشف الأحداث
-                        </button>
-                    </motion.div>
+                    <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="cave-enhanced-buy-button px-6 py-3 rounded-full text-base shadow-md"
+                        onClick={() => {
+                            document.getElementById('events-section')?.scrollIntoView({ behavior: 'smooth' });
+                            caveAudio.playCoinCollect();
+                        }}
+                    >
+                        <MapPin className="mr-1 h-4 w-4" />
+                        استكشف الأحداث
+                    </motion.button>
                 </div>
 
                 <AnimatePresence mode="wait">
@@ -295,15 +298,18 @@ const CavePage: React.FC = () => {
                                         تنتهي الجلسة في: {formatDateTime(activeSession.expires_at)}
                                     </div>
                                     <div className="flex flex-col sm:flex-row gap-4 mt-4 justify-center">
-                                        <button 
-                                            className="cave-enhanced-buy-button flex-1"
+                                        <motion.button
+                                            whileHover={{ scale: 1.03 }}
+                                            whileTap={{ scale: 0.95 }}
+                                            className="cave-enhanced-buy-button flex-1 group"
                                             onClick={() => {
                                                 navigate(`/cave/products/${activeSession.session_id}`);
                                                 caveAudio.playCaveDoor();
                                             }}
                                         >
-                                            <LogIn className="mr-1 h-4 w-4"/> اذهب للتسوق
-                                        </button>
+                                            <ArrowLeft className="mr-1 h-4 w-4 transition-transform group-hover:-translate-x-1" />
+                                            اذهب للتسوق
+                                        </motion.button>
                                         <button 
                                             className="cave-enhanced-buy-button flex-1 bg-red-600 hover:bg-red-700"
                                             onClick={handleExitCave} 
@@ -347,7 +353,7 @@ const CavePage: React.FC = () => {
                                             </div>
                                         ) : activeEvents && activeEvents.length > 0 ? (
                                             <div className="cave-events-container">
-                                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                                <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                                                         {activeEvents.map(event => (
                                                             <div key={event.event_id} className="overflow-hidden rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-1 hover:scale-105 transition-all duration-300 cave-event-card">
                                                                 <div className="bg-amber-50/90 p-6 rounded-lg shadow-md space-y-4">
@@ -356,37 +362,33 @@ const CavePage: React.FC = () => {
                                                                             {event.title}
                                                                         </h3>
                                                                     </div>
-                                                                    <div className="flex flex-wrap gap-2 mt-3">
-                                                                        <div className="flex items-center">
-                                                                            <div className="bg-amber-100 p-1 rounded-full ml-2"><Calendar className="w-4 h-4 text-purple-400"/></div> 
-                                                                            <Badge variant="outline" className="flex items-center gap-1 bg-amber-100 text-amber-800 border-amber-200"><Calendar className="w-4 h-4 text-purple-400" aria-hidden="true"/> هيبتدي: {formatDateTime(event.start_time)}</Badge>
-                                                                        </div>
-                                                                        <div className="flex items-center">
-                                                                            <div className="bg-amber-100 p-1 rounded-full ml-2"><Clock className="w-4 h-4 text-purple-400"/></div> 
-                                                                            <Badge variant="outline" className="flex items-center gap-1 bg-amber-100 text-amber-800 border-amber-200"><Clock className="w-4 h-4 text-purple-400" aria-hidden="true"/> هيخلص: {formatDateTime(event.end_time)}</Badge>
-                                                                        </div>
-                                                                        <Badge variant="outline" className="flex items-center gap-1 bg-amber-100 text-amber-800 border-amber-200">
-                                                                            
-                                                                            <CaveCountdown 
-                                                                                endTime={event.end_time} 
-                                                                                className="font-bold"
-                                                                                showLabel={false}
-                                                                            />
-                                                                            فاضلك
-                                                                        </Badge>
-                                                                        <Badge variant="outline" className="flex items-center gap-1 bg-amber-100 text-amber-800 border-amber-200">
-                                                                            <Users className="w-4 h-4 text-purple-400" aria-hidden="true"/> 
-                                                                            أقصى مستخدمين: {event.max_concurrent}
-                                                                        </Badge>
-                                                                        <Badge variant="outline" className="flex items-center gap-1 bg-amber-100 text-amber-800 border-amber-200">
-                                                                            <Timer className="w-4 h-4 text-purple-400" aria-hidden="true"/> 
-                                                                            مدتها: {event.user_time_limit} دقيقة
-                                                                        </Badge>
-                                                                        <Badge variant="outline" className="flex items-center gap-1 bg-amber-100 text-amber-800 border-amber-200">
-                                                                            <Zap className="w-4 h-4 text-purple-400" aria-hidden="true"/> 
-                                                                            محاولاتك: {userSessions.filter(s => s.event_id === event.event_id).length}/{event.max_participations_per_user}
-                                                                        </Badge>
-                                                                    </div>
+<div className="flex flex-col gap-2 mt-3">
+    <div className="flex flex-wrap items-center gap-2 text-sm text-amber-800">
+        <Calendar className="w-4 h-4 text-purple-400" aria-hidden="true" />
+        <span>{formatDateTime(event.start_time)}</span>
+        <span>-</span>
+        <Clock className="w-4 h-4 text-purple-400" aria-hidden="true" />
+        <span>{formatDateTime(event.end_time)}</span>
+    </div>
+    <div className="flex flex-wrap items-center gap-2">
+        <Badge variant="outline" className="flex items-center gap-1 bg-amber-100 text-amber-800 border-amber-200">
+            <Users className="w-4 h-4 text-purple-400" aria-hidden="true" />
+            أقصى مستخدمين: {event.max_concurrent}
+        </Badge>
+        <Badge variant="outline" className="flex items-center gap-1 bg-amber-100 text-amber-800 border-amber-200">
+            <Timer className="w-4 h-4 text-purple-400" aria-hidden="true" />
+            مدتها: {event.user_time_limit} دقيقة
+        </Badge>
+        <Badge variant="outline" className="flex items-center gap-1 bg-amber-100 text-amber-800 border-amber-200">
+            <Zap className="w-4 h-4 text-purple-400" aria-hidden="true" />
+            محاولاتك: {userSessions.filter(s => s.event_id === event.event_id).length}/{event.max_participations_per_user}
+        </Badge>
+        <Badge variant="outline" className="flex items-center gap-1 bg-amber-100 text-amber-800 border-amber-200">
+            <CaveCountdown endTime={event.end_time} className="font-mono font-bold text-amber-700" showLabel={false} />
+            فاضلك
+        </Badge>
+    </div>
+</div>
                                                                     <div className="flex flex-col sm:flex-row gap-4 justify-end mt-4 border-t border-amber-500/10 pt-4">
                                                                         {activeSession ? (
                                                                             activeSession.event_id === event.event_id ? (
@@ -413,7 +415,7 @@ const CavePage: React.FC = () => {
                                                                             )
                                                                         ) : event.kind === 'ticketed' ? (
                                                                             <button 
-                                                                                className="cave-enhanced-buy-button bg-purple-600 hover:bg-purple-700"
+                                                                                className="cave-enhanced-buy-button"
                                                                                 onClick={() => {
                                                                                     setSelectedEvent(event);
                                                                                     setIsTicketDialogOpen(true);
@@ -423,16 +425,18 @@ const CavePage: React.FC = () => {
                                                                                 <Ticket className="mr-1 h-4 w-4"/>استخدم تذكرة
                                                                             </button>
                                                                         ) : (
-                                                                            <button 
-                                                                                className="cave-enhanced-buy-button"
-                                                                                onClick={() => {
-                                                                                    handleEnterCave(event.event_id);
-                                                                                    caveAudio.playCaveDoor();
-                                                                                }}
-                                                                                disabled={createSessionMutation.isPending || (userSessions.filter(s => s.event_id === event.event_id).length >= event.max_participations_per_user)}
+                                                                            <motion.button
+className="cave-enhanced-buy-button group"
+whileHover={{ scale: 1.03 }}
+whileTap={{ scale: 0.95 }}
+onClick={() => {
+    handleEnterCave(event.event_id);
+    caveAudio.playCaveDoor();
+}}
+disabled={createSessionMutation.isPending || (userSessions.filter(s => s.event_id === event.event_id).length >= event.max_participations_per_user)}
                                                                             >
-                                                                                {createSessionMutation.isPending ? 'جاري الدخول...' : <><LogIn className="mr-1 h-4 w-4"/>دخول</>}
-                                                                            </button>
+{createSessionMutation.isPending ? 'جاري الدخول...' : <><ArrowLeft className="mr-1 h-4 w-4 transition-transform group-hover:-translate-x-1"/>دخول</>}
+                                                                            </motion.button>
                                                                         )}
                                                                     </div>
                                                                 </div>
@@ -450,11 +454,11 @@ const CavePage: React.FC = () => {
                                         </TabsContent>
                                         
                                         <TabsContent value="ticket" className="px-2 sm:px-6 pb-4 transition-opacity transform duration-500 ease-in-out data-[state=inactive]:opacity-0 data-[state=inactive]:translate-y-4 data-[state=active]:opacity-100 data-[state=active]:translate-y-0">
-                                            <motion.div 
+                                            <motion.div
                                                 initial={{ opacity: 0, y: 20 }}
                                                 animate={{ opacity: 1, y: 0 }}
                                                 transition={{ duration: 0.5 }}
-                                                className="max-w-xl mx-auto bg-white p-8 rounded-lg shadow-md text-center"
+                                                className="mx-auto max-w-md rounded-xl bg-white/90 p-6 shadow-md text-center space-y-4"
                                             >
                                                 <Ticket className="w-16 h-16 text-purple-400 mx-auto mb-6 cave-enhanced-float"/>
                                                 <h3 className="cave-enhanced-title text-2xl mb-2">هل لديك تذكرة؟</h3>
@@ -537,7 +541,7 @@ const CavePage: React.FC = () => {
                 </div>
 
             </div>
-        </div>
+        </CaveGameLayout>
     );
 };
 
