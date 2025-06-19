@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Calendar, Clock, Users, Timer, Ticket, AlertCircle, Gem, LogIn, LogOut, X, HelpCircle, Zap, KeyRound, ArrowDown } from 'lucide-react';
@@ -10,6 +10,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs'
 import { ScrollArea } from '../components/ui/scroll-area';
 import { Input } from '../components/ui/input';
 import { Badge } from '../components/ui/badge';
+import EnhancedCaveHeader from '@/components/cave/EnhancedCaveHeader';
 
 
 import { motion, AnimatePresence } from 'framer-motion';
@@ -59,6 +60,12 @@ const CavePage: React.FC = () => {
     const [selectedEvent, setSelectedEvent] = useState<CaveEvent | null>(null);
     const [isTicketDialogOpen, setIsTicketDialogOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('events');
+    const [remainingTime, setRemainingTime] = useState<{ hours: number; minutes: number; seconds: number; total: number }>({
+        hours: 0,
+        minutes: 0,
+        seconds: 0,
+        total: 0
+    });
 
     // جلب الأحداث النشطة
     const { data: activeEvents, isLoading: isLoadingEvents } = useQuery({
@@ -79,6 +86,10 @@ const CavePage: React.FC = () => {
         queryFn: () => activeSession ? caveService.getEventById(activeSession.event_id) : Promise.resolve(null),
         enabled: !!activeSession?.event_id,
     });
+
+    const remainingCap = activeEventDetails && activeSession
+        ? activeEventDetails.purchase_cap - activeSession.total_spent
+        : 0;
 
 
 
@@ -157,6 +168,27 @@ const CavePage: React.FC = () => {
         },
     });
 
+    useEffect(() => {
+        if (!activeSession) return;
+        const timer = setInterval(() => {
+            const expiry = new Date(activeSession.expires_at).getTime();
+            const now = Date.now();
+            const remainingMs = expiry - now;
+            if (remainingMs <= 0) {
+                clearInterval(timer);
+                endSessionMutation.mutate();
+                return;
+            }
+            setRemainingTime({
+                hours: Math.floor(remainingMs / 3600000),
+                minutes: Math.floor((remainingMs % 3600000) / 60000),
+                seconds: Math.floor((remainingMs % 60000) / 1000),
+                total: Math.floor(remainingMs / 1000)
+            });
+        }, 1000);
+        return () => clearInterval(timer);
+    }, [activeSession, endSessionMutation]);
+
     // التحقق من صلاحية التذكرة
     const handleValidateTicket = () => {
         const trimmedCode = ticketCode.trim();
@@ -207,38 +239,36 @@ const CavePage: React.FC = () => {
     return (
         <div className="min-h-screen cave-enhanced-bg text-white font-cairo" dir="rtl">
           {activeSession && (
-            <div className="cave-enhanced-header mb-6 mx-auto max-w-4xl">
-              <div className="cave-enhanced-header-container">
-                <div className="cave-enhanced-header-section">
-                  <div className="cave-enhanced-icon cave-enhanced-icon-hourglass"></div>
-                  <span className="text-sm font-bold">جلسة نشطة</span>
-                </div>
-                <div className="cave-enhanced-header-section">
-                  {activeEventDetails && <span className="text-sm">{activeEventDetails.title}</span>}
-                </div>
-                <div className="cave-enhanced-timer-display">
-                  <div className="cave-enhanced-icon cave-enhanced-icon-hourglass"></div>
-                  <span className="text-xs">تنتهي: {formatDateTime(activeSession.expires_at)}</span>
-                </div>
-              </div>
-              <div className="cave-enhanced-progress-container">
-                <div className="cave-enhanced-progress-bar" style={{ width: '50%' }}></div>
-              </div>
+            <>
+              <EnhancedCaveHeader
+                session={activeSession}
+                event={activeEventDetails}
+                remainingTime={{
+                  hours: remainingTime.hours,
+                  minutes: remainingTime.minutes,
+                  seconds: remainingTime.seconds
+                }}
+                purchaseLimit={{
+                  remaining: remainingCap,
+                  total: activeEventDetails?.purchase_cap || 0
+                }}
+                userPoints={200}
+              />
               <div className="mt-2 flex gap-2 justify-center">
-                <button 
+                <button
                   className="cave-enhanced-buy-button"
                   onClick={() => navigate(`/cave/products/${activeSession.session_id}`)}
                 >
-                  <LogIn className="mr-1 h-4 w-4"/> الدخول إلى الكنوز
+                  <LogIn className="mr-1 h-4 w-4" /> الدخول إلى الكنوز
                 </button>
-                <button 
+                <button
                   className="cave-enhanced-buy-button bg-red-600 hover:bg-red-700"
                   onClick={handleExitCave}
                 >
-                  <LogOut className="mr-1 h-4 w-4"/> خروج من المغارة
+                  <LogOut className="mr-1 h-4 w-4" /> خروج من المغارة
                 </button>
               </div>
-            </div>
+            </>
           )}
             <div className="cave-enhanced-bg" aria-hidden="true"></div>
             <div className="container mx-auto px-4 py-12 relative">
