@@ -1,7 +1,7 @@
 import React, { useState, useEffect, Fragment } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { AlertCircle, ShoppingCart, Star, Filter, Package, Gem, ShieldCheck, Clock, Sparkles } from 'lucide-react';
+import { AlertCircle, ShoppingCart, Star, Filter, Package, Gem, ShieldCheck, Clock, Sparkles, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Hooks & context
@@ -162,7 +162,7 @@ const CaveProductsPage: React.FC = () => {
 
     if (isLoadingSession) {
         return (
-            <div className="flex flex-col justify-center items-center h-screen bg-gray-900 text-white font-cairo">
+            <div className="flex flex-col justify-center items-center h-screen bg-gray-900 text-white cave-font-secondary">
                 <Gem className="w-16 h-16 text-yellow-400 animate-pulse" />
                 <p className="mt-4 text-lg tracking-wider">جاري فتح بوابات المغارة...</p>
             </div>
@@ -170,12 +170,12 @@ const CaveProductsPage: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-900 text-white font-cairo relative overflow-x-hidden cave-enhanced-bg" dir="rtl">
+        <div className="min-h-screen bg-gray-900 text-white cave-font-secondary relative overflow-x-hidden cave-enhanced-bg" dir="rtl">
             <div className="fixed inset-0 z-0 bg-[url('/images/cave-bg-dark.jpg')] bg-cover bg-center opacity-40"></div>
             <div className="fixed inset-0 z-0 bg-gradient-to-b from-gray-900/80 via-gray-900/60 to-gray-900/90"></div>
             <CaveParticles count={40} colors={['#FFD700', '#FDE047', '#FBBF24', '#F59E0B', '#FACC15']} />
             
-            <div className="w-full px-4 sm:px-6 lg:px-8 py-6 relative cave-enhanced-content">
+            <div className="cave-container cave-spacing-md relative cave-enhanced-content">
                 <EnhancedCaveHeader
                     session={activeSession}
                     event={activeEvent}
@@ -245,17 +245,44 @@ const CaveProductsPage: React.FC = () => {
                     </div>
                     
                     <Separator className="bg-gradient-to-r from-transparent via-yellow-500/30 to-transparent my-4" />
+
+                    <div className="flex flex-wrap gap-2 mb-4">
+                        {selectedCategory && (
+                            <Badge variant="secondary" className="flex items-center gap-1">
+                                {caveCategories.find(c => c.id === selectedCategory)?.name || selectedCategory}
+                                <X className="w-3 h-3 cursor-pointer" onClick={() => setSelectedCategory(null)} />
+                            </Badge>
+                        )}
+                        {(priceRange[0] !== 0 || priceRange[1] !== 5000) && (
+                            <Badge variant="secondary" className="flex items-center gap-1">
+                                {`السعر: ${priceRange[0]}-${priceRange[1]}`}
+                                <X className="w-3 h-3 cursor-pointer" onClick={() => setPriceRange([0, 5000])} />
+                            </Badge>
+                        )}
+                        {(pointsRange[0] !== 0 || pointsRange[1] !== 1000) && (
+                            <Badge variant="secondary" className="flex items-center gap-1">
+                                {`النقاط: ${pointsRange[0]}-${pointsRange[1]}`}
+                                <X className="w-3 h-3 cursor-pointer" onClick={() => setPointsRange([0, 1000])} />
+                            </Badge>
+                        )}
+                        {selectedRarity && (
+                            <Badge variant="secondary" className="flex items-center gap-1">
+                                {selectedRarity}
+                                <X className="w-3 h-3 cursor-pointer" onClick={() => setSelectedRarity(null)} />
+                            </Badge>
+                        )}
+                    </div>
                 </div>
 
                 <AnimatePresence>
                     {isLoadingProducts ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                        <div className="cave-grid">
                             {Array.from({length:9}).map((_,i)=>(
                                 <div key={i} className="animate-pulse bg-gray-800/50 rounded-2xl h-40 border border-yellow-500/10"></div>
                             ))}
                         </div>
                     ) : (
-                        <motion.div layout className="w-full grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                        <motion.div layout className="cave-grid">
                             {caveProducts?.filter((product: any) => {
                                 // تطبيق فلتر السعر
                                 if (product.cave_price < priceRange[0] || product.cave_price > priceRange[1]) {
