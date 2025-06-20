@@ -216,40 +216,28 @@ const CavePage: React.FC = () => {
                 <div className="cave-enhanced-header-section">
                   {activeEventDetails && <span className="text-sm">{activeEventDetails.title}</span>}
                 </div>
-                <div className="cave-enhanced-timer-display">
-                  <div className="cave-enhanced-icon cave-enhanced-icon-hourglass"></div>
-                  <span className="text-xs">تنتهي: {formatDateTime(activeSession.expires_at)}</span>
-                </div>
+
               </div>
-              <div className="cave-enhanced-progress-container">
-                <div className="cave-enhanced-progress-bar" style={{ width: '50%' }}></div>
-              </div>
-              <div className="mt-2 flex gap-2 justify-center">
-                <button 
-                  className="cave-enhanced-buy-button"
-                  onClick={() => navigate(`/cave/products/${activeSession.session_id}`)}
-                >
-                  <LogIn className="mr-1 h-4 w-4"/> الدخول إلى الكنوز
+              <div className="flex gap-2 items-center h-full">
+                <button className="cave-enhanced-buy-button px-3 py-1 text-sm flex-1" onClick={() => navigate(`/cave/products/${activeSession.session_id}`)}>
+                  <LogIn className="mr-1 h-4 w-4"/> دخول
                 </button>
-                <button 
-                  className="cave-enhanced-buy-button bg-red-600 hover:bg-red-700"
-                  onClick={handleExitCave}
-                >
-                  <LogOut className="mr-1 h-4 w-4"/> خروج من المغارة
+                <button className="cave-enhanced-buy-button bg-red-600 hover:bg-red-700 px-3 py-1 text-sm flex-1" onClick={handleExitCave}>
+                  <LogOut className="mr-1 h-4 w-4"/> خروج
                 </button>
               </div>
             </div>
           )}
-            <div className="cave-enhanced-bg" aria-hidden="true"></div>
-            <div className="container mx-auto px-4 py-12 relative">
+
+            <div className="container mx-auto px-4 pt-0 pb-12 relative">
                 {/* قسم البطل */}
-                <div className="relative flex flex-col items-center text-center pt-24 pb-32">
+                <div className="relative flex flex-col items-center text-center pt-0 pb-32">
                     <CaveParticles count={15} duration={10} colors={['#FFD700', '#FFA500', '#B8860B']} />
                     <motion.h1
                         initial={{ opacity: 0, scale: 0.8 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.8 }}
-                        className="treasure-title drop-shadow-xl mb-6 cave-enhanced-glow"
+                        className="treasure-title text-5xl drop-shadow-xl mb-6 cave-enhanced-glow"
                     >
                         كنوز المغارة
                     </motion.h1>
@@ -398,7 +386,7 @@ const CavePage: React.FC = () => {
                                                                                             caveAudio.playCaveDoor();
                                                                                         }}
                                                                                     >
-                                                                                        <LogIn className="mr-1 h-4 w-4"/> الدخول إلى الكنوز
+                                                                                        <LogIn className="mr-1 h-4 w-4"/> دخول
                                                                                     </button>
                                                                                     <button 
                                                                                         className="cave-enhanced-buy-button flex-1 bg-red-600 hover:bg-red-700"

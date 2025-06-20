@@ -129,9 +129,9 @@ const CartPage: React.FC = () => {
           <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-delight-900">سلة التسوق</h1>
           <motion.div initial="hidden" animate="visible" variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.1 } } }}>
             <AnimatePresence>
-              {items.map(item => (
+              {items.map((item, index) => (
                 <motion.div
-                  key={item.id}
+                  key={`${item.id}-${index}`}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, x: -100 }}
@@ -213,10 +213,10 @@ const CartPage: React.FC = () => {
           <div className="bg-white p-4 md:p-5 rounded-lg md:rounded-xl shadow">
             <h2 className="text-lg md:text-xl font-bold mb-3 md:mb-4">ملخص الطلب</h2>
             <div className="space-y-1.5 md:space-y-2 max-h-40 md:max-h-48 overflow-y-auto pr-1 scrollbar-thin">
-              {items.map(item => {
+              {items.map((item, index) => {
                 const itemSaving = itemSavings.find(s => s.id === item.id);
                 return (
-                  <div key={item.id} className="flex flex-col text-xs md:text-sm mb-2">
+                  <div key={`${item.id}-${index}`} className="flex flex-col text-xs md:text-sm mb-2">
                     <div className="flex justify-between">
                       <span className="truncate ml-2">{item.name} × {item.quantity}</span>
                       <span className="flex-shrink-0">{formatCurrency((item.is_cave_purchase && item.cave_price !== undefined ? item.cave_price : item.is_cave_purchase && item.cave_price !== undefined ? item.cave_price : parseFloat(item.price.replace(/[^\d.]/g, '')) || 0) * item.quantity)}</span>

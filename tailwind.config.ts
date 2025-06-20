@@ -168,6 +168,18 @@ const config: Config = {
     'data-[state=closed]:animate-fade-out',
     'data-[state=open]:animate-slide-in',
     'data-[state=closed]:animate-slide-out',
+    // فئات لمكون Tabs
+    'data-[state=active]:bg-gradient-to-r',
+    'data-[state=active]:from-amber-500',
+    'data-[state=active]:to-yellow-600',
+    'data-[state=active]:text-white',
+    'data-[state=active]:from-purple-500',
+    'data-[state=active]:to-indigo-600',
+    // فئات لمحتوى TabsContent
+    'data-[state=inactive]:opacity-0',
+    'data-[state=inactive]:translate-y-4',
+    'data-[state=active]:opacity-100',
+    'data-[state=active]:translate-y-0',
     '-translate-x-1/2',
     '-translate-y-1/2',
     // فئات لمكون ProductCard و OptimizedProductCard
