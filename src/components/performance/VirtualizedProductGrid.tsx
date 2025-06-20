@@ -324,15 +324,6 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
                           {product.points_required != null && (
                             <span className="feature-item points-required-badge">احصل عليه بـ {product.points_required} نقطة</span>
                           )}
-                          {product.cave_price != null && (
-                            <span className="feature-item cave-price-badge">سعر المغارة: {product.cave_price} ج.م</span>
-                          )}
-                          {product.cave_required_points != null && (
-                            <span className="feature-item cave-required-points-badge">نقاط مغارة مطلوبة: {product.cave_required_points}</span>
-                          )}
-                          {product.cave_max_quantity != null && (
-                            <span className="feature-item cave-max-quantity-badge">أقصى كمية للمغارة: {product.cave_max_quantity}</span>
-                          )}
                         </div>
                       </div>
                       

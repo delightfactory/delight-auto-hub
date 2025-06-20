@@ -447,6 +447,74 @@ const ProductPage: React.FC = () => {
                   )}
                 </div>
                 
+                {/* معلومات المنتج - تم نقلها لتكون أسفل الصور المصغرة */}
+                <div className="mt-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 overflow-hidden">
+                  <div className="p-2">
+                    <div className="flex flex-wrap justify-between items-start gap-4 mb-4">
+                      <div>
+                        <h1 className="text-2xl md:text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-purple-700 to-blue-600 dark:from-purple-500 dark:to-blue-400">
+                          {product.name}
+                        </h1>
+                        <div className="flex items-center mt-2 gap-3">
+                          <div className="flex items-center">
+                            {[...Array(5)].map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`w-4 h-4 ${i < Math.floor(ratingAverage) ? 'fill-amber-500 text-amber-500' : 'fill-gray-200 text-gray-200 dark:fill-gray-700 dark:text-gray-700'}`}
+                              />
+                            ))}
+                          </div>
+                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                            {ratingAverage.toFixed(1)} ({ratingCount} تقييم)
+                          </span>
+                          <Badge variant="outline" className={cn(
+                            "ml-auto",
+                            productStock.color
+                          )}>
+                            {productStock.label}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Description */}
+                    <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-sm md:text-base">
+                      {product.fullDescription || product.description}
+                    </p>
+                    
+                    {(product.points_earned != null || product.points_required != null || product.cave_enabled) && (
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        {product.points_earned != null && (
+                          <Badge variant="outline" className="bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
+                            اكسب {product.points_earned} نقطة
+                          </Badge>
+                        )}
+                        {product.points_required != null && (
+                          <Badge variant="outline" className="bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+                            احصل عليه بـ {product.points_required} نقطة
+                          </Badge>
+                        )}
+                        {product.cave_enabled && (
+                          <div className="border border-gray-200 rounded-lg p-3 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800/50 dark:to-gray-900/50">
+                            <h4 className="font-semibold mb-2">معلومات المغارة</h4>
+                            <div className="text-sm space-y-1">
+                              {product.cave_price != null && (
+                                <div>سعر المغارة: <span className="font-medium">{product.cave_price}</span> ج.م</div>
+                              )}
+                              {product.cave_required_points != null && (
+                                <div>نقاط المغارة المطلوبة: <span className="font-medium">{product.cave_required_points}</span></div>
+                              )}
+                              {product.cave_max_quantity != null && (
+                                <div>أقصى كمية متاحة: <span className="font-medium">{product.cave_max_quantity}</span></div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
                 {/* معلومات الشحن والتوصيل */}
                 <div className="mt-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
                   <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center">
@@ -483,7 +551,7 @@ const ProductPage: React.FC = () => {
               </div>
             </motion.div>
 
-            {/* Product Info */}
+            {/* Product Info - تم نقل المحتوى إلى أعلى */}
             <motion.div
               variants={fadeInVariants}
               initial="hidden"
@@ -491,72 +559,6 @@ const ProductPage: React.FC = () => {
               transition={{ delay: 0.2 }}
               className="bg-white dark:bg-gray-800 rounded-2xl shadow-md border border-gray-100 dark:border-gray-700 overflow-hidden"
             >
-              {/* Header with Title & Rating */}
-              <div className="p-6 border-b border-gray-100 dark:border-gray-700">
-                <div className="flex flex-wrap justify-between items-start gap-4 mb-4">
-                  <div>
-                    <h1 className="text-2xl md:text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-purple-700 to-blue-600 dark:from-purple-500 dark:to-blue-400">
-                      {product.name}
-                    </h1>
-                    <div className="flex items-center mt-2 gap-3">
-                      <div className="flex items-center">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`w-4 h-4 ${i < Math.floor(ratingAverage) ? 'fill-amber-500 text-amber-500' : 'fill-gray-200 text-gray-200 dark:fill-gray-700 dark:text-gray-700'}`}
-                          />
-                        ))}
-                      </div>
-                      <span className="text-sm text-gray-600 dark:text-gray-400">
-                        {ratingAverage.toFixed(1)} ({ratingCount} تقييم)
-                      </span>
-                      <Badge variant="outline" className={cn(
-                        "ml-auto",
-                        productStock.color
-                      )}>
-                        {productStock.label}
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Description */}
-                <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-sm md:text-base">
-                  {product.fullDescription || product.description}
-                </p>
-                
-                {(product.points_earned != null || product.points_required != null || product.cave_enabled) && (
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {product.points_earned != null && (
-                      <Badge variant="outline" className="bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
-                        اكسب {product.points_earned} نقطة
-                      </Badge>
-                    )}
-                    {product.points_required != null && (
-                      <Badge variant="outline" className="bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
-                        احصل عليه بـ {product.points_required} نقطة
-                      </Badge>
-                    )}
-                    {product.cave_enabled && (
-                      <div className="border border-gray-200 rounded-lg p-3 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800/50 dark:to-gray-900/50">
-                        <h4 className="font-semibold mb-2">معلومات المغارة</h4>
-                        <div className="text-sm space-y-1">
-                          {product.cave_price != null && (
-                            <div>سعر المغارة: <span className="font-medium">{product.cave_price}</span> ج.م</div>
-                          )}
-                          {product.cave_required_points != null && (
-                            <div>نقاط المغارة المطلوبة: <span className="font-medium">{product.cave_required_points}</span></div>
-                          )}
-                          {product.cave_max_quantity != null && (
-                            <div>أقصى كمية متاحة: <span className="font-medium">{product.cave_max_quantity}</span></div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-                
-              </div>
               
               {/* Pricing Section - Mobile Version */}
               <div className="md:hidden p-0 fixed bottom-0 left-0 right-0 z-50 pb-safe">
