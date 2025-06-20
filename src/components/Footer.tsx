@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { 
   Phone, 
@@ -21,8 +22,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
+import { categoryService } from '@/services/adminService';
+import { Category } from '@/types/db';
 
 const Footer: React.FC = () => {
+  const { data: categories = [], isLoading } = useQuery<Category[]>({
+    queryKey: ['footer-categories'],
+    queryFn: categoryService.getCategories,
+  });
   const currentYear = new Date().getFullYear();
   
   return (
@@ -190,36 +197,14 @@ const Footer: React.FC = () => {
                   منتجاتنا
                 </h3>
                 <ul className="space-y-2.5">
-                  <li>
-                    <Link to="/products/exterior" className="text-gray-600 hover:text-delight-600 transition-colors flex items-center">
-                      <ArrowRight className="w-3.5 h-3.5 ml-1.5 rtl:rotate-180 text-gray-400" />
-                      منتجات العناية الخارجية
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/products/interior" className="text-gray-600 hover:text-delight-600 transition-colors flex items-center">
-                      <ArrowRight className="w-3.5 h-3.5 ml-1.5 rtl:rotate-180 text-gray-400" />
-                      منتجات العناية الداخلية
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/products/engine" className="text-gray-600 hover:text-delight-600 transition-colors flex items-center">
-                      <ArrowRight className="w-3.5 h-3.5 ml-1.5 rtl:rotate-180 text-gray-400" />
-                      منتجات العناية بالمحرك
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/products/waxes" className="text-gray-600 hover:text-delight-600 transition-colors flex items-center">
-                      <ArrowRight className="w-3.5 h-3.5 ml-1.5 rtl:rotate-180 text-gray-400" />
-                      الشمع والملمعات
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/products/accessories" className="text-gray-600 hover:text-delight-600 transition-colors flex items-center">
-                      <ArrowRight className="w-3.5 h-3.5 ml-1.5 rtl:rotate-180 text-gray-400" />
-                      اكسسوارات العناية
-                    </Link>
-                  </li>
+                  {categories.map(category => (
+                    <li key={category.id}>
+                      <Link to={`/products?category=${category.id}`} className="text-gray-600 hover:text-delight-600 transition-colors flex items-center">
+                        <ArrowRight className="w-3.5 h-3.5 ml-1.5 rtl:rotate-180 text-gray-400" />
+                        {category.name}
+                      </Link>
+                    </li>
+                  ))}
                 </ul>
               </div>
               

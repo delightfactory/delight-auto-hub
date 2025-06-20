@@ -22,6 +22,13 @@ const ProductsPage: React.FC = () => {
   
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(categoryParam);
+
+  // مزامنة حالة الفئة المختارة مع معلمة الرابط في كل تغيير
+  useEffect(() => {
+    setSelectedCategory(categoryParam);
+    // التمرير لأعلى الصفحة عند تغيير الفئة لضمان البدء من الأعلى
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [categoryParam]);
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [selectedVendor, setSelectedVendor] = useState<string | null>(null);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 0]);

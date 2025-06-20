@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { motion, useAnimation, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, ShoppingCart, Star, Check, AlertTriangle, Loader2, Share2, Shield, 
-  RefreshCw, Heart, Home, ChevronLeft, ChevronRight, ZoomIn, Truck, Clock, Package,
+  RefreshCw, Heart, Home, ChevronLeft, ChevronRight, ZoomIn, Truck, Clock, Package, Gem,
   ThumbsUp, MessageCircle, Info, Award, Sparkles, Settings
 } from 'lucide-react';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '../components/ui/tooltip';
@@ -495,20 +495,26 @@ const ProductPage: React.FC = () => {
                           </Badge>
                         )}
                         {product.cave_enabled && (
-                          <div className="border border-gray-200 rounded-lg p-3 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800/50 dark:to-gray-900/50">
-                            <h4 className="font-semibold mb-2">معلومات المغارة</h4>
-                            <div className="text-sm space-y-1">
+                          <Link
+                            to="/cave"
+                            className="group block border border-gray-200 dark:border-gray-700 rounded-lg p-3 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800/50 dark:to-gray-900/50 cursor-pointer transition-shadow hover:shadow-md focus:ring-2 focus:ring-purple-500"
+                          >
+                            <div className="flex items-center gap-2 mb-2">
+                              <Gem className="w-4 h-4 text-purple-500 group-hover:scale-110 transition-transform" />
+                              <h4 className="font-semibold text-purple-700 dark:text-purple-300">عروض المغارة المميزة</h4>
+                            </div>
+                            <div className="text-sm space-y-1 rtl:text-right ltr:text-left">
                               {product.cave_price != null && (
-                                <div>سعر المغارة: <span className="font-medium">{product.cave_price}</span> ج.م</div>
+                                <div className="text-purple-600 dark:text-purple-400">سعر المغارة: <span className="font-semibold">{product.cave_price}</span> ج.م</div>
                               )}
                               {product.cave_required_points != null && (
-                                <div>نقاط المغارة المطلوبة: <span className="font-medium">{product.cave_required_points}</span></div>
+                                <div className="text-purple-600 dark:text-purple-400">نقاط المغارة المطلوبة: <span className="font-semibold">{product.cave_required_points}</span></div>
                               )}
                               {product.cave_max_quantity != null && (
-                                <div>أقصى كمية متاحة: <span className="font-medium">{product.cave_max_quantity}</span></div>
+                                <div className="text-purple-600 dark:text-purple-400">أقصى كمية متاحة: <span className="font-semibold">{product.cave_max_quantity}</span></div>
                               )}
                             </div>
-                          </div>
+                          </Link>
                         )}
                       </div>
                     )}
