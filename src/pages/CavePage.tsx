@@ -314,16 +314,15 @@ const CavePage: React.FC = () => {
                                                                         </h3>
                                                                     </div>
                                                                     <div className="flex flex-wrap gap-2 mt-3">
-                                                                        <div className="flex items-center">
-                                                                            <div className="bg-amber-100 p-1 rounded-full ml-2"><Calendar className="w-4 h-4 text-purple-400"/></div> 
-                                                                            <Badge variant="outline" className="flex items-center gap-1 bg-amber-100 text-amber-800 border-amber-200"><Calendar className="w-4 h-4 text-purple-400" aria-hidden="true"/> هيبتدي: {formatDateTime(event.start_time)}</Badge>
-                                                                        </div>
-                                                                        <div className="flex items-center">
-                                                                            <div className="bg-amber-100 p-1 rounded-full ml-2"><Clock className="w-4 h-4 text-purple-400"/></div> 
-                                                                            <Badge variant="outline" className="flex items-center gap-1 bg-amber-100 text-amber-800 border-amber-200"><Clock className="w-4 h-4 text-purple-400" aria-hidden="true"/> هيخلص: {formatDateTime(event.end_time)}</Badge>
-                                                                        </div>
                                                                         <Badge variant="outline" className="flex items-center gap-1 bg-amber-100 text-amber-800 border-amber-200">
-                                                                            
+                                                                            <Calendar className="w-4 h-4 text-purple-400" aria-hidden="true" /> 
+                                                                            هيبتدي: {formatDateTime(event.start_time)}
+                                                                        </Badge>
+                                                                        <Badge variant="outline" className="flex items-center gap-1 bg-amber-100 text-amber-800 border-amber-200">
+                                                                            <Clock className="w-4 h-4 text-purple-400" aria-hidden="true" /> 
+                                                                            هيخلص: {formatDateTime(event.end_time)}
+                                                                        </Badge>
+                                                                        <Badge variant="outline" className="flex items-center gap-1 bg-amber-100 text-amber-800 border-amber-200">
                                                                             <CaveCountdown 
                                                                                 endTime={event.end_time} 
                                                                                 className="font-bold"
@@ -332,15 +331,15 @@ const CavePage: React.FC = () => {
                                                                             فاضلك
                                                                         </Badge>
                                                                         <Badge variant="outline" className="flex items-center gap-1 bg-amber-100 text-amber-800 border-amber-200">
-                                                                            <Users className="w-4 h-4 text-purple-400" aria-hidden="true"/> 
+                                                                            <Users className="w-4 h-4 text-purple-400" aria-hidden="true" /> 
                                                                             أقصى مستخدمين: {event.max_concurrent}
                                                                         </Badge>
                                                                         <Badge variant="outline" className="flex items-center gap-1 bg-amber-100 text-amber-800 border-amber-200">
-                                                                            <Timer className="w-4 h-4 text-purple-400" aria-hidden="true"/> 
+                                                                            <Timer className="w-4 h-4 text-purple-400" aria-hidden="true" /> 
                                                                             مدتها: {event.user_time_limit} دقيقة
                                                                         </Badge>
                                                                         <Badge variant="outline" className="flex items-center gap-1 bg-amber-100 text-amber-800 border-amber-200">
-                                                                            <Zap className="w-4 h-4 text-purple-400" aria-hidden="true"/> 
+                                                                            <Zap className="w-4 h-4 text-purple-400" aria-hidden="true" /> 
                                                                             محاولاتك: {userSessions.filter(s => s.event_id === event.event_id).length}/{event.max_participations_per_user}
                                                                         </Badge>
                                                                     </div>

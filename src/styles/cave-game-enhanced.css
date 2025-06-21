@@ -227,8 +227,9 @@
 }
 /* ======== كارت المنتج المحسن ======== */
 .cave-enhanced-card {
-  background-color: #6b4423;
+  background-color: transparent;
   background-image: url('/wood.png');
+  background-repeat: repeat;
   background-size: cover;
   border-radius: 12px;
   box-shadow: 
@@ -252,7 +253,7 @@
 
 /* ======== محتوى الكارت الداخلي ======== */
 .cave-enhanced-card-inner {
-  background-color: #f5e5d5;
+  background-color: transparent; /* إظهار الخشب بالكامل */
   margin: 4px;
   border-radius: 8px;
   padding: 0.35rem;
@@ -268,12 +269,13 @@
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.5);
-  background-color: rgba(0, 0, 0, 0.1);
+  background-color: transparent;
   object-fit: cover;
   object-position: center;
   width: 100%;
   height: 100%;
   max-height: 168px;
+  transform: translateY(4px); /* fine-tuned: align exactly with card bottom while staying inside */
 }
 
 /* ======== شارة الخصم ======== */
@@ -282,14 +284,15 @@
   top: 4px;
   right: 4px;
   background: linear-gradient(135deg, #e53e3e, #c53030);
-  color: white;
-  padding: 0.1rem 0.3rem;
+  color: #ffffff;
+  text-shadow: 0 0 2px rgba(0,0,0,0.85);
+  padding: 0.15rem 0.4rem;
   border-radius: 6px;
   font-weight: bold;
   transform: rotate(-5deg);
   filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.9));
   z-index: 10;
-  font-size: 0.6rem;
+  font-size: 0.75rem;
 }
 
 .cave-enhanced-discount-badge::after {
@@ -306,7 +309,7 @@
 
 /* ======== تأثيرات النص ======== */
 .cave-enhanced-title {
-  color: #3b2414;
+  color: #fef3c7;
   font-weight: bold;
   text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
   margin-bottom: 0.25rem;
@@ -314,14 +317,11 @@
 }
 
 .cave-enhanced-price {
-  color: #8a5a2b;
-  font-weight: bold;
-  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
-  background: linear-gradient(90deg, #facc15, #f59e0b);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.5));
+  color: #fcd34d; /* ذهبي واضح */
+  font-weight: 900;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.9); /* إطار أسود خفيف */
+  -webkit-text-fill-color: #fcd34d; /* دعم WebKit */
+  filter: drop-shadow(0 0 2px rgba(0,0,0,0.9));
 }
 
 .cave-enhanced-points {
@@ -333,6 +333,23 @@
   background-clip: text;
   -webkit-text-fill-color: transparent;
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.5));
+}
+
+/* === Text colors for wooden card === */
+.cave-enhanced-description {
+  color: #f7f3e9;
+  text-shadow: 0 0 1px rgba(0,0,0,0.85);
+}
+
+.cave-enhanced-price-label {
+  color: #facc15;
+  text-shadow: 0 0 1px rgba(0,0,0,0.9);
+}
+
+.cave-enhanced-original-price {
+  color: #e9dec8;
+  text-shadow: 0 0 1px rgba(0,0,0,0.85);
+  opacity: 0.9;
 }
 
 /* ======== Gold shimmering hero border ======== */
@@ -365,6 +382,7 @@
   background-color: #5c3d1d;
   background-image: url('/wood.png'), linear-gradient(145deg, #8a5a2b, #5c3d1d);
   background-blend-mode: overlay;
+  background-repeat: repeat;
   background-size: cover;
   color: #f5e5d5;
   border: none;
@@ -482,8 +500,9 @@
   border-image-repeat: round;
   height: auto;
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  background-color: #6b4423;
+  background-color: transparent;
   background-image: url('/wood.png');
+  background-repeat: repeat;
   background-size: cover;
   border-radius: 12px;
   box-shadow: 

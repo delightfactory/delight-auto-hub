@@ -29,10 +29,10 @@ import { ProductDataService } from '@/services/productDataService';
 
 // أداة مساعدة لحساب حالة المخزون
 const getStockStatus = (qty: number) => {
-    if (qty <= 0) return { text: 'غير متوفر', color: 'text-red-400',bgColor: 'bg-red-900/30', borderColor: 'border-red-500/30' };
-    if (qty < 10) return { text: 'كمية محدودة', color: 'text-yellow-400', bgColor: 'bg-yellow-900/30', borderColor: 'border-yellow-500/30' };
-    if (qty < 50) return { text: 'مخزون منخفض', color: 'text-blue-400' , bgColor: 'bg-blue-900/30', borderColor: 'border-blue-500/30'};
-    return { text: 'متوفر', color: 'text-green-400', bgColor: 'bg-green-900/30', borderColor: 'border-green-500/30' };
+    if (qty <= 0) return { text: 'غير متوفر', color: 'text-red-800', bgColor: 'bg-red-200', borderColor: 'border-red-400' };
+    if (qty < 10) return { text: 'كمية محدودة', color: 'text-yellow-900', bgColor: 'bg-yellow-200', borderColor: 'border-yellow-400' };
+    if (qty < 50) return { text: 'مخزون منخفض', color: 'text-blue-900', bgColor: 'bg-blue-200', borderColor: 'border-blue-400' };
+    return { text: 'متوفر', color: 'text-green-900', bgColor: 'bg-green-200', borderColor: 'border-green-400' };
 };
 
 // أداة لحساب ندرة المنتج بناءً على نسبة الخصم أو نقاطه
@@ -326,10 +326,10 @@ const CaveProductsPage: React.FC = () => {
                                             `}
                                         >
                                             {/* --- قسم المحتوى (الجانب الأيمن) --- */}
-                                            <div className="cave-enhanced-card-inner flex flex-col flex-grow w-2/3">
+                                            <div className="cave-enhanced-card-inner grid grid-rows-[auto_1fr] gap-1 flex-grow w-2/3">
                                                 <div className='flex-grow'>
                                                     <h3 className="cave-enhanced-title font-bold line-clamp-1">{product.name}</h3>
-                                                    <p className="text-xs text-gray-800 mt-0.5 mb-1 line-clamp-2 h-7">{product.description}</p>
+                                                    <p className="text-xs cave-enhanced-description mt-0.5 mb-1 line-clamp-2 h-7">{product.description}</p>
                                                 </div>
                                                 
                                                 <div className="mt-auto">
@@ -344,14 +344,14 @@ const CaveProductsPage: React.FC = () => {
 
                                                     <div className="flex-shrink-0 flex items-end justify-between">
                                                         <div className="flex flex-col items-start">
-                                                        <span className="text-xs text-yellow-950 font-medium">السعر</span>
-                                                        <div className="cave-enhanced-price text-lg font-black flex items-center">
+                                                        <span className="text-xs cave-enhanced-price-label font-medium">السعر</span>
+                                                        <div className="cave-enhanced-price text-lg font-extrabold flex items-center px-1">
                                                             <div className="cave-enhanced-icon cave-enhanced-icon-coin ml-1"></div>
                                                             {product.cave_price}
                                                         </div>
                                                         {discount > 0 && (
                                                             <>
-                                                                <div className="text-xs text-gray-700 line-through font-semibold">{originalPrice} ج.م</div>
+                                                                <div className="text-xs cave-enhanced-original-price line-through font-semibold">{originalPrice} ج.م</div>
                                                                 <div className="flex flex-wrap gap-0.25 mt-0.25">
                                                                     {product.cave_required_points !== undefined && (
                                                                         <Badge variant="outline" className="flex items-center px-1 py-0.25 text-xs text-blue-700 bg-blue-100 border border-blue-300">
@@ -383,7 +383,7 @@ const CaveProductsPage: React.FC = () => {
                                             </div>
 
                                             {/* --- قسم الصورة (الجانب الأيسر) --- */}
-                                            <div className="relative w-1/3 flex-shrink-0">
+                                            <div className="relative w-32 flex-shrink-0">
                                                 <div className="w-full h-full flex flex-col items-center justify-center">
                                                     <img 
                                                         src={product.image} 
