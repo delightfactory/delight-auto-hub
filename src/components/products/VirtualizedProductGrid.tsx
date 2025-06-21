@@ -10,7 +10,8 @@ import ProductCard, { ProductCardProps } from '@/components/ProductCard'; // ا�
 export interface Product {
   id: string;
   name: string;
-  description?: string; // الوصف قد يكون اختياريًا هنا
+  description?: string; // الوصف التفصيلي
+  descriptionTitle?: string; // عنوان الوصف
   price: number; // السعر كرقم
   originalPrice?: number; // السعر الأصلي كرقم (اختياري)
   image: string;
@@ -140,7 +141,9 @@ const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
             const productCardData: ProductCardProps = {
               id: productItem.id,
               name: productItem.name,
-              description: productItem.description || productItem.name, // استخدام الوصف إن وجد، وإلا الاسم
+              descriptionTitle: productItem.descriptionTitle,
+              // لعرض عنوان الوصف القصير فقط داخل البطاقة
+              description: productItem.descriptionTitle ?? '', // إذا لم يتوفر العنوان نُرسل نصاً فارغاً
               image: productItem.image,
               category: productItem.category,
               rating: productItem.rating,

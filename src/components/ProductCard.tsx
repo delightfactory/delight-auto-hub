@@ -10,9 +10,10 @@ import { WishlistService } from '@/services/wishlistService';
 import { useAuth } from '@/context/AuthContext';
 
 export interface ProductCardProps {
+  descriptionTitle?: string;
   id: string;
   name: string;
-  description: string;
+  description: string; // الوصف التفصيلي
   image: string;
   className?: string;
   category?: string;
@@ -37,6 +38,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   id,
   name,
   description,
+  descriptionTitle,
   image,
   className,
   category,
@@ -158,6 +160,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const imageClasses = "w-full h-full object-cover transition-transform duration-500 group-hover:scale-105";
   const contentClasses = "p-1 flex flex-col h-[calc(100%-0px)]";
   const titleClasses = "text-lg font-semibold text-gray-800 dark:text-gray-100 mb-1 line-clamp-2 min-h-[48px]";
+  const subtitleClasses = "mt-0.5 text-sm text-gray-500 line-clamp-2";
   const categoryClasses = "text-xs text-gray-500 dark:text-gray-400 mb-2";
   const ratingClasses = "flex items-center mb-2";
   const starClasses = "text-yellow-500 mr-1";
@@ -288,7 +291,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         </h3>
         
         <p className="text-gray-600 dark:text-gray-300 mb-0.5 text-[10px] line-clamp-1 min-h-[0.75rem]">
-          {description}
+          {descriptionTitle ?? description}
         </p>
 
         {/* Stock Status */}

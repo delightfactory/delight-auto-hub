@@ -4,6 +4,8 @@ export interface Product {
   id: string;
   name: string;
   description?: string;
+  /** عنوان مختصر للوصف */
+  description_title?: string;
   price: number;
   discount_price?: number;
   stock?: number;

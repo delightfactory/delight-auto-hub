@@ -7,6 +7,7 @@ import {
   RefreshCw, Heart, Home, ChevronLeft, ChevronRight, ZoomIn, Truck, Clock, Package, Gem,
   ThumbsUp, MessageCircle, Info, Award, Sparkles, Settings
 } from 'lucide-react';
+import CavePromoCard from '@/components/common/CavePromoCard';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '../components/ui/tooltip';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
@@ -455,6 +456,11 @@ const ProductPage: React.FC = () => {
                         <h1 className="text-2xl md:text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-purple-700 to-blue-600 dark:from-purple-500 dark:to-blue-400">
                           {product.name}
                         </h1>
+                        {product.descriptionTitle && (
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                            {product.descriptionTitle}
+                          </p>
+                        )}
                         <div className="flex items-center mt-2 gap-3">
                           <div className="flex items-center">
                             {[...Array(5)].map((_, i) => (
@@ -495,26 +501,13 @@ const ProductPage: React.FC = () => {
                           </Badge>
                         )}
                         {product.cave_enabled && (
-                          <Link
-                            to="/cave"
-                            className="group block border border-gray-200 dark:border-gray-700 rounded-lg p-3 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800/50 dark:to-gray-900/50 cursor-pointer transition-shadow hover:shadow-md focus:ring-2 focus:ring-purple-500"
-                          >
-                            <div className="flex items-center gap-2 mb-2">
-                              <Gem className="w-4 h-4 text-purple-500 group-hover:scale-110 transition-transform" />
-                              <h4 className="font-semibold text-purple-700 dark:text-purple-300">عروض المغارة المميزة</h4>
-                            </div>
-                            <div className="text-sm space-y-1 rtl:text-right ltr:text-left">
-                              {product.cave_price != null && (
-                                <div className="text-purple-600 dark:text-purple-400">سعر المغارة: <span className="font-semibold">{product.cave_price}</span> ج.م</div>
-                              )}
-                              {product.cave_required_points != null && (
-                                <div className="text-purple-600 dark:text-purple-400">نقاط المغارة المطلوبة: <span className="font-semibold">{product.cave_required_points}</span></div>
-                              )}
-                              {product.cave_max_quantity != null && (
-                                <div className="text-purple-600 dark:text-purple-400">أقصى كمية متاحة: <span className="font-semibold">{product.cave_max_quantity}</span></div>
-                              )}
-                            </div>
-                          </Link>
+                          <CavePromoCard
+                              productName={product.name}
+                              originalPrice={typeof product.originalPrice === 'string' ? parseFloat(product.originalPrice.replace(/[^\d.]/g, '')) : product.originalPrice}
+                              cavePrice={product.cave_price ?? undefined}
+                              requiredPoints={product.cave_required_points ?? undefined}
+                              maxQuantity={product.cave_max_quantity ?? undefined}
+                            />
                         )}
                       </div>
                     )}

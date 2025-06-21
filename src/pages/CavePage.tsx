@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Calendar, Clock, Users, Timer, Ticket, AlertCircle, Gem, LogIn, LogOut, X, HelpCircle, Zap, KeyRound, ArrowDown } from 'lucide-react';
 import { useCaveAudio } from '../components/cave/CaveAudioEffects';
-import CaveParticles from '../components/cave/CaveParticles';
+import CaveHero from '../components/cave/CaveHero';
 import { Button } from '../components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs';
@@ -230,38 +230,7 @@ const CavePage: React.FC = () => {
           )}
 
             <div className="container mx-auto px-4 pt-0 pb-12 relative">
-                {/* قسم البطل */}
-                <div className="relative flex flex-col items-center text-center pt-0 pb-32">
-                    <CaveParticles count={15} duration={10} colors={['#FFD700', '#FFA500', '#B8860B']} />
-                    <motion.h1
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.8 }}
-                        className="treasure-title text-5xl drop-shadow-xl mb-6 cave-enhanced-glow"
-                    >
-                        كنوز المغارة
-                    </motion.h1>
-                    <motion.p
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.3, duration: 0.8 }}
-                        className="max-w-2xl text-lg text-gray-100 mb-10"
-                    >
-                        استعد لرحلة فريدة بين أندر العروض والخصومات الأسطورية. جهّز عتادك وانطلق!
-                    </motion.p>
-                    <motion.div whileHover={{ scale: 1.05 }}>
-                        <button 
-                            className="cave-enhanced-buy-button px-6 py-3 rounded-full text-base"
-                            onClick={() => {
-                                document.getElementById('events-section')?.scrollIntoView({ behavior: 'smooth' });
-                                caveAudio.playCoinCollect();
-                            }}
-                        >
-                            <Gem className="mr-1 h-4 w-4" />
-                            استكشف الأحداث
-                        </button>
-                    </motion.div>
-                </div>
+                <CaveHero className="mb-24" />
 
                 <AnimatePresence mode="wait">
                     {activeSession ? (

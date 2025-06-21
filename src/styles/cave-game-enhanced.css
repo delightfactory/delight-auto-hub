@@ -7,7 +7,7 @@
 .cave-enhanced-bg {
   /* مساحة لتموضع الهيدر الخشبي أسفل الهيدر الرئيسي (mobile: main header 3.5rem + wood header 6.25rem = 9.75rem) */
   padding-top: 9.75rem; /* mobile: header (3.5rem) + wood header (6.25rem) */
-  background: linear-gradient(to bottom, #1a0f1d 0%, #2d1a30 100%);
+  background: radial-gradient(circle at top center, #120812 0%, #0c050d 60%, #060308 100%);
   position: relative;
   overflow: hidden;
 }
@@ -22,6 +22,15 @@
   background-image: url('/images/cave-texture.svg');
   background-size: 200px;
   opacity: 0.15;
+  pointer-events: none;
+}
+
+/* أُضيف تراكب خفيف لتغميق الأطراف وإضفاء جو مغارة أكثر عمقًا */
+.cave-enhanced-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(0, 0, 0, 0) 60%, rgba(0, 0, 0, 0.6) 100%);
   pointer-events: none;
 }
 
@@ -324,6 +333,31 @@
   background-clip: text;
   -webkit-text-fill-color: transparent;
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.5));
+}
+
+/* ======== Gold shimmering hero border ======== */
+.cave-hero-gold-frame {
+  position: relative;
+}
+.cave-hero-gold-frame::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px; /* thin border */
+  background: linear-gradient(130deg, #f7e7a3, #ffd700, #f7e7a3);
+  background-size: 400% 400%;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  animation: cave-gold-shimmer 6s linear infinite;
+}
+@keyframes cave-gold-shimmer {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 /* ======== زر الشراء ======== */

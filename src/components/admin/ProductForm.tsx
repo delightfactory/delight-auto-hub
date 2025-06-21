@@ -28,6 +28,7 @@ import { useToast } from '@/hooks/use-toast';
 // مخطط التحقق من صحة المنتج
 const productSchema = z.object({
   name: z.string().min(2, "اسم المنتج مطلوب ويجب أن يتكون من حرفين على الأقل"),
+  description_title: z.string().min(2, "عنوان الوصف مطلوب ويجب أن يتكون من حرفين على الأقل"),
   description: z.string().optional(),
   usage_instructions: z.string().optional(),
   product_code: z.string().min(1, "رمز المنتج مطلوب"),
@@ -75,6 +76,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit, onCanc
     resolver: zodResolver(productSchema),
     defaultValues: {
       name: initialData?.name || '',
+      description_title: initialData?.description_title || '',
       description: initialData?.description || '',
       usage_instructions: initialData?.usage_instructions || '',
       product_code: initialData?.product_code || '',
@@ -215,6 +217,20 @@ const ProductForm: React.FC<ProductFormProps> = ({ initialData, onSubmit, onCanc
                         <FormLabel>اسم المنتج</FormLabel>
                         <FormControl>
                           <Input placeholder="أدخل اسم المنتج" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="description_title"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>عنوان الوصف</FormLabel>
+                        <FormControl>
+                          <Input placeholder="أدخل عنوان الوصف" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

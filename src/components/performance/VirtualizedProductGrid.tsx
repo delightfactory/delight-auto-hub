@@ -20,6 +20,7 @@ interface Product {
   price: string | number; // تعديل لدعم السعر كنص أو رقم
   image: string;
   description?: string;
+  descriptionTitle?: string; // عنوان الوصف القصير
   category?: string;
   originalPrice?: string; // إضافة السعر الأصلي
   rating?: number; // تقييم المنتج
@@ -267,7 +268,7 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
 
                         {/* Short Description (Moved under Name) */}
                         <p className="text-xs text-gray-600 dark:text-gray-300 line-clamp-2 mt-0 mb-0 min-h-[calc(1.5*1rem)]">
-                          {product.description || 'وصف المنتج غير متوفر'}
+                          {product.descriptionTitle ?? ''}
                         </p>
 
                         {/* Price Block (Added vertical margin) */}

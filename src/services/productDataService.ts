@@ -6,6 +6,8 @@ export interface ProductDisplay {
   id: string;
   name: string;
   description: string;
+  /** عنوان مختصر للوصف */
+  descriptionTitle?: string;
   fullDescription?: string;
   price: string;
   originalPrice?: string;
@@ -47,6 +49,7 @@ const transformProductToDisplay = (product: Product): ProductDisplay => {
     id: product.id,
     name: product.name,
     description: product.description || '',
+    descriptionTitle: product.description_title || undefined,
     fullDescription: product.description || '',
     price: product.discount_price ? `${product.discount_price} جنيه` : priceText,
     originalPrice: product.discount_price ? priceText : undefined,
